@@ -1,0 +1,23 @@
+# Publica o site no Vercel a cada envio no main, de qualquer colaborador.
+# Motivo: no plano Hobby, com repositório privado, o Vercel bloqueia ("Blocked")
+# os envios de quem não é dono do projeto. O Deploy Hook não tem esse bloqueio.
+# O endereço do hook fica no segredo VERCEL_DEPLOY_HOOK (Settings > Secrets > Actions).
+name: Publicar no Vercel
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    # Os envios do Lucas (dono do projeto no Vercel) já publicam sozinhos.
+    if: github.actor != 'LucasVitalBR' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Chamar o Deploy Hook do Vercel
+        env:
+          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then echo "Segredo VERCEL_DEPLOY_HOOK não configurado"; exit 1; fi
+          curl -fsS -X POST "$HOOK"

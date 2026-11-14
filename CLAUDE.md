@@ -65,6 +65,7 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
   - `backup-*/` e `*.vN.js`: backups locais (o histórico do git já guarda as versões);
   - `.claude/`, `node_modules/`, `.DS_Store`, `Thumbs.db`, `desktop.ini`: arquivos de ferramenta/sistema.
 - Antes de enviar, conferir com `git status` que nada dessa lista aparece.
+- **Envios do colega no Vercel:** no plano Hobby com repositório privado, o Vercel marca como "Blocked" os envios de quem não é dono do projeto. Resolvido com `.github/workflows/vercel-deploy.yml`: a cada envio no `main` feito por outra pessoa, o GitHub Actions chama o Deploy Hook do Vercel (`github-push`, ramo `main`), guardado no segredo `VERCEL_DEPLOY_HOOK`. Para publicar na mão: aba Actions → "Publicar no Vercel" → Run workflow.
 - **Site no ar (Vercel):** https://bancada-instrumentacao.vercel.app — projeto `bancada-instrumentacao` na conta Vercel do Lucas (Hobby), preset "Other", sem build. **Cada push no `main` publica sozinho** em ~30 s. Depois de publicar, Ctrl+F5 no navegador.
 
 ## 2. Arquivos (sempre juntos na mesma pasta)
@@ -195,3 +196,4 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
 - **BUILD -11 (14/11, pedido do Lucas):** ícone do site criado: `favicon.svg` (manômetro com ponteiro laranja na faixa alta + onda quadrada do sinal 4–20 mA, cores da identidade), `favicon.ico`, `icons/` (180/192/512 px) e `site.webmanifest`; links no `<head>` do `index.html`.
 - **BUILD -12 (14/11, pedido do Ederson):** régua do tanque de acrílico (`buildLine`, `app-3d.js`) passou de 11 traços sem número para escala **0–100 %**: traço a cada 5 %, número a cada 10 %, 50 % em laranja. 0 % = fundo (y 0,65) e 100 % = nível máximo (y 1,53), a mesma conta de `setWater` e do LIT-101, então a água bate com a régua. Testado na cena (nível 68,7 % na marca certa). Enviado ao GitHub/Vercel; Drive não atualizado.
 - **14/11 (Ederson):** decidido trabalhar **só pelo GitHub**; a regra 1.1 (salvar também no Drive) foi desativada. Sem mudança no app (BUILD continua -12).
+- **14/11 (Lucas):** envios do Ederson apareciam como "Blocked" no Vercel (plano Hobby + repositório privado). Criado o Deploy Hook `github-push` no Vercel e a automação `.github/workflows/vercel-deploy.yml` (GitHub Actions), que publica o site a cada envio de outro colaborador.
