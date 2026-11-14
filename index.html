@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Instrumentação · Aula 01</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<meta name="theme-color" content="#1E3A5F">
 <style>
 :root{
   --navy:#1E3A5F; --ink:#1F2A37; --bg:#EEF2F7; --card:#FFFFFF; --line:#D5DDE8;
@@ -1481,7 +1486,7 @@ const pt = (() => {
   document.addEventListener("keydown", e => { if (e.key === "Escape" && box.classList.contains("max")) { box.classList.remove("max"); document.body.style.overflow = ""; label(); if (typeof closeWiring === "function") closeWiring(); } });
 })();
 let load3dP = null;
-const BUILD = "20261114-10"; // muda a cada versão para o navegador não usar arquivos antigos do cache
+const BUILD = "20261114-11"; // muda a cada versão para o navegador não usar arquivos antigos do cache
 function load3dAll() { if (!load3dP) load3dP = loadScript("vendor/three-bundle.js").then(() => loadScript("app-clp.js?v=" + BUILD)).then(() => loadScript("app-3d.js?v=" + BUILD)); return load3dP; }
 (() => {
   const v = document.getElementById("v3d-views"), t = document.getElementById("v3dToggle");
