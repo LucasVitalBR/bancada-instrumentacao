@@ -26,7 +26,6 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 **Ao finalizar a edição do dia:**
 1. Atualizar este CLAUDE.md (regra 0.1).
 2. `git add -A`, `git commit -m "o que mudou"`, `git push`.
-3. Enquanto a regra 1.1 valer, salvar também no Drive.
 
 **Se a pessoa esquecer**, a IA deve lembrar: no início, de baixar/comparar com o GitHub; no fim, de enviar para o GitHub. Não encerrar uma sessão com alterações sem commit/push sem avisar.
 
@@ -37,7 +36,7 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 - **Próxima etapa sugerida:** escolher entre os itens 4 (PID), 6 (exportar/importar ladder) ou 7 (modo avaliação) do plano; itens 1 e 3 dependem de fotos/slides.
 - **Repositório oficial:** GitHub `LucasVitalBR/bancada-instrumentacao` (privado), ver 1.2. Lucas e colega trabalham por pull/push.
 - **Site:** https://bancada-instrumentacao.vercel.app (atualiza a cada push).
-- **Drive:** cópia em pasta compartilhada (ver 1.1).
+- **Drive:** não é mais usado (desde 14/11 só GitHub; ver 1.1).
 
 ## 0.1 Regra fixa: manter este arquivo atualizado
 
@@ -46,18 +45,13 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
   2. marcar o que foi concluído no **plano de continuação**;
   3. acrescentar uma linha no **histórico** (data, BUILD, o que mudou e quem pediu);
   4. ajustar as demais seções se algo mudou (arquivos, convenções, mapa de E/S).
-- Depois de atualizar, fazer **commit + push no GitHub** (regra 1.2) e, enquanto a regra 1.1 valer, salvar também no Drive.
+- Depois de atualizar, fazer **commit + push no GitHub** (regra 1.2). Não salvar no Drive.
 - Esta regra vale para qualquer pessoa ou IA que trabalhe no projeto.
 
-## 1.1 Google Drive (regra fixa)
+## 1.1 Google Drive (desativado)
 
-- **Toda modificação deve ser salva também na pasta do Drive** "Bancada de Instrumentação - App":
-  https://drive.google.com/drive/folders/1_B6YByHBpEh2IXBdSGdLoJg1QqpLFLFq (id `1_B6YByHBpEh2IXBdSGdLoJg1QqpLFLFq`; subpasta `vendor` id `1wIpql46jqZg5Engbcay0gajHp8HPJXpC`).
-- Pelo conector do Drive não dá para sobrescrever o conteúdo: enviar o arquivo novo com o mesmo nome e mandar o antigo para a lixeira.
-- Só o dono de um arquivo consegue mandá-lo para a lixeira ou movê-lo. Se o antigo for de outra pessoa, renomeie para `nome.vN.ext` (N = BUILD anterior), como foi feito na BUILD -10. A conta Google do conector do Claude do Ederson é a do SAEP Naviraí.
-- Ideal: instalar o Google Drive para computador e conectar a pasta sincronizada no Claude. Aí as edições sobem sozinhas.
-- Não editar o mesmo arquivo ao mesmo tempo que o colega (o Drive cria cópia em conflito).
-- `bloco1.pptx` (18 MB) é enviado manualmente; a pasta SCORM nunca vai para o Drive.
+- **Desde 14/11/2026 (decisão do Ederson) as atualizações vão só para o GitHub.** Não enviar mais nada para a pasta do Drive "Bancada de Instrumentação - App" (https://drive.google.com/drive/folders/1_B6YByHBpEh2IXBdSGdLoJg1QqpLFLFq), que ficou parada na BUILD -10, com cópias antigas renomeadas `.v9`.
+- Motivo: o conector do Drive não substitui arquivos (só cria novos), o que gerava duplicados.
 
 ## 1.2 GitHub (repositório oficial)
 
@@ -200,3 +194,4 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
 - **13/11 (Lucas):** site publicado no Vercel (https://bancada-instrumentacao.vercel.app), ligado ao GitHub: cada push no `main` atualiza o site. Testado com a BUILD -10 (3D e CLP carregam, sem erros no console).
 - **BUILD -11 (14/11, pedido do Lucas):** ícone do site criado: `favicon.svg` (manômetro com ponteiro laranja na faixa alta + onda quadrada do sinal 4–20 mA, cores da identidade), `favicon.ico`, `icons/` (180/192/512 px) e `site.webmanifest`; links no `<head>` do `index.html`.
 - **BUILD -12 (14/11, pedido do Ederson):** régua do tanque de acrílico (`buildLine`, `app-3d.js`) passou de 11 traços sem número para escala **0–100 %**: traço a cada 5 %, número a cada 10 %, 50 % em laranja. 0 % = fundo (y 0,65) e 100 % = nível máximo (y 1,53), a mesma conta de `setWater` e do LIT-101, então a água bate com a régua. Testado na cena (nível 68,7 % na marca certa). Enviado ao GitHub/Vercel; Drive não atualizado.
+- **14/11 (Ederson):** decidido trabalhar **só pelo GitHub**; a regra 1.1 (salvar também no Drive) foi desativada. Sem mudança no app (BUILD continua -12).
