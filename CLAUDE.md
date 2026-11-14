@@ -38,6 +38,34 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 - **Site:** https://bancada-instrumentacao.vercel.app (atualiza a cada push).
 - **Drive:** não é mais usado (desde 14/11 só GitHub; ver 1.1).
 
+
+## 0.0 PROBLEMA EM ABERTO: site não publica os envios do Ederson (LEIA, Lucas)
+
+**Situação em 14/11/2026, 10h20:** a BUILD -13 (líquido rosa) está no GitHub (commit `f5f3b10`), mas o site https://bancada-instrumentacao.vercel.app continua na **BUILD -12**.
+
+**O que funciona:** a edição em conjunto pelo GitHub. Os envios do Lucas e do Ederson se juntam sem perda, por exemplo a BUILD -11 (ícone) com a -12 (régua).
+
+**O que falha:** a publicação no Vercel dos envios do Ederson.
+- O Vercel no plano Hobby com repositório privado bloqueia ("Blocked") os envios de quem não é dono do projeto.
+- A automação `.github/workflows/vercel-deploy.yml` rodou com sucesso no envio da -13 (execução #3, ator `ederivancardoso-alt`).
+- O Deploy Hook respondeu `{"job":{"state":"PENDING","createdAt":1794650774210}}` às 10:06 UTC.
+- Mesmo assim, nenhuma publicação nova entrou no ar: o site ficou com `Last-Modified` de 10:02, que é a -12.
+
+**Lucas, conferir no painel do Vercel** (projeto `bancada-instrumentacao` → Deployments), a publicação de ~10:06:
+- **Error ou Blocked:** ler o motivo.
+- **Ready mas fora de produção:** usar "Promote to Production".
+- **Não aparece nenhuma:** o hook pode estar ligado a outro projeto ou ramo.
+
+**Decisão pendente (Ederson e Lucas vão conversar):**
+1. **Tornar o repositório público.** O bloqueio do Hobby só vale para repositório privado, então a automação extra deixa de ser necessária. Antes de mudar:
+   - tirar deste arquivo o link da pasta do Drive (está como "qualquer pessoa com o link = Editor"), ou fechar o compartilhamento dela;
+   - decidir sobre o e-mail pessoal do Ederson, que aparece nos commits dele. Daqui em diante dá para usar o e-mail noreply do GitHub; os commits antigos continuam com o e-mail atual;
+   - opcional: incluir um aviso de direitos (sem licença = todos os direitos reservados).
+   O código já fica visível para quem abre o site; o SCORM, os .pptx e os backups seguem protegidos pelo `.gitignore`.
+2. **Trocar o Vercel pelo Cloudflare Pages.** É grátis, aceita repositório privado e publica os envios de qualquer colaborador. O endereço do site muda.
+
+Enquanto não resolver, a versão mais nova abre localmente pelo `index.html` do clone. Depois de resolvido, apagar esta seção e registrar no histórico.
+
 ## 0.1 Regra fixa: manter este arquivo atualizado
 
 - **A cada modificação no projeto, reescrever este CLAUDE.md antes de encerrar**, para quem abrir o projeto (Lucas ou o colega) saber em que etapa estamos:
@@ -65,8 +93,8 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
   - `backup-*/` e `*.vN.js`: backups locais (o histórico do git já guarda as versões);
   - `.claude/`, `node_modules/`, `.DS_Store`, `Thumbs.db`, `desktop.ini`: arquivos de ferramenta/sistema.
 - Antes de enviar, conferir com `git status` que nada dessa lista aparece.
-- **Envios do colega no Vercel:** no plano Hobby com repositório privado, o Vercel marca como "Blocked" os envios de quem não é dono do projeto. Resolvido com `.github/workflows/vercel-deploy.yml`: a cada envio no `main` feito por outra pessoa, o GitHub Actions chama o Deploy Hook do Vercel (`github-push`, ramo `main`), guardado no segredo `VERCEL_DEPLOY_HOOK`. Para publicar na mão: aba Actions → "Publicar no Vercel" → Run workflow.
-- **Site no ar (Vercel):** https://bancada-instrumentacao.vercel.app — projeto `bancada-instrumentacao` na conta Vercel do Lucas (Hobby), preset "Other", sem build. **Cada push no `main` publica sozinho** em ~30 s. Depois de publicar, Ctrl+F5 no navegador.
+- **Envios do colega no Vercel:** no plano Hobby com repositório privado, o Vercel marca como "Blocked" os envios de quem não é dono do projeto. Tentativa de solução (ainda falhando em 14/11, ver seção 0.0): `.github/workflows/vercel-deploy.yml`: a cada envio no `main` feito por outra pessoa, o GitHub Actions chama o Deploy Hook do Vercel (`github-push`, ramo `main`), guardado no segredo `VERCEL_DEPLOY_HOOK`. Para publicar na mão: aba Actions → "Publicar no Vercel" → Run workflow.
+- **Site no ar (Vercel):** https://bancada-instrumentacao.vercel.app — projeto `bancada-instrumentacao` na conta Vercel do Lucas (Hobby), preset "Other", sem build. **Cada push do Lucas no `main` publica sozinho** em ~30 s; os do Ederson ainda não (ver 0.0). Depois de publicar, Ctrl+F5 no navegador.
 
 ## 2. Arquivos (sempre juntos na mesma pasta)
 
@@ -199,3 +227,4 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
 - **14/11 (Ederson):** decidido trabalhar **só pelo GitHub**; a regra 1.1 (salvar também no Drive) foi desativada. Sem mudança no app (BUILD continua -12).
 - **14/11 (Lucas):** envios do Ederson apareciam como "Blocked" no Vercel (plano Hobby + repositório privado). Criado o Deploy Hook `github-push` no Vercel e a automação `.github/workflows/vercel-deploy.yml` (GitHub Actions), que publica o site a cada envio de outro colaborador.
 - **BUILD -13 (14/11, pedido do Ederson):** líquido da bancada trocado de azul-claro para **rosa claro**, porque a bancada física usa fluido dessa cor. Mudou: água do tanque de acrílico, superfície com ondas, jato de entrada, filete do dreno, bolhas (`app-3d.js`) e a cor `--water` das telas 2D (planta). Canos continuam verdes (NBR 6493). Testado na cena.
+- **14/11 (Ederson):** BUILD -13 no GitHub, mas o site seguiu na -12 apesar da automação (Deploy Hook aceito, PENDING). Problema e opções registrados na seção 0.0 para decisão com o Lucas.
