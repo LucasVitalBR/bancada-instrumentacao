@@ -1,0 +1,17 @@
+# Pacote SCORM do SENAI: contém token de acesso. NUNCA enviar.
+senaiscormhub_*/
+senaiscormhub_*.zip
+*.zip
+
+# Material do SENAI e arquivos grandes
+bloco1.pptx
+*.pptx
+
+# Backups e ferramentas locais
+backup-*/
+*.v[0-9]*.js
+.claude/
+node_modules/
+.DS_Store
+Thumbs.db
+desktop.ini
