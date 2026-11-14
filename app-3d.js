@@ -520,12 +520,31 @@
     const rodM = mat(0x8A939C, 0.7, 0.4);
     for (const x of [-4.2, -3.2, -2.2, -1.2, -0.45]) for (const dz of [-0.1, 0.1]) { root.add(at(mesh(new T.CylinderGeometry(0.005, 0.005, 3.2 - TY, 8), rodM), v3(x, (3.2 + TY) / 2, -1.2 + dz))); root.add(at(mesh(new T.BoxGeometry(0.03, 0.01, 0.24), rodM), v3(x, TY - 0.008, -1.2))); }
     for (const dx of [-0.1, 0.1]) root.add(at(mesh(new T.CylinderGeometry(0.005, 0.005, 3.2 - TY, 8), rodM), v3(-0.45 + dx, (3.2 + TY) / 2, -0.6)));
-    const cond = (pts) => { root.add(mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts), 40, 0.009, 10, false), M.conduit)); root.add(at(mesh(new T.CylinderGeometry(0.014, 0.014, 0.02, 10), M.dark), pts[pts.length - 1])); };
-    cond([v3(-0.45, TY, -0.32), v3(-0.42, 2.62, -0.1), v3(-0.25, 2.52, 0.08), v3(-0.16, 2.43, 0.12)]);     // TE/TT-104
-    cond([v3(-0.4, TY, -0.32), v3(-0.2, 2.66, -0.1), v3(0.2, 2.56, 0.12), v3(0.32, 2.4, 0.2)]);           // PIT-103
-    cond([v3(-0.45, TY, -0.32), v3(-0.2, 2.62, -0.34), v3(0.12, 2.5, -0.32), v3(0.19, 2.36, -0.3)]);      // PSH-103
-    cond([v3(-0.5, TY, -0.32), v3(-0.72, 2.55, -0.28), v3(-0.75, 1.6, -0.18), v3(-0.69, 0.9, -0.1)]);     // TZ-104
-    cond([v3(-0.5, TY, -0.32), v3(-0.7, 2.5, -0.1), v3(-0.66, 1.5, 0.35), v3(-0.44, 1.1, 0.48)]);         // TSH-104
+    // eletroduto flexível: sai da eletrocalha (bucha), faz a curva e termina numa conexão (unidut) rosqueada no prensa-cabo do instrumento
+    const unid = mat(0x8A939C, 0.8, 0.35), bush = mat(0x2B2F36, 0.3, 0.6);
+    const pol = (a, r, y) => v3(Math.sin(a) * r, y, Math.cos(a) * r);
+    S.conduits = [];
+    const cond = (tag, pts) => {
+      const g = new T.Group(); root.add(g);
+      const curve = new T.CatmullRomCurve3(pts, false, "centripetal");
+      g.add(mesh(new T.TubeGeometry(curve, Math.max(60, pts.length * 14), 0.009, 10, false), M.conduit));
+      // bucha na saída da eletrocalha
+      g.add(at(mesh(new T.CylinderGeometry(0.014, 0.014, 0.014, 12), bush), pts[0].clone().add(v3(0, -0.006, 0))));
+      // unidut na ponta, alinhado com a última direção do eletroduto
+      const e = pts[pts.length - 1], d = e.clone().sub(curve.getPoint(0.985)).normalize();
+      const u = new T.Group(); u.position.copy(e); u.quaternion.setFromUnitVectors(v3(0, 1, 0), d); g.add(u);
+      u.add(at(mesh(new T.CylinderGeometry(0.0125, 0.0125, 0.022, 16), unid), v3(0, -0.011, 0)));
+      u.add(at(mesh(new T.CylinderGeometry(0.0145, 0.0145, 0.008, 6), unid), v3(0, -0.002, 0)));
+      S.conduits.push({ tag, g });
+    };
+    // pontos finais = saída do prensa-cabo de cada instrumento já montado (coordenadas da sala)
+    cond("TE-104", [v3(-0.45, TY, -0.32), v3(-0.43, 2.64, -0.16), v3(-0.18, 2.55, 0.02), v3(0.03, 2.44, 0.12), v3(0.0, 2.34, 0.12), v3(-0.07, 2.319, 0.12), v3(-0.14, 2.319, 0.12)]);
+    cond("PIT-103", [v3(-0.4, TY, -0.32), v3(-0.22, 2.68, -0.22), v3(0.25, 2.6, 0.0), v3(0.5, 2.46, 0.15), v3(0.49, 2.33, 0.17), v3(0.43, 2.292, 0.17), v3(0.37, 2.292, 0.17)]);
+    cond("PSH-103", [v3(-0.43, TY, -0.32), v3(-0.3, 2.66, -0.38), v3(0.1, 2.6, -0.4), v3(0.37, 2.45, -0.32), v3(0.35, 2.26, -0.3), v3(0.29, 2.217, -0.3), v3(0.237, 2.217, -0.3)]);
+    // TZ-104 e TSH-104 descem por fora do costado, passam por baixo e sobem até o prensa-cabo (curva de gotejamento)
+    const tzE = v3(-0.6176, 0.829, -0.0977), tshE = v3(0.3915, 0.995, 0.5389);
+    cond("TZ-104", [v3(-0.5, TY, -0.32), pol(-2.1, 0.66, 2.5), pol(-1.95, 0.74, 2.1), pol(-1.85, 0.76, 1.3), pol(-1.78, 0.76, 0.8), tzE.clone().add(v3(-0.02, -0.12, 0)), tzE.clone().add(v3(0, -0.035, 0)), tzE]);
+    cond("TSH-104", [v3(-0.48, TY, -0.34), pol(-2.2, 0.64, 2.5), pol(-2.25, 0.7, 2.1), pol(-2.25, 0.7, 1.2), pol(-2.1, 0.7, 0.86), pol(-1.3, 0.7, 0.8), pol(-0.4, 0.7, 0.8), pol(0.35, 0.69, 0.82), tshE.clone().add(v3(0, -0.11, 0)), tshE.clone().add(v3(0, -0.035, 0)), tshE]);
   }
   function drawPlc() {
     if (!S.plcScreen) return;
@@ -577,7 +596,6 @@
       add(new T.CylinderGeometry(0.038, 0.038, 0.004, 32), mat(0x15191E, 0.2, 0.8), v3(0, 0.214, 0));
       add(cylX(0.016, 0.03, 16), head, v3(0.055, 0.185, 0));
       gland(g, v3(0.07, 0.185, 0), v3(1, 0, 0), 0.009);
-      add(cylX(0.006, 0.06, 10), M.cable, v3(0.12, 0.185, 0));
     } else if (tag === "TT-104") {
       // transmissor de cabeçote (disco) + tampa do cabeçote
       add(new T.CylinderGeometry(0.03, 0.03, 0.012, 32), mat(0xF4F6F8, 0.05, 0.5), v3(0, -0.004, 0));
@@ -1094,6 +1112,7 @@
   const _m4 = new T.Matrix4(), _q = new T.Quaternion(), _sc = new T.Vector3(), _p = new T.Vector3();
   function stepAnims(dt) {
     A.t += dt; const t = A.t;
+    if (S.conduits) for (const c of S.conduits) c.g.visible = c.tag === "TZ-104" || !!S.installed[c.tag];
     const L = S.lvl, P = S.proc;
     const Q = ready("ln") ? L.Q : 0, pumpOn = ready("ln") && L.pumpOn;
     const topY = 0.65 + 0.88 * L.L / 100;

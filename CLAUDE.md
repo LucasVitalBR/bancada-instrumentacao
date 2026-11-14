@@ -32,8 +32,8 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 
 ## 0. Situação atual (ler primeiro)
 
-- **Versão:** BUILD `20261113-9` (13/11/2026).
-- **Última etapa feita:** item 2 do plano (endereços e escalas do DVP20SX2 conferidos no manual; saída D1116 corrigida para 0..4000; D1115 = K7967 no 1º scan).
+- **Versão:** BUILD `20261114-10` (14/11/2026).
+- **Última etapa feita:** eletrodutos do TQ-01 ligados aos prensa-cabos dos instrumentos (BUILD -10). Antes: item 2 do plano (endereços e escalas do DVP20SX2 conferidos no manual; saída D1116 corrigida para 0..4000; D1115 = K7967 no 1º scan).
 - **Próxima etapa sugerida:** escolher entre os itens 4 (PID), 6 (exportar/importar ladder) ou 7 (modo avaliação) do plano; itens 1 e 3 dependem de fotos/slides.
 - **Repositório oficial:** GitHub `LucasVitalBR/bancada-instrumentacao` (privado), ver 1.2. Lucas e colega trabalham por pull/push.
 - **Drive:** cópia em pasta compartilhada (ver 1.1).
@@ -53,6 +53,7 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 - **Toda modificação deve ser salva também na pasta do Drive** "Bancada de Instrumentação - App":
   https://drive.google.com/drive/folders/1_B6YByHBpEh2IXBdSGdLoJg1QqpLFLFq (id `1_B6YByHBpEh2IXBdSGdLoJg1QqpLFLFq`; subpasta `vendor` id `1wIpql46jqZg5Engbcay0gajHp8HPJXpC`).
 - Pelo conector do Drive não dá para sobrescrever o conteúdo: enviar o arquivo novo com o mesmo nome e mandar o antigo para a lixeira.
+- Só o dono de um arquivo consegue mandá-lo para a lixeira ou movê-lo. Se o antigo for de outra pessoa, renomeie para `nome.vN.ext` (N = BUILD anterior), como foi feito na BUILD -10. A conta Google do conector do Claude do Ederson é a do SAEP Naviraí.
 - Ideal: instalar o Google Drive para computador e conectar a pasta sincronizada no Claude. Aí as edições sobem sozinhas.
 - Não editar o mesmo arquivo ao mesmo tempo que o colega (o Drive cria cópia em conflito).
 - `bloco1.pptx` (18 MB) é enviado manualmente; a pasta SCORM nunca vai para o Drive.
@@ -102,7 +103,7 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 
 ## 4. Convenções importantes
 
-- **`const BUILD = "20261113-9"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
+- **`const BUILD = "20261114-10"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
 - **Three.js:** `object.position` é somente leitura. Use o helper `at(obj, pos, scale)`, nunca `Object.assign(mesh, {position})`.
 - **GTAOPass (oclusão ambiente):** deixa sprites/transparentes **pretos**. `overrideVisibility()` foi sobrescrito para esconder `isSprite` e `material.transparent` no G-buffer.
 - **Gráficos:** modo realista ↔ leve. Cai sozinho para o leve se ficar abaixo de 24 fps por 4 s.
@@ -193,3 +194,4 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
 - **BUILD -9 (13/11):** escalas do CLP conferidas no manual. Entradas D1110–D1113: 4–20 mA = 0..2000 (já estava certo). **Saída D1116 corrigida para 0..4000** (antes 0..2000). Programas-padrão ajustados (bias K2000, Kp ×4, passo K40, limite K4000, MOV K4000). Novo D1115 = K7967 (H1F1F) no 1º scan em todos os programas com analógica; monitor avisa "não configurado" se faltar. Simulação testada (vazão P/flutuante/válvula/completa).
 - **13/11 (Lucas):** criado o repositório GitHub `LucasVitalBR/bancada-instrumentacao` (privado). `app-instrumentacao.html` renomeado para `index.html`; `.gitignore` e README criados. GitHub passa a ser a cópia oficial.
 - **13/11 (Lucas):** regra 00 criada (ler CLAUDE.md + comparar/baixar do GitHub no início; commit + push no fim; IA lembra se esquecerem). Lista do que não vai para o GitHub documentada na 1.2.
+- **BUILD -10 (14/11, pedido do Ederson):** eletrodutos cinza do TQ-01 refeitos em `buildPanel` (`app-3d.js`). Antes terminavam soltos no ar; agora saem da eletrocalha com bucha e terminam numa conexão (unidut) no prensa-cabo de TE/TT-104, PIT-103, PSH-103, TSH-104 e TZ-104. TSH e TZ descem por fora do costado e sobem ao prensa-cabo por baixo (curva de gotejamento). Cada eletroduto só aparece com o instrumento instalado (`S.conduits`, conferido em `stepAnims`); o da resistência TZ-104 é fixo. Saiu o pedaço de cabo solto do TE-104. Enviado ao Drive e ao GitHub (14/11). Link publicado ainda na BUILD -8.
