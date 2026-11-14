@@ -430,7 +430,7 @@
     const acr = new T.MeshPhysicalMaterial({ color: 0xDDEEFF, metalness: 0, roughness: 0.05, transparent: true, opacity: 0.2, depthWrite: false, side: T.DoubleSide });
     ac.add(at(mesh(new T.BoxGeometry(0.66, 0.9, 0.56), acr, false, false), v3(0, 1.09, 0)));
     ac.add(at(mesh(new T.BoxGeometry(0.7, 0.02, 0.6), new T.MeshPhysicalMaterial({ color: 0xDDEEFF, transparent: true, opacity: 0.35, roughness: 0.1, depthWrite: false }), false, false), v3(0, 1.55, 0)));
-    S.water = mesh(new T.BoxGeometry(0.64, 1, 0.54), new T.MeshStandardMaterial({ color: 0x5FA8E0, transparent: true, opacity: 0.5, roughness: 0.1, depthWrite: false }), false, false);
+    S.water = mesh(new T.BoxGeometry(0.64, 1, 0.54), new T.MeshStandardMaterial({ color: 0xF097BD, transparent: true, opacity: 0.6, roughness: 0.1, depthWrite: false }), false, false);
     ac.add(S.water);
     const edges = new T.LineSegments(new T.EdgesGeometry(new T.BoxGeometry(0.66, 0.9, 0.56)), new T.LineBasicMaterial({ color: 0x9FB6CC })); edges.position.set(0, 1.09, 0); ac.add(edges);
     // régua de nível em %: 0 % no fundo (y 0,65) e 100 % no nível máximo (y 1,53), igual ao setWater e ao LIT-101
@@ -1090,17 +1090,17 @@
     // superfície da água (malha com ondas)
     const sg = new T.PlaneGeometry(0.636, 0.536, 36, 30).rotateX(-Math.PI / 2);
     A.surfBase = sg.attributes.position.array.slice();
-    A.surf = mesh(sg, new T.MeshStandardMaterial({ color: 0x3E8FD6, transparent: true, opacity: 0.7, roughness: 0.06, metalness: 0.2, depthWrite: false, side: T.DoubleSide }), false, false);
+    A.surf = mesh(sg, new T.MeshStandardMaterial({ color: 0xEC9BBE, transparent: true, opacity: 0.7, roughness: 0.06, metalness: 0.2, depthWrite: false, side: T.DoubleSide }), false, false);
     A.surf.renderOrder = 4; S.ac.add(A.surf);
     // jato de entrada
-    A.jetTex = texStreak(); A.jetMat = new T.MeshStandardMaterial({ map: A.jetTex, color: 0xBFE3FA, transparent: true, opacity: 0.85, roughness: 0.1, depthWrite: false });
+    A.jetTex = texStreak(); A.jetMat = new T.MeshStandardMaterial({ map: A.jetTex, color: 0xF9CFE0, transparent: true, opacity: 0.85, roughness: 0.1, depthWrite: false });
     A.jet = null; A.jetKey = "";
     // bolhas
-    A.bub = new T.InstancedMesh(new T.SphereGeometry(1, 8, 6), new T.MeshStandardMaterial({ color: 0xF2FAFF, transparent: true, opacity: 0.75, roughness: 0.05 }), 70);
+    A.bub = new T.InstancedMesh(new T.SphereGeometry(1, 8, 6), new T.MeshStandardMaterial({ color: 0xFFF3F8, transparent: true, opacity: 0.75, roughness: 0.05 }), 70);
     A.bub.count = 0; A.bub.renderOrder = 5; S.ac.add(A.bub);
     // dreno: filete até o ralo
     const dc = new T.CatmullRomCurve3([v3(-0.2, 0.39, 0.17), v3(-0.2, 0.36, 0.21), v3(-0.2, 0.2, 0.27), v3(-0.2, 0.005, 0.3)]);
-    A.drainTex = texStreak(); A.drain = mesh(new T.TubeGeometry(dc, 20, 0.006, 8, false), new T.MeshStandardMaterial({ map: A.drainTex, color: 0xBFE3FA, transparent: true, opacity: 0.85, roughness: 0.1, depthWrite: false }), false, false);
+    A.drainTex = texStreak(); A.drain = mesh(new T.TubeGeometry(dc, 20, 0.006, 8, false), new T.MeshStandardMaterial({ map: A.drainTex, color: 0xF9CFE0, transparent: true, opacity: 0.85, roughness: 0.1, depthWrite: false }), false, false);
     A.drain.visible = false; S.ac.add(A.drain);
     S.ac.add(at(mesh(new T.BoxGeometry(0.16, 0.006, 0.16), mat(0x5A6068, 0.6, 0.4), false), v3(-0.2, 0.003, 0.3)));
     for (let i = 0; i < 5; i++) S.ac.add(at(mesh(new T.BoxGeometry(0.14, 0.008, 0.008), mat(0x2B2F36), false), v3(-0.2, 0.007, 0.25 + i * 0.025)));

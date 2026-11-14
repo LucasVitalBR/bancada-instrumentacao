@@ -31,8 +31,8 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 
 ## 0. Situação atual (ler primeiro)
 
-- **Versão:** BUILD `20261114-12` (14/11/2026).
-- **Última etapa feita:** régua do tanque de acrílico em % (BUILD -12). Antes: ícone do site (favicon de manômetro + sinal 4–20 mA, BUILD -11). Antes: eletrodutos do TQ-01 ligados aos prensa-cabos dos instrumentos (BUILD -10). Antes: item 2 do plano (endereços e escalas do DVP20SX2 conferidos no manual; saída D1116 corrigida para 0..4000; D1115 = K7967 no 1º scan).
+- **Versão:** BUILD `20261114-13` (14/11/2026).
+- **Última etapa feita:** líquido da bancada em rosa claro, igual ao fluido da bancada física (BUILD -13). Antes: régua do tanque de acrílico em % (BUILD -12). Antes: ícone do site (favicon de manômetro + sinal 4–20 mA, BUILD -11). Antes: eletrodutos do TQ-01 ligados aos prensa-cabos dos instrumentos (BUILD -10). Antes: item 2 do plano (endereços e escalas do DVP20SX2 conferidos no manual; saída D1116 corrigida para 0..4000; D1115 = K7967 no 1º scan).
 - **Próxima etapa sugerida:** escolher entre os itens 4 (PID), 6 (exportar/importar ladder) ou 7 (modo avaliação) do plano; itens 1 e 3 dependem de fotos/slides.
 - **Repositório oficial:** GitHub `LucasVitalBR/bancada-instrumentacao` (privado), ver 1.2. Lucas e colega trabalham por pull/push.
 - **Site:** https://bancada-instrumentacao.vercel.app (atualiza a cada push).
@@ -100,7 +100,7 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 
 ## 4. Convenções importantes
 
-- **`const BUILD = "20261114-12"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
+- **`const BUILD = "20261114-13"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
 - **Three.js:** `object.position` é somente leitura. Use o helper `at(obj, pos, scale)`, nunca `Object.assign(mesh, {position})`.
 - **GTAOPass (oclusão ambiente):** deixa sprites/transparentes **pretos**. `overrideVisibility()` foi sobrescrito para esconder `isSprite` e `material.transparent` no G-buffer.
 - **Gráficos:** modo realista ↔ leve. Cai sozinho para o leve se ficar abaixo de 24 fps por 4 s.
@@ -111,6 +111,7 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
   - `menu3d` (menu lateral recolhido).
 - **Edições grandes:** foram feitas com scripts Node de substituição exata (`patch-*.js` no scratchpad) e backup antes (`app-3d.vN.js`). Validar com `node --check`. Para o HTML, extrair os `<script>` inline e checar.
 - **Cores de tubulação (NBR 6493):** água de processo verde, ar comprimido azul, eletroduto cinza-escuro, vapor/respiro branco.
+- **Cor do fluido (bancada física usa líquido rosa):** água do tanque `0xF097BD` (opacidade 0,6), superfície `0xEC9BBE`, jato e dreno `0xF9CFE0`, bolhas `0xFFF3F8`; no 2D, `--water:#F4B6CF`. A tubulação continua verde (NBR 6493: água de processo); só o líquido visível é rosa.
 - **Identidade visual:** azul `#1E3A5F`, laranja `#E87722`, fundo `#EEF2F7`; fonte Calibri; tags em Courier New.
 
 ## 5. O que existe hoje
@@ -197,3 +198,4 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
 - **BUILD -12 (14/11, pedido do Ederson):** régua do tanque de acrílico (`buildLine`, `app-3d.js`) passou de 11 traços sem número para escala **0–100 %**: traço a cada 5 %, número a cada 10 %, 50 % em laranja. 0 % = fundo (y 0,65) e 100 % = nível máximo (y 1,53), a mesma conta de `setWater` e do LIT-101, então a água bate com a régua. Testado na cena (nível 68,7 % na marca certa). Enviado ao GitHub/Vercel; Drive não atualizado.
 - **14/11 (Ederson):** decidido trabalhar **só pelo GitHub**; a regra 1.1 (salvar também no Drive) foi desativada. Sem mudança no app (BUILD continua -12).
 - **14/11 (Lucas):** envios do Ederson apareciam como "Blocked" no Vercel (plano Hobby + repositório privado). Criado o Deploy Hook `github-push` no Vercel e a automação `.github/workflows/vercel-deploy.yml` (GitHub Actions), que publica o site a cada envio de outro colaborador.
+- **BUILD -13 (14/11, pedido do Ederson):** líquido da bancada trocado de azul-claro para **rosa claro**, porque a bancada física usa fluido dessa cor. Mudou: água do tanque de acrílico, superfície com ondas, jato de entrada, filete do dreno, bolhas (`app-3d.js`) e a cor `--water` das telas 2D (planta). Canos continuam verdes (NBR 6493). Testado na cena.
