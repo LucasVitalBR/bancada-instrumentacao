@@ -15,6 +15,21 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 - **Link publicado (privado, compartilhar pelo menu Share):** https://claude.ai/artifact/JWPR6417D5qq23xkttKEt9
   Para atualizar, republique o mesmo artifact (passe a URL como `url` na ferramenta Artifact).
 
+## 00. Rotina obrigatória de início e fim (vale para qualquer pessoa ou IA)
+
+**Ao iniciar (antes de qualquer pedido, mesmo pequeno):**
+1. Ler este CLAUDE.md inteiro.
+2. Comparar a cópia local com o GitHub: `git fetch origin` e depois `git status` / `git log HEAD..origin/main --oneline`.
+3. Se o GitHub tiver versão mais nova, **baixar antes de editar** (`git pull`) e avisar quem está trabalhando o que mudou (ver histórico na seção 7).
+4. Se não houver pasta local com git, clonar: `git clone https://github.com/LucasVitalBR/bancada-instrumentacao` (fora do Google Drive).
+
+**Ao finalizar a edição do dia:**
+1. Atualizar este CLAUDE.md (regra 0.1).
+2. `git add -A`, `git commit -m "o que mudou"`, `git push`.
+3. Enquanto a regra 1.1 valer, salvar também no Drive.
+
+**Se a pessoa esquecer**, a IA deve lembrar: no início, de baixar/comparar com o GitHub; no fim, de enviar para o GitHub. Não encerrar uma sessão com alterações sem commit/push sem avisar.
+
 ## 0. Situação atual (ler primeiro)
 
 - **Versão:** BUILD `20261113-9` (13/11/2026).
@@ -48,7 +63,12 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 - **Antes de começar:** `git pull` (traz o que o outro enviou).
 - **Ao terminar:** atualizar este CLAUDE.md (regra 0.1), `git add -A`, `git commit -m "o que mudou"`, `git push`. Se o push for recusado, fazer `git pull`, resolver conflitos e enviar de novo.
 - A pasta de trabalho fica **fora do Google Drive** (o Drive corrompe a pasta `.git`).
-- O `.gitignore` bloqueia a pasta SCORM, o `.zip`, `bloco1.pptx`, `backup-*` e `.claude/`. Nunca enviar o token do SCORM.
+- **O que NÃO vai para o GitHub** (bloqueado no `.gitignore`; manter esta lista igual ao arquivo):
+  - `senaiscormhub_*/` e `*.zip`: pacote SCORM do SENAI com **token de acesso**;
+  - `bloco1.pptx` e `*.pptx`: material do SENAI e arquivo grande (18 MB);
+  - `backup-*/` e `*.vN.js`: backups locais (o histórico do git já guarda as versões);
+  - `.claude/`, `node_modules/`, `.DS_Store`, `Thumbs.db`, `desktop.ini`: arquivos de ferramenta/sistema.
+- Antes de enviar, conferir com `git status` que nada dessa lista aparece.
 - Hospedagem planejada: Vercel (ou similar) ligado ao repositório; o site abre pelo `index.html`, sem build.
 
 ## 2. Arquivos (sempre juntos na mesma pasta)
@@ -172,3 +192,4 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
 - **Publicação:** link no claude.ai.
 - **BUILD -9 (13/11):** escalas do CLP conferidas no manual. Entradas D1110–D1113: 4–20 mA = 0..2000 (já estava certo). **Saída D1116 corrigida para 0..4000** (antes 0..2000). Programas-padrão ajustados (bias K2000, Kp ×4, passo K40, limite K4000, MOV K4000). Novo D1115 = K7967 (H1F1F) no 1º scan em todos os programas com analógica; monitor avisa "não configurado" se faltar. Simulação testada (vazão P/flutuante/válvula/completa).
 - **13/11 (Lucas):** criado o repositório GitHub `LucasVitalBR/bancada-instrumentacao` (privado). `app-instrumentacao.html` renomeado para `index.html`; `.gitignore` e README criados. GitHub passa a ser a cópia oficial.
+- **13/11 (Lucas):** regra 00 criada (ler CLAUDE.md + comparar/baixar do GitHub no início; commit + push no fim; IA lembra se esquecerem). Lista do que não vai para o GitHub documentada na 1.2.
