@@ -433,7 +433,18 @@
     S.water = mesh(new T.BoxGeometry(0.64, 1, 0.54), new T.MeshStandardMaterial({ color: 0x5FA8E0, transparent: true, opacity: 0.5, roughness: 0.1, depthWrite: false }), false, false);
     ac.add(S.water);
     const edges = new T.LineSegments(new T.EdgesGeometry(new T.BoxGeometry(0.66, 0.9, 0.56)), new T.LineBasicMaterial({ color: 0x9FB6CC })); edges.position.set(0, 1.09, 0); ac.add(edges);
-    ac.add(at(mesh(new T.PlaneGeometry(0.05, 0.86), new T.MeshBasicMaterial({ map: canvasTex(40, 400, (c) => { c.fillStyle = "#fff"; c.fillRect(0, 0, 40, 400); c.fillStyle = "#1F2A37"; for (let i = 0; i <= 10; i++) c.fillRect(0, 398 - i * 39.6, i % 5 ? 14 : 28, 3); }), transparent: true, opacity: 0.85 }), false), v3(-0.29, 1.09, 0.281)));
+    // régua de nível em %: 0 % no fundo (y 0,65) e 100 % no nível máximo (y 1,53), igual ao setWater e ao LIT-101
+    const RY0 = 0.63, RY1 = 1.55, RH = 1024, ppm = RH / (RY1 - RY0), ry = (pct) => RH - (0.65 + 0.88 * pct / 100 - RY0) * ppm;
+    ac.add(at(mesh(new T.PlaneGeometry(0.1, RY1 - RY0), new T.MeshBasicMaterial({ map: canvasTex(176, RH, (c, w) => {
+      c.fillStyle = "rgba(255,255,255,0.92)"; c.fillRect(0, 0, w, RH);
+      c.fillStyle = "#1F2A37"; c.fillRect(0, ry(100), 4, ry(0) - ry(100) + 3);
+      c.textBaseline = "middle"; c.textAlign = "left";
+      for (let p = 0; p <= 100; p += 5) {
+        const y = ry(p), big = p % 10 === 0;
+        c.fillStyle = p === 50 ? "#E87722" : "#1F2A37"; c.fillRect(0, y - (big ? 2 : 1), big ? 44 : 24, big ? 5 : 3);
+        if (big) { c.font = "bold 40px Arial"; c.fillText(p === 100 ? "100%" : String(p), 52, y + 1); }
+      }
+    }), transparent: true }), false), v3(-0.278, (RY0 + RY1) / 2, 0.281)));
     const wallHolder = (y) => { const h = new T.Group(); h.position.set(0.14, y, 0.28); ac.add(h); h.add(at(mesh(cylZ(0.028, 0.012, 20), M.dark), v3(0, 0, 0.006))); return { holder: h, kind: "side", mount: v3(0, 0, 0.012) }; };
     slots.lsh = wallHolder(1.38); slots.lsl = wallHolder(0.8);
     const lidH = new T.Group(); lidH.position.set(-0.1, 1.56, 0.05); ac.add(lidH);

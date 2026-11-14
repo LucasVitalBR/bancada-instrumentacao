@@ -32,8 +32,8 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 
 ## 0. Situação atual (ler primeiro)
 
-- **Versão:** BUILD `20261114-11` (14/11/2026).
-- **Última etapa feita:** ícone do site (favicon de manômetro + sinal 4–20 mA, BUILD -11). Antes: eletrodutos do TQ-01 ligados aos prensa-cabos dos instrumentos (BUILD -10). Antes: item 2 do plano (endereços e escalas do DVP20SX2 conferidos no manual; saída D1116 corrigida para 0..4000; D1115 = K7967 no 1º scan).
+- **Versão:** BUILD `20261114-12` (14/11/2026).
+- **Última etapa feita:** régua do tanque de acrílico em % (BUILD -12). Antes: ícone do site (favicon de manômetro + sinal 4–20 mA, BUILD -11). Antes: eletrodutos do TQ-01 ligados aos prensa-cabos dos instrumentos (BUILD -10). Antes: item 2 do plano (endereços e escalas do DVP20SX2 conferidos no manual; saída D1116 corrigida para 0..4000; D1115 = K7967 no 1º scan).
 - **Próxima etapa sugerida:** escolher entre os itens 4 (PID), 6 (exportar/importar ladder) ou 7 (modo avaliação) do plano; itens 1 e 3 dependem de fotos/slides.
 - **Repositório oficial:** GitHub `LucasVitalBR/bancada-instrumentacao` (privado), ver 1.2. Lucas e colega trabalham por pull/push.
 - **Site:** https://bancada-instrumentacao.vercel.app (atualiza a cada push).
@@ -105,7 +105,7 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 
 ## 4. Convenções importantes
 
-- **`const BUILD = "20261114-11"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
+- **`const BUILD = "20261114-12"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
 - **Three.js:** `object.position` é somente leitura. Use o helper `at(obj, pos, scale)`, nunca `Object.assign(mesh, {position})`.
 - **GTAOPass (oclusão ambiente):** deixa sprites/transparentes **pretos**. `overrideVisibility()` foi sobrescrito para esconder `isSprite` e `material.transparent` no G-buffer.
 - **Gráficos:** modo realista ↔ leve. Cai sozinho para o leve se ficar abaixo de 24 fps por 4 s.
@@ -127,7 +127,7 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
 - **Sala:** remodelada a partir de foto do laboratório: granitina, janelas de caixilho azul, forro com LEDs, armários cinza-claro, bancada didática, cone, carrinho.
 - **Equipamentos:**
   - TQ-01 (inox) com respiro;
-  - tanque de acrílico com tampa e dreno;
+  - tanque de acrílico com tampa, dreno e régua de nível em % (0–100 %, traço a cada 5 %, 50 % em laranja);
   - bomba centrífuga completa (motor, protetor de acoplamento amarelo, voluta, skid);
   - rotâmetro vermelho;
   - 4 válvulas manuais de volante amarelo;
@@ -199,3 +199,4 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
 - **BUILD -10 (14/11, pedido do Ederson):** eletrodutos cinza do TQ-01 refeitos em `buildPanel` (`app-3d.js`). Antes terminavam soltos no ar; agora saem da eletrocalha com bucha e terminam numa conexão (unidut) no prensa-cabo de TE/TT-104, PIT-103, PSH-103, TSH-104 e TZ-104. TSH e TZ descem por fora do costado e sobem ao prensa-cabo por baixo (curva de gotejamento). Cada eletroduto só aparece com o instrumento instalado (`S.conduits`, conferido em `stepAnims`); o da resistência TZ-104 é fixo. Saiu o pedaço de cabo solto do TE-104. Enviado ao Drive e ao GitHub (14/11). Link publicado ainda na BUILD -8.
 - **13/11 (Lucas):** site publicado no Vercel (https://bancada-instrumentacao.vercel.app), ligado ao GitHub: cada push no `main` atualiza o site. Testado com a BUILD -10 (3D e CLP carregam, sem erros no console).
 - **BUILD -11 (14/11, pedido do Lucas):** ícone do site criado: `favicon.svg` (manômetro com ponteiro laranja na faixa alta + onda quadrada do sinal 4–20 mA, cores da identidade), `favicon.ico`, `icons/` (180/192/512 px) e `site.webmanifest`; links no `<head>` do `index.html`.
+- **BUILD -12 (14/11, pedido do Ederson):** régua do tanque de acrílico (`buildLine`, `app-3d.js`) passou de 11 traços sem número para escala **0–100 %**: traço a cada 5 %, número a cada 10 %, 50 % em laranja. 0 % = fundo (y 0,65) e 100 % = nível máximo (y 1,53), a mesma conta de `setWater` e do LIT-101, então a água bate com a régua. Testado na cena (nível 68,7 % na marca certa). Enviado ao GitHub/Vercel; Drive não atualizado.
