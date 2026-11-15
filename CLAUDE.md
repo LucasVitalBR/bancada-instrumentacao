@@ -31,7 +31,7 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 
 ## 0. Situação atual (ler primeiro)
 
-- **Versão:** BUILD `20261115-15` (15/11/2026).
+- **Versão:** BUILD `20261115-16` (15/11/2026).
 - **Última etapa feita:** **inversor PowerFlex 525** no painel, com IHM interativa, checklist de parâmetros e seletora de partida da bomba DIRETA/INVERSOR (BUILD -14, fases 1 e 2 do roteiro do inversor). Antes: líquido da bancada em rosa claro, igual ao fluido da bancada física (BUILD -13). Antes: régua do tanque de acrílico em % (BUILD -12). Antes: ícone do site (favicon de manômetro + sinal 4–20 mA, BUILD -11). Antes: eletrodutos do TQ-01 ligados aos prensa-cabos dos instrumentos (BUILD -10). Antes: item 2 do plano (endereços e escalas do DVP20SX2 conferidos no manual; saída D1116 corrigida para 0..4000; D1115 = K7967 no 1º scan).
 - **Próxima etapa sugerida:** fases 3 e 4 do inversor (ver 6.1), ou os itens 4 (PID), 6 (exportar/importar ladder) e 7 (modo avaliação) do plano; itens 1 e 3 dependem de fotos/slides.
 - **Repositório oficial:** GitHub `LucasVitalBR/bancada-instrumentacao` (privado), ver 1.2. Lucas e colega trabalham por pull/push.
@@ -140,7 +140,7 @@ O login do wrangler fica salvo no PC do Ederson.
 
 ## 4. Convenções importantes
 
-- **`const BUILD = "20261115-15"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
+- **`const BUILD = "20261115-16"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
 - **Three.js:** `object.position` é somente leitura. Use o helper `at(obj, pos, scale)`, nunca `Object.assign(mesh, {position})`.
 - **GTAOPass (oclusão ambiente):** deixa sprites/transparentes **pretos**. `overrideVisibility()` foi sobrescrito para esconder `isSprite` e `material.transparent` no G-buffer.
 - **Gráficos:** modo realista ↔ leve. Cai sozinho para o leve se ficar abaixo de 24 fps por 4 s.
@@ -183,7 +183,11 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
 
 ### Inversor PowerFlex 525 (BUILD -14)
 - **Modelo:** Allen-Bradley **25B-B5P0N104** (PF525, 240 V trifásico, 5,0 A, 0,75 kW / 1 HP, carcaça A, IP20, sem filtro). Manual: **520-UM001** (set/2025), PDF só na pasta antiga do Ederson, sem ir ao GitHub (material da Rockwell). Páginas usadas: 14 (código), 42–46 (bornes), 61–63 (IHM), 65–66 (Basic Program), 78–80 (Basic Display), 90–92 (t062–t064), 161–163 (falhas).
-- **No 3D:** inversor ao lado do K1 no painel; clicar nele (ou em "🎛 Inversor PF525" no menu, ou "Abrir o inversor" no painel escuro) abre a janela da IHM. A frente 3D mostra o display ao vivo.
+- **No 3D:** inversor ao lado do K1 no painel; a frente 3D mostra o display ao vivo.
+  - Clicar nele (ou em "🎛 Inversor PF525" no menu, "Abrir o inversor" no painel escuro ou na vista "Inversor") aproxima a câmera e abre o **painel lateral do inversor** (`#vfdDock`, classe `vdock` no `#box3d`). O painel traz Próxima tecla, passo a passo, display em texto, estado, potenciômetro, seletora e checklist.
+  - **Com o painel aberto, as teclas do inversor 3D são clicáveis:** o UV do clique vai para `PF525.pressAt(u, v)` e as posições ficam em `KEYPOS`.
+  - O botão "IHM ampliada" abre a janela grande antiga (`openVfdBig`), útil em tela pequena.
+  - O menu da cena recolhe sozinho ao abrir o painel.
 - **Seletora "PARTIDA DA BOMBA" (porta do painel, painel escuro e janela do inversor):**
   - **DIRETA:** o contator K1 liga o motor em 60 Hz, sem rampa (comportamento antigo);
   - **INVERSOR:** a rotação do motor vem do PF525, com rampa, e a vazão é proporcional à rotação (lei de afinidade). Em reverso, a bomba centrífuga entrega 25 %.
@@ -298,3 +302,4 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
   - caixa laranja **“Próxima tecla”** abaixo do teclado, que diz o que apertar em cada etapa (ex.: na tela inicial, “Esc 2 vezes, ▲ até P, ↵”);
   - link **“como fazer ›”** em cada item do checklist, que mostra o passo a passo até aquele parâmetro, com o número de toques no ▲;
   - aviso ao dar Enter num parâmetro do grupo b, que é só leitura.
+- **BUILD -16 (15/11, pedido do Ederson):** o checklist e as orientações ficam num **painel ao lado da cena 3D**, e o aluno opera as **teclas do inversor no próprio painel 3D**. Vista nova "Inversor". A janela grande continua no botão "IHM ampliada". `PF525.mount(el, { compact: true })` monta só o painel; vários lugares podem estar montados ao mesmo tempo (`hosts`).

@@ -523,10 +523,15 @@
     for (const sx of [-1, 1]) for (let i = 0; i < 9; i++) vfd.add(at(mesh(new T.BoxGeometry(0.004, VH * 0.5, 0.006), mat(0x2A2D32, 0.3, 0.6)), v3(sx * (VW / 2 + 0.002), VH * 0.08, 0.03 + i * 0.015)));
     vfd.add(at(mesh(new T.BoxGeometry(VW + 0.03, VH + 0.02, 0.006), M.alu), v3(0, 0, 0.003)));
     S.vfdScreen = (() => { const c = document.createElement("canvas"); c.width = 300; c.height = 624; const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.anisotropy = 4; return { c, t }; })();
-    vfd.add(at(mesh(new T.PlaneGeometry(VW * 0.98, VH * 0.98), new T.MeshStandardMaterial({ map: S.vfdScreen.t, roughness: 0.5 }), false), v3(0, 0, VD + 0.0115)));
+    S.vfdFront = at(mesh(new T.PlaneGeometry(VW * 0.98, VH * 0.98), new T.MeshStandardMaterial({ map: S.vfdScreen.t, roughness: 0.5 }), false), v3(0, 0, VD + 0.0115)); vfd.add(S.vfdFront);
     // cabo de saída do inversor descendo para a canaleta
     for (let k = 0; k < 3; k++) pipe(v3(-0.03 + k * 0.03, -VH / 2, VD * 0.6), v3(-0.03 + k * 0.03, -0.2, VD * 0.6), 0.0035, mat([0x1F2328, 0x6E4A2C, 0x6E7782][k], 0.1, 0.6), vfd);
-    S.vfd = vfd; S.clickables = [{ obj: vfd, tag: "PF525", fn: () => window.openVfd ? window.openVfd() : null }];
+    S.vfd = vfd; S.clickables = [{ obj: vfd, tag: "PF525", fn: (hit) => {
+      // painel do inversor aberto: o clique na frente aperta a tecla correspondente
+      if (window.isVfdDockOpen && window.isVfdDockOpen() && hit && hit.object === S.vfdFront && hit.uv && window.PF525) { const k = window.PF525.pressAt(hit.uv.x, hit.uv.y); if (k) { if (S.vfdScreen) { window.PF525.paint3D(S.vfdScreen.c); S.vfdScreen.t.needsUpdate = true; } return; } }
+      goView("inversor"); if (window.openVfd) window.openVfd();
+      tip("Inversor <b>PowerFlex 525</b>: clique nas <b>teclas do próprio inversor</b> (Esc, Sel, ↵, setas, Start verde, Stop vermelho e o potenciômetro). O checklist e a próxima tecla ficam no painel ao lado.", "");
+    } }];
     if (window.PF525) window.PF525.paint3D(S.vfdScreen.c);
     // seletora de partida na porta: DIRETA / INVERSOR
     const selG = new T.Group(); selG.position.set(-0.45, 0.33, 0.012); hinge.add(selG);
@@ -1253,6 +1258,7 @@
     tubulacao: { p: v3(1.9, 1.25, 1.15), t: v3(1.85, 0.38, -0.4) },
     painel: { p: v3(-3.6, 1.75, -0.95), t: v3(-4.85, 1.65, -1.25) },
     clp: { p: v3(-4.42, 1.8, -1.0), t: v3(-4.95, 1.78, -1.0) },
+    inversor: { p: v3(-4.42, 1.8, -1.53), t: v3(-4.96, 1.78, -1.53) },
   };
   // obstáculos (coordenadas do mundo): caixas [xmin, xmax, zmin, zmax, ytopo] e cilindros [x, z, raio, ytopo]
   const ROOM = { x0: -4.82, x1: 4.82, z0: -3.85, z1: 4.82, y0: 0.25, y1: 3.0 };
@@ -1366,7 +1372,7 @@
       const cl = S.clickables || [], hitsC = ray.intersectObjects(cl.map(c => c.obj), true);
       if (hitsC.length && (!hitsG.length || hitsC[0].distance < hitsG[0].distance) && (!hitsP.length || hitsC[0].distance < hitsP[0].distance)) {
         let o = hitsC[0].object; while (o && !cl.find(c => c.obj === o)) o = o.parent;
-        const c = cl.find(x => x.obj === o); if (c) return { click: c };
+        const c = cl.find(x => x.obj === o); if (c) return { click: c, hit: hitsC[0] };
       }
       if (hitsG.length && (!hitsP.length || hitsG[0].distance < hitsP[0].distance + 0.05)) return { slot: hitsG[0].object.userData.slot };
       if (hitsP.length) return { part: hitsP[0].object.userData.tag };
@@ -1378,7 +1384,7 @@
       down = null;
       const h = pick(e);
       if (!h) return;
-      if (h.click) { h.click.fn(); return; }
+      if (h.click) { h.click.fn(h.hit); return; }
       if (h.slot) tryInstall(h.slot);
       else if (h.part) {
         const r = window.readTag ? window.readTag(h.part).text : h.part;
@@ -1498,6 +1504,7 @@
     setLitFail(v) { S.lvl.litFail = !!v; if (v) tip("<b>LIT-101 travado em 10%</b>: o CLP acha que o tanque está quase vazio. Se o programa não usar o LSH-101 (X1), o tanque transborda.", "bad"); },
     ready: () => ready("ln"),
     autoInstall() { for (const p of PARTS) if (p.slot && !S.installed[p.tag]) { S.sel = p.tag; install(p, p.slot); const a = S.parts[p.tag].userData.anim; a.t = 1; S.parts[p.tag].position.copy(a.to); } },
+    view(k) { goView(k); },
     _tick(dt) { if (ready("tq") || ready("ln")) plcCycle(dt); if (ready("tq")) stepProc(dt); stepDrive(dt); if (ready("ln")) stepLevel(dt); updateReadings(); },
   };
 })();

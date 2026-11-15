@@ -334,7 +334,29 @@
     g.fillStyle = "#1E9A4A"; g.beginPath(); g.arc(258, 156, 15, 0, 7); g.fill(); g.fillStyle = "#fff"; g.fillRect(256, 148, 4, 16);
     g.fillStyle = "#5A6068"; g.beginPath(); g.arc(214, 205, 13, 0, 7); g.fill();
     g.fillStyle = "#C8342A"; g.fillRect(238, 188, 40, 40); g.strokeStyle = "#fff"; g.lineWidth = 3; g.beginPath(); g.arc(258, 208, 9, 0, 7); g.stroke();
+    if (st.hit && performance.now() - st.hit.t < 220) { const z = KEYPOS[st.hit.k]; if (z) { g.fillStyle = "rgba(255,255,255,.45)"; g.beginPath(); g.arc(z[0], z[1], z[2], 0, 7); g.fill(); } }
     g.restore();
+  }
+
+  // posições das teclas no desenho da frente (coordenadas de 300 × 624)
+  const KEYPOS = { up: [104, 152, 22], down: [104, 240, 22], esc: [60, 196, 22], enter: [148, 196, 22], sel: [104, 196, 22], start: [258, 156, 17], rev: [214, 205, 15], stop: [258, 208, 24], "pot+": [250, 58, 14], "pot-": [250, 82, 14] };
+  function hitKey(u, v) {
+    const x = u * 300, y = (1 - v) * 624, d = (a, b) => Math.hypot(x - a, y - b);
+    if (d(250, 70) < 32) return y < 70 ? "pot+" : "pot-";
+    if (d(258, 156) < 22) return "start";
+    if (d(214, 205) < 18) return "rev";
+    if (x > 230 && x < 286 && y > 180 && y < 236) return "stop";
+    const r = d(104, 196);
+    if (r < 26) return "sel";
+    if (r < 70) { const dx = x - 104, dy = y - 196; return Math.abs(dy) > Math.abs(dx) ? (dy < 0 ? "up" : "down") : (dx < 0 ? "esc" : "enter"); }
+    return null;
+  }
+  function pressAt(u, v) {
+    const k = hitKey(u, v); if (!k) return null;
+    st.hit = { k, t: performance.now() };
+    if (k === "pot+" || k === "pot-") st.pot = Math.max(0, Math.min(1, st.pot + (k === "pot+" ? 0.05 : -0.05)));
+    else key(k);
+    paint(); return k;
   }
 
   /* ---------- janela da IHM + checklist ---------- */
@@ -365,7 +387,7 @@
       ["Ligar a bomba pelo CLP (Y0) ou pelo botão local e ver o inversor partir", () => st.ranDI],
     ] },
   };
-  let host = null, tab = "a1", timer = null;
+  let hosts = [], tab = "a1", timer = null;
   const CSS = `
   .pf-wrap{display:grid;grid-template-columns:330px minmax(0,1fr);gap:16px;align-items:start}
   @media (max-width:820px){.pf-wrap{grid-template-columns:1fr}}
@@ -430,13 +452,32 @@
   .pf-next .x{float:right;border:0;background:none;cursor:pointer;color:#B35A12;font-weight:700}
   .pf-ck li a{margin-left:auto;white-space:nowrap;font-size:12px;color:#2F6DB5;cursor:pointer;text-decoration:underline}
   .pf-ck li.sel{outline:2px solid #E87722}
+  .pf-compact{display:grid;gap:10px}
+  .pf-compact .pf-next{max-width:none;margin:0}
+  .pf-compact .pf-st b{font-size:17px}
+  .pf-hint3d{font-size:13px;color:#1E3A5F;background:#E8F0FA;border-radius:10px;padding:8px 10px}
   .pf-keys{font-size:13px;color:var(--muted,#5B6B80);line-height:1.5}
   .pf-keys kbd{display:inline-block;min-width:22px;text-align:center;border:1px solid #B9C2CC;border-radius:5px;padding:0 4px;background:#fff;font:700 12px Arial;color:#1E3A5F}
   `;
-  function mount(el) {
+  const COMPACT = `<div class="pf-side pf-compact">
+        <div class="pf-hint3d">Opere as <b>teclas do inversor no painel 3D</b>: clique nelas como no equipamento real. O display do inversor mostra o resultado.</div>
+        <div class="pf-next" id="pfNext"></div>
+        <div class="box pf-now" id="pfNow"></div>
+        <div class="pf-msg" id="pfMsg"></div>
+        <div class="box"><div class="pf-st" id="pfSt"></div>
+          <label class="note" style="display:block;margin-top:8px">Potenciômetro do inversor (o botão redondo, no alto à direita): <b id="pfPotT"></b></label>
+          <input type="range" id="pfPotR" min="0" max="100" step="1" style="width:100%"></div>
+        <div class="box"><h4>Partida da bomba</h4>
+          <div class="seg" id="pfMode"><button data-m="direta">Direta (K1)</button><button data-m="inversor">Inversor PF525</button></div>
+          <div class="note" style="margin-top:6px" id="pfModeNote"></div></div>
+        <div class="box"><div class="seg" id="pfTab"><button data-t="a1">Atividade 1 · IHM</button><button data-t="a2">Atividade 2 · CLP</button></div>
+          <div id="pfCk"></div>
+          <div class="row" style="margin-top:10px;gap:8px"><button class="btn" id="pfDefaults" title="Equivale a P053 = 2 (Factory Rset)">Restaurar padrão de fábrica</button></div></div>
+      </div>`;
+  function mount(el, opts = {}) {
     if (!document.getElementById("pf525css")) { const s = document.createElement("style"); s.id = "pf525css"; s.textContent = CSS; document.head.appendChild(s); }
-    host = el;
-    el.innerHTML = `<div class="pf-wrap">
+    hosts = hosts.filter(h => h !== el && document.contains(h)); hosts.push(el);
+    el.innerHTML = opts.compact ? COMPACT : `<div class="pf-wrap">
       <div>
         <div class="pf-dev" id="pfDev">
           <div class="logo"><b>A·B</b>Allen-Bradley</div>
@@ -478,7 +519,8 @@
       b.addEventListener("pointerup", end); b.addEventListener("pointerleave", end);
     });
     // potenciômetro
-    const pot = el.querySelector("#pfPot");
+    const pr = el.querySelector("#pfPotR"); if (pr) pr.oninput = () => { st.pot = +pr.value / 100; paint(); };
+    const pot = el.querySelector("#pfPot") || document.createElement("div");
     let drag = null;
     pot.addEventListener("pointerdown", e => { drag = { y: e.clientY, v: st.pot }; pot.setPointerCapture(e.pointerId); });
     pot.addEventListener("pointermove", e => { if (!drag) return; st.pot = Math.max(0, Math.min(1, drag.v + (drag.y - e.clientY) / 160)); paint(); });
@@ -493,16 +535,18 @@
       if (Date.now() - armed > 3000) { armed = Date.now(); bd.textContent = "Clique de novo para confirmar"; setTimeout(() => { bd.textContent = "Restaurar padrão de fábrica"; }, 3000); return; }
       armed = 0; bd.textContent = "Restaurar padrão de fábrica"; st.par = defaults(); st.ach45 = st.stopAfter45 = st.ranDI = false; changed(); msg("Parâmetros no padrão de fábrica.", "ok"); paint();
     };
-    if (!timer) timer = setInterval(() => { if (host && host.offsetParent) paint(); }, 120);
+    if (!timer) timer = setInterval(() => { if (hosts.some(h => h.offsetParent)) paint(); }, 120);
     paint();
   }
-  function paint() {
-    if (!host) return;
+  function paint() { hosts = hosts.filter(h => document.contains(h)); for (const h of hosts) if (h.offsetParent || h === hosts[hosts.length - 1]) paintHost(h); }
+  function paintHost(host) {
     const $ = s => host.querySelector(s);
     const L = lcd(), on = Math.floor(performance.now() / 350) % 2 === 0;
-    $("#pfLcd").innerHTML = lcdSVG({ ...L, blink: blinkCell(L) }, on);
-    $("#pfFault").classList.toggle("on", !!st.fault && on);
-    $("#pfPot").style.setProperty("--a", (-135 + 270 * st.pot) + "deg");
+    if ($("#pfLcd")) $("#pfLcd").innerHTML = lcdSVG({ ...L, blink: blinkCell(L) }, on);
+    if ($("#pfFault")) $("#pfFault").classList.toggle("on", !!st.fault && on);
+    if ($("#pfPot")) $("#pfPot").style.setProperty("--a", (-135 + 270 * st.pot) + "deg");
+    const pr = $("#pfPotR"); if (pr && document.activeElement !== pr) pr.value = Math.round(st.pot * 100);
+    if ($("#pfPotT")) $("#pfPotT").textContent = Math.round(st.pot * 100) + " %";
     host.querySelectorAll("#pfMode button").forEach(b => b.classList.toggle("on", b.dataset.m === mode));
     $("#pfModeNote").innerHTML = mode === "inversor"
       ? "O motor da bomba é alimentado pelo <b>inversor</b>: rampa de aceleração e velocidade ajustável. A vazão acompanha a rotação."
@@ -520,7 +564,7 @@
     $("#pfNow").innerHTML = now;
     $("#pfNext").innerHTML = ui.guide ? guideHTML(ui.guide) : `<b class="h">Próxima tecla</b>${nextHint()}`;
     const gx = $("#pfNext .x"); if (gx) gx.onclick = () => { ui.guide = null; paint(); };
-    const m = $("#pfMsg"); m.className = "pf-msg " + ui.msgKind; m.innerHTML = ui.msg || "Use a IHM como no inversor real. O checklist ao lado confere os valores <b>gravados</b> no inversor.";
+    const m = $("#pfMsg"); m.className = "pf-msg " + ui.msgKind; m.innerHTML = ui.msg || "Use a IHM como no inversor real. O checklist confere os valores <b>gravados</b> no inversor.";
     host.querySelectorAll("#pfTab button").forEach(b => b.classList.toggle("on", b.dataset.t === tab));
     const ex = EX[tab]; const done = ex.items.filter(i => i[1]()).length;
     $("#pfCk").innerHTML = `<div style="margin-top:8px"><b>${ex.t}</b> · ${done}/${ex.items.length}</div><div class="note">${ex.note} Clique em <b>como fazer</b> para ver o caminho das teclas.</div><ul class="pf-ck">${ex.items.map(i => { const ok = i[1](), m = i[0].match(/\b([PtA]\d{3})\b/), c = m ? m[1] : ""; return `<li class="${ok ? "ok" : ""}${c && ui.guide === c ? " sel" : ""}"><i>${ok ? "✓" : ""}</i><span>${i[0]}</span>${c ? `<a data-g="${c}">como fazer ›</a>` : ""}</li>`; }).join("")}</ul>`;
@@ -561,7 +605,7 @@
   }
 
   window.PF525 = {
-    step, key: k => { key(k); paint(); }, mount, paint, lcd: () => { const L = lcd(); return { ...L, blink: blinkCell(L) }; }, paint3D,
+    step, key: k => { key(k); paint(); }, mount, paint, pressAt, hitKey, lcd: () => { const L = lcd(); return { ...L, blink: blinkCell(L) }; }, paint3D,
     get mode() { return mode; }, setMode, onChange: f => listeners.push(f),
     get state() { return st; }, param: c => val(c), setParam: (c, v) => { if (c in st.par) { st.par[c] = v; changed(); } },
     get faulted() { return !!st.fault; }, defs: DEFS, defaults: () => { st.par = defaults(); changed(); },

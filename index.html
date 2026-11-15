@@ -156,6 +156,11 @@ table.t tr.hl td{background:#FFF4EA;font-weight:700}
 .stage3d > .w3d{flex:1;min-width:0}
 .clpdock{display:none;flex:0 0 46%;max-width:820px;min-width:420px;overflow:auto;background:var(--bg);border-radius:var(--r);padding:10px}
 .box3d.dock .clpdock{display:block}
+.vfddock{display:none;flex:0 0 38%;max-width:560px;min-width:340px;overflow:auto;background:var(--bg);border-radius:var(--r);padding:10px}
+.box3d.vdock .vfddock{display:block}
+.box3d.vdock .h3d,.box3d.vdock .h3dshow{display:none}
+.box3d:fullscreen .vfddock,.box3d.max .vfddock{max-height:100%}
+@media (max-width:760px){.box3d.vdock .stage3d{flex-direction:column}.vfddock{min-width:0;max-height:60vh;flex:none}}
 .box3d.dock .bot3d,.box3d.dock .h3d{display:none}
 .dockhead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;color:var(--navy)}
 .clpdock .card{padding:12px;margin-bottom:10px}
@@ -310,12 +315,13 @@ footer{max-width:1240px;margin:0 auto;padding:0 20px 30px;color:var(--muted);fon
   <div class="box3d" id="box3d">
     <div class="stage3d" id="stage3d">
     <div class="clpdock" id="clpDock"><div class="dockhead"><b>CLP DVP20SX2 · programação</b><button class="btn" id="dockClose">✕ Fechar painel</button></div></div>
+    <div class="vfddock" id="vfdDock"><div class="dockhead"><b>Inversor PF525 · parametrização</b><span style="display:flex;gap:6px"><button class="btn" id="vfdBig" title="Abre a IHM ampliada numa janela">IHM ampliada</button><button class="btn" id="vfdDockClose">✕ Fechar</button></span></div><div id="vfdDockBody"></div></div>
     <div class="w3d" id="w3d">
       <div class="load3d" id="load3d">Carregando a cena 3D…</div>
       <div class="v3d-views" id="v3d-views">
         <button id="v3dToggle" class="vtog" title="Mostrar ou ocultar o menu">☰ Menu</button>
         <div class="vgrp"><div class="vlbl">Ações</div><button id="b3full" class="full">⛶ Tela cheia</button><button id="b3clp" class="clpb">⌨ Programar CLP</button><button id="b3vfd">🎛 Inversor PF525</button><button id="b3labels">🏷 Rótulos: compactos</button><button id="b3fx">✨ Gráficos: realista</button><button id="b3therm">🌡 Visão térmica</button><button id="b3reset">↺ Recomeçar</button></div>
-        <div class="vgrp"><div class="vlbl">Vistas</div><button data-view="geral">Vista geral</button><button data-view="topo">Topo do TQ-01</button><button data-view="lateral">Lateral do TQ-01</button><button data-view="acrilico">Tanque de acrílico</button><button data-view="tubulacao">Tubulação</button><button data-view="painel">Painel</button><button data-view="clp">CLP</button></div>
+        <div class="vgrp"><div class="vlbl">Vistas</div><button data-view="geral">Vista geral</button><button data-view="topo">Topo do TQ-01</button><button data-view="lateral">Lateral do TQ-01</button><button data-view="acrilico">Tanque de acrílico</button><button data-view="tubulacao">Tubulação</button><button data-view="painel">Painel</button><button data-view="clp">CLP</button><button data-view="inversor">Inversor</button></div>
       </div>
       <div class="h3d" id="h3d"></div>
       <button class="h3dshow" id="h3dShow" title="Mostrar o painel do processo">📊 Painel</button>
@@ -1487,7 +1493,7 @@ const pt = (() => {
   document.addEventListener("keydown", e => { if (e.key === "Escape" && box.classList.contains("max")) { box.classList.remove("max"); document.body.style.overflow = ""; label(); if (typeof closeWiring === "function") closeWiring(); } });
 })();
 let load3dP = null;
-const BUILD = "20261115-15"; // muda a cada versão para o navegador não usar arquivos antigos do cache
+const BUILD = "20261115-16"; // muda a cada versão para o navegador não usar arquivos antigos do cache
 function load3dAll() { if (!load3dP) load3dP = loadScript("vendor/three-bundle.js").then(() => loadScript("app-clp.js?v=" + BUILD)).then(() => loadScript("app-pf525.js?v=" + BUILD)).then(() => loadScript("app-3d.js?v=" + BUILD)); return load3dP; }
 (() => {
   const v = document.getElementById("v3d-views"), t = document.getElementById("v3dToggle");
@@ -1517,8 +1523,9 @@ function closeWiring() {
 }
 function backFromWiring() { if (document.getElementById("ovl3d").classList.contains("on")) closeWiring(); else show("bancada3d"); }
 function openClp() { if (isFull3d()) { goFullClp(); } else show("clp"); }
-function openVfd() {
+function openVfdBig() {
   if (!window.PF525) return;
+  closeVfdDock();
   if (document.getElementById("box3d").classList.contains("dock")) dockOpen(false);
   if (location.hash !== "#bancada3d") show("bancada3d");
   window.PF525.mount(document.getElementById("vfdBody"));
@@ -1526,15 +1533,31 @@ function openVfd() {
 }
 function closeVfd() { document.getElementById("ovlVfd").classList.remove("on"); if (window.App3D && window.App3D.refreshHud) window.App3D.refreshHud(); }
 document.getElementById("vfdClose").addEventListener("click", closeVfd);
-document.getElementById("b3vfd").addEventListener("click", openVfd);
-window.openVfd = openVfd;
+// painel do inversor ao lado da cena 3D (as teclas do PF525 3D ficam clicáveis)
+function openVfdDock() {
+  if (!window.PF525) return;
+  const box = document.getElementById("box3d");
+  if (box.classList.contains("dock")) dockOpen(false);
+  if (location.hash !== "#bancada3d") show("bancada3d");
+  window.PF525.mount(document.getElementById("vfdDockBody"), { compact: true });
+  box.classList.add("vdock");
+  // recolhe o menu da cena para o inversor ficar à vista (sem mudar a preferência salva)
+  const vv = document.getElementById("v3d-views"); if (!vv.classList.contains("col")) { vv.classList.add("col"); document.getElementById("v3dToggle").textContent = "☰ Menu"; }
+  window.dispatchEvent(new Event("resize"));
+  if (window.App3D && window.App3D.view) window.App3D.view("inversor");
+}
+function closeVfdDock() { const box = document.getElementById("box3d"); if (!box.classList.contains("vdock")) return; box.classList.remove("vdock"); window.dispatchEvent(new Event("resize")); if (window.App3D && window.App3D.refreshHud) window.App3D.refreshHud(); }
+document.getElementById("b3vfd").addEventListener("click", () => { if (document.getElementById("box3d").classList.contains("vdock")) closeVfdDock(); else openVfdDock(); });
+document.getElementById("vfdBig").addEventListener("click", openVfdBig);
+document.getElementById("vfdDockClose").addEventListener("click", closeVfdDock);
+window.openVfd = openVfdDock; window.openVfdBig = openVfdBig; window.isVfdDockOpen = () => document.getElementById("box3d").classList.contains("vdock");
 window.openWiring = openWiring; window.openClp = openClp; window.backFromWiring = backFromWiring;
 document.getElementById("ovlClose").addEventListener("click", closeWiring);
 document.addEventListener("fullscreenchange", () => { if (!isFull3d()) closeWiring(); });
 function dockOpen(open) {
   const box = document.getElementById("box3d"), dock = document.getElementById("clpDock");
   const ld = document.getElementById("ldCard"), pc = document.getElementById("plcCard"), grid = document.getElementById("clpGrid");
-  if (open) { dock.appendChild(pc); dock.appendChild(ld); box.classList.add("dock"); }
+  if (open) { box.classList.remove("vdock"); dock.appendChild(pc); dock.appendChild(ld); box.classList.add("dock"); }
   else { grid.insertBefore(ld, grid.firstChild); document.querySelector("#clpGrid .clpside").appendChild(pc); box.classList.remove("dock"); }
   window.dispatchEvent(new Event("resize"));
 }
