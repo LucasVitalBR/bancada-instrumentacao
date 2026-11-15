@@ -39,6 +39,14 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 - **Drive:** não é mais usado (desde 14/11 só GitHub; ver 1.1).
 
 
+## 0.00 Como nós dois trabalhamos (resumo, 15/11)
+
+- **Editar:** os dois editam pelo **GitHub** (repositório privado `LucasVitalBR/bancada-instrumentacao`). Cada um trabalha na sua pasta clonada: `git pull` antes de começar e `git push` ao terminar, seguindo a rotina 00. Assim os dois mexem no mesmo projeto e o git junta as mudanças.
+- **Ver o resultado:** os links dos sites (`bancada-instrumentacao.pages.dev` e `bancada-instrumentacao.vercel.app`) **só mostram o app**; não dão para editar. Servem para abrir em sala e mandar para os alunos.
+- **Publicar no Cloudflare (site novo):** hoje só sai do PC do Ederson (ver 0.0). Para os dois publicarem, escolher uma opção:
+  1. **(Recomendado) Lucas libera o repositório para o Cloudflare.** No GitHub dele: Settings → Applications → "Cloudflare Workers and Pages" → Configure, com acesso a `bancada-instrumentacao`. Depois o Ederson liga o projeto ao repositório no painel do Cloudflare (Settings → Builds → Connect to Git). A partir daí, **qualquer push de qualquer um dos dois publica sozinho** e não é mais preciso publicar na mão.
+  2. O Ederson convida o Lucas como membro da conta Cloudflare dele (Manage account → Members). Aí o Lucas também pode publicar na mão, com o mesmo comando do wrangler.
+
 ## 0.0 Publicação do site (LEIA, Lucas)
 
 **Desde 15/11/2026 há um segundo site, no Cloudflare Pages da conta do Ederson:** https://bancada-instrumentacao.pages.dev (BUILD -13 no ar, com o líquido rosa e a régua em %).
