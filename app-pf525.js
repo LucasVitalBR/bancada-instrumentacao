@@ -203,7 +203,7 @@
     if (ui.mode === "pnum") {
       const n = groupList(ui.grp).length;
       if (k === "up" || k === "down") ui.idx[ui.grp] = (ui.idx[ui.grp] + (k === "up" ? 1 : n - 1)) % n;
-      else if (k === "enter" || k === "sel") { if (d && d.ro) { ui.disp = bList().indexOf(d); ui.mode = "disp"; } else ui.mode = "view"; }
+      else if (k === "enter" || k === "sel") { if (d && d.ro) { ui.disp = bList().indexOf(d); ui.mode = "disp"; msg(`<b>${d.c}</b> é uma <b>leitura</b> (grupo b): só mostra valores. Para programar, aperte <b>Esc 2 vezes</b> até a letra piscar e <b>▲</b> até o grupo <b>P</b>.`, ""); } else ui.mode = "view"; }
       else if (k === "esc") ui.mode = "group";
       return;
     }
@@ -424,6 +424,12 @@
   .pf-ck li{display:flex;gap:8px;align-items:flex-start;font-size:14px;padding:4px 6px;border-radius:8px}
   .pf-ck li i{flex:0 0 20px;height:20px;border-radius:50%;border:2px solid #9AA5B1;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:700;color:#fff}
   .pf-ck li.ok{background:#E3F3EF}.pf-ck li.ok i{background:#2E8B7A;border-color:#2E8B7A}
+  .pf-next{max-width:310px;margin:10px auto 0;background:#FFF4EA;border:2px solid #E87722;border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.45}
+  .pf-next b.h{display:block;color:#B35A12;font-size:13px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+  .pf-next ol{margin:4px 0 0;padding-left:20px}.pf-next li{margin:2px 0}
+  .pf-next .x{float:right;border:0;background:none;cursor:pointer;color:#B35A12;font-weight:700}
+  .pf-ck li a{margin-left:auto;white-space:nowrap;font-size:12px;color:#2F6DB5;cursor:pointer;text-decoration:underline}
+  .pf-ck li.sel{outline:2px solid #E87722}
   .pf-keys{font-size:13px;color:var(--muted,#5B6B80);line-height:1.5}
   .pf-keys kbd{display:inline-block;min-width:22px;text-align:center;border:1px solid #B9C2CC;border-radius:5px;padding:0 4px;background:#fff;font:700 12px Arial;color:#1E3A5F}
   `;
@@ -450,6 +456,7 @@
             <div class="nets">PORT<i class="g"></i><br>MOD<i></i><br>NET A<i></i><br>NET B<i></i></div></div>
         </div>
         <div class="pf-keys" style="max-width:310px;margin:8px auto 0"><kbd>Esc</kbd> volta um nível · <kbd>▲</kbd><kbd>▼</kbd> navegam ou mudam o valor · <kbd>Sel</kbd>/<kbd>↵</kbd> entram · em edição, <kbd>Sel</kbd> troca o dígito e <kbd>↵</kbd> salva.</div>
+        <div class="pf-next" id="pfNext"></div>
       </div>
       <div class="pf-side">
         <div class="box"><h4>Partida da bomba</h4>
@@ -511,10 +518,39 @@
     else if (ui.mode === "group") now = `Escolhendo o <b>grupo</b> (${ui.grp}): ${{ b: "Basic Display · leituras", P: "Basic Program · programação básica", t: "Terminal Block · bornes", A: "Advanced Program · avançados", M: "Modified · só os alterados" }[ui.grp]}. ▲▼ trocam, ↵ entra.`;
     else if (d) { const v = ui.mode === "edit" ? ui.ed.v : val(d.c); now = `<code>${d.c}</code> <b>[${d.n}]</b> = <b>${fmtVal(d, v)}</b>${d.opts && d.opts[v] != null ? " · “" + d.opts[v] + "”" : d.u ? " " + uName(d.u) : ""}${ui.mode === "edit" ? " <b style=\"color:#E87722\">(editando)</b>" : ""}<div class="note" style="margin-top:4px">${d.pt}${d.ro ? "" : ` Faixa ${d.min}–${d.max}${d.u ? " " + uName(d.u) : ""} · padrão ${fmtVal(d, d.d)}.`}${d.stop ? " <b>Só altera com o inversor parado.</b>" : ""}</div>`; }
     $("#pfNow").innerHTML = now;
+    $("#pfNext").innerHTML = ui.guide ? guideHTML(ui.guide) : `<b class="h">Próxima tecla</b>${nextHint()}`;
+    const gx = $("#pfNext .x"); if (gx) gx.onclick = () => { ui.guide = null; paint(); };
     const m = $("#pfMsg"); m.className = "pf-msg " + ui.msgKind; m.innerHTML = ui.msg || "Use a IHM como no inversor real. O checklist ao lado confere os valores <b>gravados</b> no inversor.";
     host.querySelectorAll("#pfTab button").forEach(b => b.classList.toggle("on", b.dataset.t === tab));
     const ex = EX[tab]; const done = ex.items.filter(i => i[1]()).length;
-    $("#pfCk").innerHTML = `<div style="margin-top:8px"><b>${ex.t}</b> · ${done}/${ex.items.length}</div><div class="note">${ex.note}</div><ul class="pf-ck">${ex.items.map(i => { const ok = i[1](); return `<li class="${ok ? "ok" : ""}"><i>${ok ? "✓" : ""}</i><span>${i[0]}</span></li>`; }).join("")}</ul>`;
+    $("#pfCk").innerHTML = `<div style="margin-top:8px"><b>${ex.t}</b> · ${done}/${ex.items.length}</div><div class="note">${ex.note} Clique em <b>como fazer</b> para ver o caminho das teclas.</div><ul class="pf-ck">${ex.items.map(i => { const ok = i[1](), m = i[0].match(/\b([PtA]\d{3})\b/), c = m ? m[1] : ""; return `<li class="${ok ? "ok" : ""}${c && ui.guide === c ? " sel" : ""}"><i>${ok ? "✓" : ""}</i><span>${i[0]}</span>${c ? `<a data-g="${c}">como fazer ›</a>` : ""}</li>`; }).join("")}</ul>`;
+    host.querySelectorAll("#pfCk [data-g]").forEach(a => a.onclick = () => { ui.guide = a.dataset.g; paint(); const n = host.querySelector("#pfNext"); if (n && n.scrollIntoView) n.scrollIntoView({ block: "nearest", behavior: "smooth" }); });
+  }
+  // dica da próxima tecla, conforme o ponto da navegação
+  function nextHint() {
+    const d = curDef();
+    if (st.fault) return "Inversor em <b>falha</b>: aperte o botão vermelho <kbd>O</kbd> (Stop) para limpar.";
+    if (ui.mode === "disp") return "Esta é a tela de <b>leitura</b>. Para <b>programar</b>: aperte <kbd>Esc</kbd> <b>2 vezes</b> (a letra <b>b</b> fica piscando), depois <kbd>▲</kbd> até aparecer <b>P</b> e <kbd>↵</kbd>.";
+    if (ui.mode === "pnum" && ui.grp === "b") return "Você está nas <b>leituras</b> (grupo b, só visualizar). Aperte <kbd>Esc</kbd> (a letra pisca) e <kbd>▲</kbd> até <b>P</b>; depois <kbd>↵</kbd>.";
+    if (ui.mode === "group") return "A <b>letra do grupo</b> está piscando: <kbd>▲</kbd><kbd>▼</kbd> trocam (b → P → t → A → M) e <kbd>↵</kbd> entra. Os dados do motor e as rampas ficam no grupo <b>P</b>.";
+    if (ui.mode === "pnum") return `<kbd>▲</kbd><kbd>▼</kbd> escolhem o parâmetro (agora <b>${d.c}</b>) e <kbd>↵</kbd> mostra o valor. <kbd>Esc</kbd> volta para os grupos.`;
+    if (ui.mode === "view") return d.ro ? "Valor só de leitura. <kbd>Esc</kbd> volta para a lista." : `Mostrando o valor de <b>${d.c}</b>. Aperte <kbd>↵</kbd> (ou <kbd>Sel</kbd>) para <b>editar</b>; <kbd>Esc</kbd> volta para a lista.`;
+    if (ui.mode === "edit") return `<b>Editando ${d.c}</b> (PROGRAM aceso): <kbd>▲</kbd><kbd>▼</kbd> mudam o <b>dígito que pisca</b>, <kbd>Sel</kbd> passa para o dígito da esquerda, <kbd>↵</kbd> <b>salva</b> e <kbd>Esc</kbd> cancela.`;
+    return "";
+  }
+  // passo a passo das teclas até um parâmetro (ex.: P041)
+  function guideHTML(code) {
+    const dd = BY[code]; if (!dd) return "";
+    const g = code[0], gi = GROUPS.indexOf(g), list = groupList(g), i = list.indexOf(dd), first = list[0].c;
+    const ex = dd.opts ? ` (${Object.entries(dd.opts).slice(0, 3).map(([k, v]) => k + " = " + v).join(", ")}…)` : "";
+    return `<button class="x" title="Fechar">✕</button><b class="h">Como chegar em ${code} [${dd.n}]</b><ol>
+      <li>Na tela inicial (valor em Hz), aperte <kbd>Esc</kbd> <b>2 vezes</b>: a letra do grupo pisca.</li>
+      <li>${gi > 0 ? `Aperte <kbd>▲</kbd> <b>${gi}×</b> até aparecer <b>${g}</b>.` : "Fique no grupo <b>b</b>."}</li>
+      <li><kbd>↵</kbd> entra no grupo (aparece <b>${first}</b>).</li>
+      <li>${i > 0 ? `Aperte <kbd>▲</kbd> <b>${i}×</b> até <b>${code}</b>.` : `Você já está em <b>${code}</b>.`}</li>
+      <li><kbd>↵</kbd> mostra o valor; <kbd>↵</kbd> de novo para <b>editar</b> (acende PROGRAM)${dd.stop ? " — com o motor <b>parado</b>" : ""}.</li>
+      <li><kbd>▲</kbd><kbd>▼</kbd> mudam o dígito que pisca (começa pelo da direita); <kbd>Sel</kbd> passa para o dígito da esquerda.${ex}</li>
+      <li><kbd>↵</kbd> <b>salva</b>. Depois <kbd>Esc</kbd> volta para a lista.</li></ol>`;
   }
   function setMode(m) {
     if (m !== "direta" && m !== "inversor") return;

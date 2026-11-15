@@ -31,7 +31,7 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 
 ## 0. Situação atual (ler primeiro)
 
-- **Versão:** BUILD `20261115-14` (15/11/2026).
+- **Versão:** BUILD `20261115-15` (15/11/2026).
 - **Última etapa feita:** **inversor PowerFlex 525** no painel, com IHM interativa, checklist de parâmetros e seletora de partida da bomba DIRETA/INVERSOR (BUILD -14, fases 1 e 2 do roteiro do inversor). Antes: líquido da bancada em rosa claro, igual ao fluido da bancada física (BUILD -13). Antes: régua do tanque de acrílico em % (BUILD -12). Antes: ícone do site (favicon de manômetro + sinal 4–20 mA, BUILD -11). Antes: eletrodutos do TQ-01 ligados aos prensa-cabos dos instrumentos (BUILD -10). Antes: item 2 do plano (endereços e escalas do DVP20SX2 conferidos no manual; saída D1116 corrigida para 0..4000; D1115 = K7967 no 1º scan).
 - **Próxima etapa sugerida:** fases 3 e 4 do inversor (ver 6.1), ou os itens 4 (PID), 6 (exportar/importar ladder) e 7 (modo avaliação) do plano; itens 1 e 3 dependem de fotos/slides.
 - **Repositório oficial:** GitHub `LucasVitalBR/bancada-instrumentacao` (privado), ver 1.2. Lucas e colega trabalham por pull/push.
@@ -140,7 +140,7 @@ O login do wrangler fica salvo no PC do Ederson.
 
 ## 4. Convenções importantes
 
-- **`const BUILD = "20261115-14"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
+- **`const BUILD = "20261115-15"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
 - **Three.js:** `object.position` é somente leitura. Use o helper `at(obj, pos, scale)`, nunca `Object.assign(mesh, {position})`.
 - **GTAOPass (oclusão ambiente):** deixa sprites/transparentes **pretos**. `overrideVisibility()` foi sobrescrito para esconder `isSprite` e `material.transparent` no G-buffer.
 - **Gráficos:** modo realista ↔ leve. Cai sozinho para o leve se ficar abaixo de 24 fps por 4 s.
@@ -294,3 +294,7 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
 - **15/11 (Ederson):** criado o site no **Cloudflare Pages** da conta do Ederson (https://bancada-instrumentacao.pages.dev), publicado a partir do PC dele com o wrangler. BUILD -13 no ar. O Vercel continua na -12. Procedimento e pendências na seção 0.0.
 - **15/11 (Ederson, manhã):** combinado que o site oficial será o **Cloudflare Pages** e o Vercel será desligado depois que o Cloudflare publicar sozinho. Pendências do Lucas listadas em "PENDENTE PARA O LUCAS" (seção 0.0).
 - **BUILD -14 (15/11, pedido do Ederson):** inversor **Allen-Bradley PowerFlex 525 (25B-B5P0N104)** no painel: modelo 3D com display ao vivo, IHM interativa fiel ao manual 520-UM001 (navegação, edição por dígito, Start/Stop/Reverse/potenciômetro), parâmetros reais dos grupos b, P, t e A, falhas F007/F048, checklist das Atividades 1 (IHM) e 2 (CLP), e **seletora de partida DIRETA/INVERSOR**. Novo arquivo `app-pf525.js`. CLP: D1117 (velocidade, borne 15) e X7 (falha do inversor). Fases 3–4 do roteiro na seção 6.1.
+- **BUILD -15 (15/11, pedido do Ederson):** o Ederson não achava como entrar nos parâmetros. A edição funcionava, mas o caminho não era óbvio. Mudanças:
+  - caixa laranja **“Próxima tecla”** abaixo do teclado, que diz o que apertar em cada etapa (ex.: na tela inicial, “Esc 2 vezes, ▲ até P, ↵”);
+  - link **“como fazer ›”** em cada item do checklist, que mostra o passo a passo até aquele parâmetro, com o número de toques no ▲;
+  - aviso ao dar Enter num parâmetro do grupo b, que é só leitura.
