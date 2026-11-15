@@ -34,14 +34,14 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 - **Versão:** BUILD `20261115-21` (15/11/2026).
 - **Última etapa feita:** **inversor PowerFlex 525** no painel, com IHM interativa, checklist de parâmetros e seletora de partida da bomba DIRETA/INVERSOR (BUILD -14, fases 1 e 2 do roteiro do inversor). Antes: líquido da bancada em rosa claro, igual ao fluido da bancada física (BUILD -13). Antes: régua do tanque de acrílico em % (BUILD -12). Antes: ícone do site (favicon de manômetro + sinal 4–20 mA, BUILD -11). Antes: eletrodutos do TQ-01 ligados aos prensa-cabos dos instrumentos (BUILD -10). Antes: item 2 do plano (endereços e escalas do DVP20SX2 conferidos no manual; saída D1116 corrigida para 0..4000; D1115 = K7967 no 1º scan).
 - **Próxima etapa sugerida:** fases 3 e 4 do inversor (ver 6.1), ou os itens 4 (PID), 6 (exportar/importar ladder) e 7 (modo avaliação) do plano; itens 1 e 3 dependem de fotos/slides.
-- **Repositório oficial:** GitHub `LucasVitalBR/bancada-instrumentacao` (privado), ver 1.2. Lucas e colega trabalham por pull/push.
+- **Repositório oficial:** GitHub `LucasVitalBR/bancada-instrumentacao` (**público desde 15/11**), ver 1.2. Lucas e colega trabalham por pull/push.
 - **Site:** https://bancada-instrumentacao.vercel.app (atualiza a cada push).
 - **Drive:** não é mais usado (desde 14/11 só GitHub; ver 1.1).
 
 
 ## 0.00 Como nós dois trabalhamos (resumo, 15/11)
 
-- **Editar:** os dois editam pelo **GitHub** (repositório privado `LucasVitalBR/bancada-instrumentacao`). Cada um trabalha na sua pasta clonada: `git pull` antes de começar e `git push` ao terminar, seguindo a rotina 00. Assim os dois mexem no mesmo projeto e o git junta as mudanças.
+- **Editar:** os dois editam pelo **GitHub** (repositório `LucasVitalBR/bancada-instrumentacao`, público desde 15/11). Cada um trabalha na sua pasta clonada: `git pull` antes de começar e `git push` ao terminar, seguindo a rotina 00. Assim os dois mexem no mesmo projeto e o git junta as mudanças.
 - **Ver o resultado:** os links dos sites (`bancada-instrumentacao.pages.dev` e `bancada-instrumentacao.vercel.app`) **só mostram o app**; não dão para editar. Servem para abrir em sala e mandar para os alunos.
 - **Publicar no Cloudflare (site novo):** hoje só sai do PC do Ederson (ver 0.0). Para os dois publicarem, escolher uma opção:
   1. **(Recomendado) Lucas libera o repositório para o Cloudflare.** No GitHub dele: Settings → Applications → "Cloudflare Workers and Pages" → Configure, com acesso a `bancada-instrumentacao`. Depois o Ederson liga o projeto ao repositório no painel do Cloudflare (Settings → Builds → Connect to Git). A partir daí, **qualquer push de qualquer um dos dois publica sozinho** e não é mais preciso publicar na mão.
@@ -62,6 +62,13 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 **Fluxo final esperado:** Ederson ou Lucas editam pelo Claude → push no GitHub → o Cloudflare publica sozinho → todos veem o mesmo link.
 
 ## 0.0 Publicação do site (LEIA, Lucas)
+
+**Atualização 15/11, tarde:** o Lucas deixou o repositório **público**. No plano Hobby do Vercel, o bloqueio dos envios de quem não é dono só vale para repositório privado: agora os envios do Ederson devem publicar sozinhos no Vercel. Teste feito com o envio deste CLAUDE.md (ver histórico). Com isso, ficam disponíveis os dois sites:
+- **Vercel:** https://bancada-instrumentacao.vercel.app (automático para os dois);
+- **Cloudflare:** https://bancada-instrumentacao.pages.dev (publicado à mão do PC do Ederson).
+Decidam qual fica como oficial. **Segurança com o repositório público:**
+- o histórico do git ainda contém o link antigo da pasta do Drive (editável por qualquer um com o link): **fechar o compartilhamento da pasta**;
+- os commits mostram o e-mail de quem enviou.
 
 **Desde 15/11/2026 há um segundo site, no Cloudflare Pages da conta do Ederson:** https://bancada-instrumentacao.pages.dev (BUILD -13 no ar, com o líquido rosa e a régua em %).
 
@@ -89,12 +96,12 @@ O login do wrangler fica salvo no PC do Ederson.
 
 ## 1.1 Google Drive (desativado)
 
-- **Desde 14/11/2026 (decisão do Ederson) as atualizações vão só para o GitHub.** Não enviar mais nada para a pasta do Drive "Bancada de Instrumentação - App" (https://drive.google.com/drive/folders/1_B6YByHBpEh2IXBdSGdLoJg1QqpLFLFq), que ficou parada na BUILD -10, com cópias antigas renomeadas `.v9`.
+- **Desde 14/11/2026 (decisão do Ederson) as atualizações vão só para o GitHub.** Não enviar mais nada para a pasta do Drive "Bancada de Instrumentação - App" (link retirado deste arquivo porque o repositório é público), que ficou parada na BUILD -10, com cópias antigas renomeadas `.v9`.
 - Motivo: o conector do Drive não substitui arquivos (só cria novos), o que gerava duplicados.
 
 ## 1.2 GitHub (repositório oficial)
 
-- Repositório: https://github.com/LucasVitalBR/bancada-instrumentacao (privado, ramo `main`). Colega entra como **collaborator**.
+- Repositório: https://github.com/LucasVitalBR/bancada-instrumentacao (**público** desde 15/11, ramo `main`). Qualquer pessoa pode ver e baixar; só os colaboradores enviam. Colega entra como **collaborator**.
 - **Antes de começar:** `git pull` (traz o que o outro enviou).
 - **Ao terminar:** atualizar este CLAUDE.md (regra 0.1), `git add -A`, `git commit -m "o que mudou"`, `git push`. Se o push for recusado, fazer `git pull`, resolver conflitos e enviar de novo.
 - A pasta de trabalho fica **fora do Google Drive** (o Drive corrompe a pasta `.git`).
@@ -342,3 +349,4 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
   - **Níveis Alto/Médio/Leve.**
   - O bundle subiu de 755 KB para 821 KB.
   - Testado no navegador interno; **falta testar o desempenho no PC do laboratório e no projetor.**
+- **15/11 (Ederson):** repositório agora **público** (feito pelo Lucas). CLAUDE.md atualizado: tirado o link da pasta do Drive e anotado na seção 0.0 que o Vercel deve passar a publicar os envios do Ederson.
