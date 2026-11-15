@@ -430,7 +430,7 @@
     const acr = new T.MeshPhysicalMaterial({ color: 0xDDEEFF, metalness: 0, roughness: 0.05, transparent: true, opacity: 0.2, depthWrite: false, side: T.DoubleSide });
     ac.add(at(mesh(new T.BoxGeometry(0.66, 0.9, 0.56), acr, false, false), v3(0, 1.09, 0)));
     ac.add(at(mesh(new T.BoxGeometry(0.7, 0.02, 0.6), new T.MeshPhysicalMaterial({ color: 0xDDEEFF, transparent: true, opacity: 0.35, roughness: 0.1, depthWrite: false }), false, false), v3(0, 1.55, 0)));
-    S.water = mesh(new T.BoxGeometry(0.64, 1, 0.54), new T.MeshStandardMaterial({ color: 0xF097BD, transparent: true, opacity: 0.6, roughness: 0.1, depthWrite: false }), false, false);
+    S.water = mesh(new T.BoxGeometry(0.64, 1, 0.54), new T.MeshStandardMaterial({ color: 0xDE6FA3, transparent: true, opacity: 0.64, roughness: 0.1, depthWrite: false }), false, false);
     ac.add(S.water);
     const edges = new T.LineSegments(new T.EdgesGeometry(new T.BoxGeometry(0.66, 0.9, 0.56)), new T.LineBasicMaterial({ color: 0x9FB6CC })); edges.position.set(0, 1.09, 0); ac.add(edges);
     // régua de nível em %: 0 % no fundo (y 0,65) e 100 % no nível máximo (y 1,53), igual ao setWater e ao LIT-101
@@ -1104,13 +1104,13 @@
   const A = { t: 0, flowDist: 0, pumpW: 0, thermal: false, bubbles: [], steam: [], ringT: 0, bubAcc: 0, steamAcc: 0 };
   function texArrow() {
     const c = document.createElement("canvas"); c.width = 64; c.height = 64; const g = c.getContext("2d");
-    g.strokeStyle = "rgba(110,215,255,1)"; g.lineWidth = 9; g.lineCap = "round"; g.lineJoin = "round";
+    g.strokeStyle = "rgba(240,130,185,1)"; g.lineWidth = 9; // setas na cor do fluido (rosa) g.lineCap = "round"; g.lineJoin = "round";
     g.beginPath(); g.moveTo(14, 46); g.lineTo(32, 22); g.lineTo(50, 46); g.stroke();
     const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.wrapS = t.wrapT = T.RepeatWrapping; return t;
   }
   function texStreak() {
     const c = document.createElement("canvas"); c.width = 128; c.height = 32; const g = c.getContext("2d");
-    g.fillStyle = "rgba(160,215,250,0.75)"; g.fillRect(0, 0, 128, 32);
+    g.fillStyle = "rgba(255,255,255,0.8)"; g.fillRect(0, 0, 128, 32); // base neutra: a cor vem do material (fluido rosa)
     for (let i = 0; i < 40; i++) { g.fillStyle = "rgba(255,255,255," + (0.2 + Math.random() * 0.6) + ")"; g.fillRect(Math.random() * 128, Math.random() * 32, 6 + Math.random() * 20, 1 + Math.random() * 2); }
     const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.wrapS = t.wrapT = T.RepeatWrapping; return t;
   }
@@ -1142,17 +1142,17 @@
     // superfície da água (malha com ondas)
     const sg = new T.PlaneGeometry(0.636, 0.536, 36, 30).rotateX(-Math.PI / 2);
     A.surfBase = sg.attributes.position.array.slice();
-    A.surf = mesh(sg, new T.MeshStandardMaterial({ color: 0xEC9BBE, transparent: true, opacity: 0.7, roughness: 0.06, metalness: 0.2, depthWrite: false, side: T.DoubleSide }), false, false);
+    A.surf = mesh(sg, new T.MeshStandardMaterial({ color: 0xD4639A, transparent: true, opacity: 0.74, roughness: 0.06, metalness: 0.2, depthWrite: false, side: T.DoubleSide }), false, false);
     A.surf.renderOrder = 4; S.ac.add(A.surf);
     // jato de entrada
-    A.jetTex = texStreak(); A.jetMat = new T.MeshStandardMaterial({ map: A.jetTex, color: 0xF9CFE0, transparent: true, opacity: 0.85, roughness: 0.1, depthWrite: false });
+    A.jetTex = texStreak(); A.jetMat = new T.MeshStandardMaterial({ map: A.jetTex, color: 0xE07FAD, transparent: true, opacity: 0.88, roughness: 0.1, depthWrite: false });
     A.jet = null; A.jetKey = "";
     // bolhas
-    A.bub = new T.InstancedMesh(new T.SphereGeometry(1, 8, 6), new T.MeshStandardMaterial({ color: 0xFFF3F8, transparent: true, opacity: 0.75, roughness: 0.05 }), 70);
+    A.bub = new T.InstancedMesh(new T.SphereGeometry(1, 8, 6), new T.MeshStandardMaterial({ color: 0xF8D6E6, transparent: true, opacity: 0.75, roughness: 0.05 }), 70);
     A.bub.count = 0; A.bub.renderOrder = 5; S.ac.add(A.bub);
     // dreno: filete até o ralo
     const dc = new T.CatmullRomCurve3([v3(-0.2, 0.39, 0.17), v3(-0.2, 0.36, 0.21), v3(-0.2, 0.2, 0.27), v3(-0.2, 0.005, 0.3)]);
-    A.drainTex = texStreak(); A.drain = mesh(new T.TubeGeometry(dc, 20, 0.006, 8, false), new T.MeshStandardMaterial({ map: A.drainTex, color: 0xF9CFE0, transparent: true, opacity: 0.85, roughness: 0.1, depthWrite: false }), false, false);
+    A.drainTex = texStreak(); A.drain = mesh(new T.TubeGeometry(dc, 20, 0.006, 8, false), new T.MeshStandardMaterial({ map: A.drainTex, color: 0xE07FAD, transparent: true, opacity: 0.88, roughness: 0.1, depthWrite: false }), false, false);
     A.drain.visible = false; S.ac.add(A.drain);
     S.ac.add(at(mesh(new T.BoxGeometry(0.16, 0.006, 0.16), mat(0x5A6068, 0.6, 0.4), false), v3(-0.2, 0.003, 0.3)));
     for (let i = 0; i < 5; i++) S.ac.add(at(mesh(new T.BoxGeometry(0.14, 0.008, 0.008), mat(0x2B2F36), false), v3(-0.2, 0.007, 0.25 + i * 0.025)));
@@ -1309,6 +1309,30 @@
     const ctl = new T.OrbitControls(cam, renderer.domElement);
     ctl.target.copy(VIEWS.geral.t); ctl.enableDamping = true; ctl.minDistance = 0.35; ctl.maxDistance = 7.5; ctl.maxPolarAngle = Math.PI * 0.495;
     ctl.addEventListener("start", () => { S.tw = null; });
+    // andar com o teclado: W A S D ou setas (frente/trás/lados), Q/E ou PageUp/PageDown (sobe/desce), Shift = mais rápido
+    const KEYS = new Set();
+    const KMAP = { KeyW: "f", ArrowUp: "f", KeyS: "b", ArrowDown: "b", KeyA: "l", ArrowLeft: "l", KeyD: "r", ArrowRight: "r", KeyE: "u", PageUp: "u", KeyQ: "d", PageDown: "d" };
+    const typing = () => { const a = document.activeElement; return a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.tagName === "SELECT" || a.isContentEditable); };
+    window.addEventListener("keydown", e => {
+      const k = KMAP[e.code]; if (!k || typing() || !wrap.offsetParent || e.ctrlKey || e.altKey || e.metaKey) return;
+      const ov = document.querySelector(".ovl3d.on"); if (ov) return;          // janela aberta (PT100, IHM ampliada): não anda
+      KEYS.add(k); S.fast = e.shiftKey; S.tw = null; e.preventDefault();
+    });
+    window.addEventListener("keyup", e => { const k = KMAP[e.code]; if (k) KEYS.delete(k); S.fast = e.shiftKey; });
+    window.addEventListener("blur", () => KEYS.clear());
+    S.walk = (dt) => {
+      if (!KEYS.size) return;
+      const fwd = new T.Vector3().subVectors(ctl.target, cam.position); fwd.y = 0;
+      if (fwd.lengthSq() < 1e-6) fwd.set(0, 0, -1); fwd.normalize();
+      const right = new T.Vector3(-fwd.z, 0, fwd.x), mv = new T.Vector3();
+      if (KEYS.has("f")) mv.add(fwd); if (KEYS.has("b")) mv.sub(fwd);
+      if (KEYS.has("r")) mv.add(right); if (KEYS.has("l")) mv.sub(right);
+      if (KEYS.has("u")) mv.y += 1; if (KEYS.has("d")) mv.y -= 1;
+      if (mv.lengthSq() === 0) return;
+      mv.normalize().multiplyScalar((S.fast ? 2.6 : 1.2) * dt);
+      cam.position.add(mv); ctl.target.add(mv);
+      if (ctl.target.y < 0.1) { const d = 0.1 - ctl.target.y; ctl.target.y += d; cam.position.y += d; }
+    };
     Object.assign(S, { renderer, lr, scene, cam, ctl, wrap });
     S.fx = true; S.composer = null;
     try {
@@ -1415,13 +1439,14 @@
     resize();
     $("#load3d").style.display = "none";
     renderTray();
-    tip("Escolha uma peça na Bancada de Peças, leia a tag e toque na área azul onde ela deve ser instalada. Arraste para girar, use a roda ou dois dedos para aproximar.");
+    tip("Escolha uma peça na Bancada de Peças, leia a tag e toque na área azul onde ela deve ser instalada. Arraste para girar, use a roda ou dois dedos para aproximar. Teclado: <b>W A S D</b> ou <b>setas</b> para andar, <b>Q/E</b> para descer/subir (Shift = mais rápido).");
     const clock = new T.Clock();
     let acc = 0;
     function loop() {
       requestAnimationFrame(loop);
       const dt = Math.min(clock.getDelta(), 0.1);
       if (!wrap.offsetParent) return;
+      if (S.walk) S.walk(dt);
       if (S.tw) { S.tw.k = Math.min(1, S.tw.k + dt * 1.6); const k = 1 - Math.pow(1 - S.tw.k, 3); cam.position.lerpVectors(S.tw.p0, S.tw.p1, k); ctl.target.lerpVectors(S.tw.t0, S.tw.t1, k); if (S.tw.k >= 1) S.tw = null; }
       ctl.update(); clampCam();
       const tt = performance.now() / 1000;

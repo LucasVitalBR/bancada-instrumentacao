@@ -31,7 +31,7 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 
 ## 0. Situação atual (ler primeiro)
 
-- **Versão:** BUILD `20261115-16` (15/11/2026).
+- **Versão:** BUILD `20261115-18` (15/11/2026).
 - **Última etapa feita:** **inversor PowerFlex 525** no painel, com IHM interativa, checklist de parâmetros e seletora de partida da bomba DIRETA/INVERSOR (BUILD -14, fases 1 e 2 do roteiro do inversor). Antes: líquido da bancada em rosa claro, igual ao fluido da bancada física (BUILD -13). Antes: régua do tanque de acrílico em % (BUILD -12). Antes: ícone do site (favicon de manômetro + sinal 4–20 mA, BUILD -11). Antes: eletrodutos do TQ-01 ligados aos prensa-cabos dos instrumentos (BUILD -10). Antes: item 2 do plano (endereços e escalas do DVP20SX2 conferidos no manual; saída D1116 corrigida para 0..4000; D1115 = K7967 no 1º scan).
 - **Próxima etapa sugerida:** fases 3 e 4 do inversor (ver 6.1), ou os itens 4 (PID), 6 (exportar/importar ladder) e 7 (modo avaliação) do plano; itens 1 e 3 dependem de fotos/slides.
 - **Repositório oficial:** GitHub `LucasVitalBR/bancada-instrumentacao` (privado), ver 1.2. Lucas e colega trabalham por pull/push.
@@ -140,7 +140,7 @@ O login do wrangler fica salvo no PC do Ederson.
 
 ## 4. Convenções importantes
 
-- **`const BUILD = "20261115-16"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
+- **`const BUILD = "20261115-18"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
 - **Three.js:** `object.position` é somente leitura. Use o helper `at(obj, pos, scale)`, nunca `Object.assign(mesh, {position})`.
 - **GTAOPass (oclusão ambiente):** deixa sprites/transparentes **pretos**. `overrideVisibility()` foi sobrescrito para esconder `isSprite` e `material.transparent` no G-buffer.
 - **Gráficos:** modo realista ↔ leve. Cai sozinho para o leve se ficar abaixo de 24 fps por 4 s.
@@ -151,7 +151,12 @@ O login do wrangler fica salvo no PC do Ederson.
   - `menu3d` (menu lateral recolhido).
 - **Edições grandes:** foram feitas com scripts Node de substituição exata (`patch-*.js` no scratchpad) e backup antes (`app-3d.vN.js`). Validar com `node --check`. Para o HTML, extrair os `<script>` inline e checar.
 - **Cores de tubulação (NBR 6493):** água de processo verde, ar comprimido azul, eletroduto cinza-escuro, vapor/respiro branco.
-- **Cor do fluido (bancada física usa líquido rosa):** água do tanque `0xF097BD` (opacidade 0,6), superfície `0xEC9BBE`, jato e dreno `0xF9CFE0`, bolhas `0xFFF3F8`; no 2D, `--water:#F4B6CF`. A tubulação continua verde (NBR 6493: água de processo); só o líquido visível é rosa.
+- **Cor do fluido (bancada física usa líquido rosa, tom mais escuro desde a BUILD -17):**
+  - água do tanque `0xDE6FA3` (opacidade 0,64) e superfície `0xD4639A`;
+  - jato e dreno `0xE07FAD`: a textura `texStreak` tem base branca, para não puxar para o azul;
+  - bolhas `0xF8D6E6`;
+  - setas de fluxo nos canos rosa, `rgba(240,130,185)` em `texArrow`;
+  - no 2D, `--water:#E48DB6`. A tubulação continua verde (NBR 6493: água de processo); só o líquido visível é rosa.
 - **Identidade visual:** azul `#1E3A5F`, laranja `#E87722`, fundo `#EEF2F7`; fonte Calibri; tags em Courier New.
 
 ## 5. O que existe hoje
@@ -303,3 +308,9 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
   - link **“como fazer ›”** em cada item do checklist, que mostra o passo a passo até aquele parâmetro, com o número de toques no ▲;
   - aviso ao dar Enter num parâmetro do grupo b, que é só leitura.
 - **BUILD -16 (15/11, pedido do Ederson):** o checklist e as orientações ficam num **painel ao lado da cena 3D**, e o aluno opera as **teclas do inversor no próprio painel 3D**. Vista nova "Inversor". A janela grande continua no botão "IHM ampliada". `PF525.mount(el, { compact: true })` monta só o painel; vários lugares podem estar montados ao mesmo tempo (`hosts`).
+- **BUILD -17 (15/11, pedido do Ederson):** rosa do fluido mais escuro. O jato da mangueira e o filete do dreno ainda saíam azuis, porque a textura `texStreak` tinha fundo azul: agora a base é branca. As setas de fluxo nos canos também ficaram rosa.
+- **BUILD -18 (15/11, pedido do Ederson):** andar pela cena com o teclado (`S.walk` no laço do `app-3d.js`):
+  - **W A S D ou setas** para frente, trás e lados, no plano horizontal da câmera;
+  - **Q/E ou PageDown/PageUp** para descer e subir;
+  - **Shift** anda mais rápido;
+  - não reage enquanto se digita num campo ou com uma janela (`.ovl3d.on`) aberta.
