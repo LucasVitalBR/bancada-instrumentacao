@@ -144,7 +144,7 @@
     } };
   }
   function gland(parent, p, dir, r = 0.009) {
-    const g = new T.Group(); g.position.copy(p); g.quaternion.setFromUnitVectors(v3(0, 1, 0), dir); parent.add(g);
+    const g = new T.Group(); g.position.copy(p); g.quaternion.setFromUnitVectors(v3(0, 1, 0), dir); g.userData.gland = true; parent.add(g);
     g.add(at(mesh(new T.CylinderGeometry(r * 1.4, r * 1.4, 0.012, 6), M.gland), v3(0, 0.006, 0)));
     g.add(at(mesh(new T.CylinderGeometry(r, r * 1.2, 0.018, 16), M.gland), v3(0, 0.021, 0)));
     g.add(at(mesh(new T.CylinderGeometry(r * 0.6, r * 0.6, 0.03, 10), M.cable), v3(0, 0.042, 0)));
@@ -366,7 +366,7 @@
     P(cylX(0.092, 0.06, 32), mat(0x2A6F3E, 0.4, 0.45), v3(0.45, 0.17, 0));
     P(new T.BoxGeometry(0.085, 0.06, 0.085), green, v3(0.27, 0.285, 0));
     P(new T.BoxGeometry(0.09, 0.008, 0.09), greenD, v3(0.27, 0.318, 0));
-    gland(pump, v3(0.27, 0.285, 0.0425), v3(0, 0, 1), 0.008);
+    gland(pump, v3(0.27, 0.285, -0.0425), v3(0, 0, -1), 0.008); // saída de cabos para trás, rumo à eletrocalha
     for (const x of [0.2, 0.34]) P(new T.BoxGeometry(0.05, 0.06, 0.2), greenD, v3(x, 0.08, 0));
     P(new T.TorusGeometry(0.014, 0.004, 8, 16).rotateY(Math.PI / 2), M.steel, v3(0.33, 0.275, 0));
     // ventilador (gira) visível na grade da tampa
@@ -522,13 +522,13 @@
     vfd.add(at(mesh(new T.BoxGeometry(VW * 0.98, VH * 0.42, 0.012), mat(0xD9DBDD, 0.05, 0.6)), v3(0, -VH * 0.29, VD + 0.004)));
     for (const sx of [-1, 1]) for (let i = 0; i < 9; i++) vfd.add(at(mesh(new T.BoxGeometry(0.004, VH * 0.5, 0.006), mat(0x2A2D32, 0.3, 0.6)), v3(sx * (VW / 2 + 0.002), VH * 0.08, 0.03 + i * 0.015)));
     vfd.add(at(mesh(new T.BoxGeometry(VW + 0.03, VH + 0.02, 0.006), M.alu), v3(0, 0, 0.003)));
-    S.vfdScreen = (() => { const c = document.createElement("canvas"); c.width = 400; c.height = 885; const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.anisotropy = 4; return { c, t }; })();
+    S.vfdScreen = (() => { const c = document.createElement("canvas"); c.width = 400; c.height = 855; const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.anisotropy = 4; return { c, t }; })();
     S.vfdFront = at(mesh(new T.PlaneGeometry(VW * 0.98, VH * 0.98), new T.MeshStandardMaterial({ map: S.vfdScreen.t, roughness: 0.5 }), false), v3(0, 0, VD + 0.0115)); vfd.add(S.vfdFront);
     // cabo de saída do inversor descendo para a canaleta
     for (let k = 0; k < 3; k++) pipe(v3(-0.03 + k * 0.03, -VH / 2, VD * 0.6), v3(-0.03 + k * 0.03, -0.2, VD * 0.6), 0.0035, mat([0x1F2328, 0x6E4A2C, 0x6E7782][k], 0.1, 0.6), vfd);
-    S.vfd = vfd; S.clickables = [{ obj: vfd, tag: "PF525", fn: (hit) => {
+    S.vfd = vfd; S.clickables = [{ obj: vfd, tag: "PF525", fn: (hit, ev) => {
       // painel do inversor aberto: o clique na frente aperta a tecla correspondente
-      if (window.isVfdDockOpen && window.isVfdDockOpen() && hit && hit.object === S.vfdFront && hit.uv && window.PF525) { const k = window.PF525.pressAt(hit.uv.x, hit.uv.y); if (k) { if (S.vfdScreen) { window.PF525.paint3D(S.vfdScreen.c); S.vfdScreen.t.needsUpdate = true; } return; } }
+      if (window.isVfdDockOpen && window.isVfdDockOpen() && hit && hit.object === S.vfdFront && hit.uv && window.PF525) { const k = window.PF525.pressAt(hit.uv.x, hit.uv.y, ev); if (k) { if (S.vfdScreen) { window.PF525.paint3D(S.vfdScreen.c); S.vfdScreen.t.needsUpdate = true; } return; } }
       goView("inversor"); if (window.openVfd) window.openVfd();
       tip("Inversor <b>PowerFlex 525</b>: clique nas <b>teclas do próprio inversor</b> (Esc, Sel, ↵, setas, Start verde, Stop vermelho e o potenciômetro). O checklist e a próxima tecla ficam no painel ao lado.", "");
     } }];
@@ -552,10 +552,12 @@
     const trayX = (x0, x1, z) => { const L = x1 - x0, cx = (x0 + x1) / 2; root.add(at(mesh(new T.BoxGeometry(L, 0.006, 0.2), galv), v3(cx, TY, z))); for (const dz of [-0.1, 0.1]) root.add(at(mesh(new T.BoxGeometry(L, 0.06, 0.006), galv), v3(cx, TY + 0.03, z + dz))); };
     const trayZ = (z0, z1, x) => { const L = z1 - z0, cz = (z0 + z1) / 2; root.add(at(mesh(new T.BoxGeometry(0.2, 0.006, L), galv), v3(x, TY, cz))); for (const dx of [-0.1, 0.1]) root.add(at(mesh(new T.BoxGeometry(0.006, 0.06, L), galv), v3(x + dx, TY + 0.03, cz))); };
     trayX(-4.9, -0.45, -1.2); trayZ(-1.3, -0.3, -0.45);
+    trayX(-0.45, 2.55, -1.2); // trecho novo: leva os cabos até a linha (bomba, FIT, FV/FY, VY e tanque de acrílico)
     root.add(at(mesh(new T.BoxGeometry(0.2, TY - 2.1, 0.06), galv), v3(-4.86, (TY + 2.1) / 2, -1.2)));
     const rodM = mat(0x8A939C, 0.7, 0.4);
     for (const x of [-4.2, -3.2, -2.2, -1.2, -0.45]) for (const dz of [-0.1, 0.1]) { root.add(at(mesh(new T.CylinderGeometry(0.005, 0.005, 3.2 - TY, 8), rodM), v3(x, (3.2 + TY) / 2, -1.2 + dz))); root.add(at(mesh(new T.BoxGeometry(0.03, 0.01, 0.24), rodM), v3(x, TY - 0.008, -1.2))); }
     for (const dx of [-0.1, 0.1]) root.add(at(mesh(new T.CylinderGeometry(0.005, 0.005, 3.2 - TY, 8), rodM), v3(-0.45 + dx, (3.2 + TY) / 2, -0.6)));
+    for (const x of [0.5, 1.5, 2.45]) for (const dz of [-0.1, 0.1]) { root.add(at(mesh(new T.CylinderGeometry(0.005, 0.005, 3.2 - TY, 8), rodM), v3(x, (3.2 + TY) / 2, -1.2 + dz))); root.add(at(mesh(new T.BoxGeometry(0.03, 0.01, 0.24), rodM), v3(x, TY - 0.008, -1.2))); }
     // eletroduto flexível: sai da eletrocalha (bucha), faz a curva e termina numa conexão (unidut) rosqueada no prensa-cabo do instrumento
     const unid = mat(0x8A939C, 0.8, 0.35), bush = mat(0x2B2F36, 0.3, 0.6);
     const pol = (a, r, y) => v3(Math.sin(a) * r, y, Math.cos(a) * r);
@@ -580,6 +582,14 @@
     // TZ-104 e TSH-104 descem por fora do costado, passam por baixo e sobem até o prensa-cabo (curva de gotejamento)
     const tzE = v3(-0.6176, 0.829, -0.0977), tshE = v3(0.3915, 0.995, 0.5389);
     cond("TZ-104", [v3(-0.5, TY, -0.32), pol(-2.1, 0.66, 2.5), pol(-1.95, 0.74, 2.1), pol(-1.85, 0.76, 1.3), pol(-1.78, 0.76, 0.8), tzE.clone().add(v3(-0.02, -0.12, 0)), tzE.clone().add(v3(0, -0.035, 0)), tzE]);
+    // linha e tanque de acrílico (pontos finais medidos nos prensa-cabos com tudo montado; contornam o tanque e os canos)
+    cond("BOMBA", [v3(1.28, TY, -1.2), v3(1.28, 2.55, -1.22), v3(1.28, 1.8, -1.3), v3(1.3, 0.6, -1.3), v3(1.32, 0.24, -1.17), v3(1.32, 0.285, -1.1), v3(1.32, 0.285, -1.052)]);
+    cond("FIT-102", [v3(1.38, TY, -1.2), v3(1.38, 2.45, -1.2), v3(1.4, 1.2, -0.72), v3(1.5, 0.78, -0.44), v3(1.57, 0.54, -0.38), v3(1.51, 0.595, -0.38), v3(1.456, 0.595, -0.38)]);
+    cond("FY-102", [v3(1.46, TY, -1.2), v3(1.46, 2.5, -1.2), v3(1.45, 1.3, -0.8), v3(1.47, 0.6, -0.6), v3(1.62, 0.36, -0.45), v3(1.76, 0.4, -0.25), v3(1.76, 0.53, -0.285), v3(1.76, 0.583, -0.285)]);
+    cond("LIT-101", [v3(2.05, TY, -1.2), v3(2.05, 2.5, -1.2), v3(2.05, 1.9, -1.05), v3(2.02, 1.6, -0.95), v3(1.95, 1.655, -0.95), v3(1.905, 1.655, -0.95)]);
+    cond("LSH-101", [v3(2.31, TY, -1.2), v3(2.31, 2.6, -1.15), v3(2.31, 2.35, -0.6), v3(2.31, 1.36, -0.55), v3(2.12, 1.32, -0.49), v3(2.04, 1.38, -0.53), v3(2.04, 1.38, -0.575)]);
+    cond("LSL-101", [v3(2.36, TY, -1.2), v3(2.36, 2.6, -1.15), v3(2.36, 2.35, -0.62), v3(2.36, 0.78, -0.55), v3(2.12, 0.74, -0.49), v3(2.04, 0.8, -0.53), v3(2.04, 0.8, -0.575)]);
+    cond("VY-01", [v3(2.45, TY, -1.2), v3(2.45, 2.55, -1.2), v3(2.45, 2.3, -1.1), v3(2.42, 1.3, -0.6), v3(2.36, 0.72, -0.35), v3(2.36, 0.657, -0.35)]);
     cond("TSH-104", [v3(-0.48, TY, -0.34), pol(-2.2, 0.64, 2.5), pol(-2.25, 0.7, 2.1), pol(-2.25, 0.7, 1.2), pol(-2.1, 0.7, 0.86), pol(-1.3, 0.7, 0.8), pol(-0.4, 0.7, 0.8), pol(0.35, 0.69, 0.82), tshE.clone().add(v3(0, -0.11, 0)), tshE.clone().add(v3(0, -0.035, 0)), tshE]);
   }
   function drawPlc() {
@@ -805,6 +815,7 @@
       add(new T.BoxGeometry(0.07, 0.085, 0.07), mat(0x1F2A37, 0.3, 0.6), v3(0, 0.105, 0));
       add(new T.BoxGeometry(0.05, 0.05, 0.03), mat(0x2B2F36, 0.2, 0.6), v3(0, 0.105, 0.05));
       add(new T.CylinderGeometry(0.004, 0.004, 0.01, 8), M.bolt, v3(0, 0.12, 0.068));
+      gland(g, v3(0, 0.1475, 0), v3(0, 1, 0), 0.007);
       S.vyLamp = new T.MeshStandardMaterial({ color: 0x333333, emissive: 0x000000 });
       add(new T.SphereGeometry(0.007, 12, 8), S.vyLamp, v3(0.015, 0.09, 0.066));
     }
@@ -1175,7 +1186,7 @@
   const _m4 = new T.Matrix4(), _q = new T.Quaternion(), _sc = new T.Vector3(), _p = new T.Vector3();
   function stepAnims(dt) {
     A.t += dt; const t = A.t;
-    if (S.conduits) for (const c of S.conduits) c.g.visible = c.tag === "TZ-104" || !!S.installed[c.tag];
+    if (S.conduits) for (const c of S.conduits) c.g.visible = S.showCond !== false && (c.tag === "TZ-104" || c.tag === "BOMBA" || !!S.installed[c.tag]);
     const L = S.lvl, P = S.proc;
     const Q = ready("ln") ? L.Q : 0, pumpOn = ready("ln") && L.pumpOn;
     const topY = 0.65 + 0.88 * L.L / 100;
@@ -1408,7 +1419,7 @@
       down = null;
       const h = pick(e);
       if (!h) return;
-      if (h.click) { h.click.fn(h.hit); return; }
+      if (h.click) { h.click.fn(h.hit, e); return; }
       if (h.slot) tryInstall(h.slot);
       else if (h.part) {
         const r = window.readTag ? window.readTag(h.part).text : h.part;
@@ -1434,6 +1445,10 @@
     const setMode = m => { S.labelMode = m; wrap.classList.remove("lab-compact", "lab-full", "lab-off"); wrap.classList.add("lab-" + m); const b = $("#b3labels"); if (b) b.textContent = LM[m]; };
     setMode("compact");
     const bl = $("#b3labels"); if (bl) bl.onclick = () => setMode(ORDER[(ORDER.indexOf(S.labelMode) + 1) % 3]);
+    // botão: mostrar/esconder as conexões elétricas (eletrodutos)
+    try { S.showCond = localStorage.getItem("cond3d") !== "0"; } catch (e) { S.showCond = true; }
+    const bc = $("#b3cond"), setCond = v => { S.showCond = v; if (bc) bc.textContent = v ? "🔌 Eletrodutos: visíveis" : "🔌 Eletrodutos: ocultos"; try { localStorage.setItem("cond3d", v ? "1" : "0"); } catch (e) { } };
+    setCond(S.showCond); if (bc) bc.onclick = () => setCond(!S.showCond);
 
     new ResizeObserver(resize).observe(wrap);
     resize();

@@ -31,7 +31,7 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 
 ## 0. Situação atual (ler primeiro)
 
-- **Versão:** BUILD `20261115-19` (15/11/2026).
+- **Versão:** BUILD `20261115-20` (15/11/2026).
 - **Última etapa feita:** **inversor PowerFlex 525** no painel, com IHM interativa, checklist de parâmetros e seletora de partida da bomba DIRETA/INVERSOR (BUILD -14, fases 1 e 2 do roteiro do inversor). Antes: líquido da bancada em rosa claro, igual ao fluido da bancada física (BUILD -13). Antes: régua do tanque de acrílico em % (BUILD -12). Antes: ícone do site (favicon de manômetro + sinal 4–20 mA, BUILD -11). Antes: eletrodutos do TQ-01 ligados aos prensa-cabos dos instrumentos (BUILD -10). Antes: item 2 do plano (endereços e escalas do DVP20SX2 conferidos no manual; saída D1116 corrigida para 0..4000; D1115 = K7967 no 1º scan).
 - **Próxima etapa sugerida:** fases 3 e 4 do inversor (ver 6.1), ou os itens 4 (PID), 6 (exportar/importar ladder) e 7 (modo avaliação) do plano; itens 1 e 3 dependem de fotos/slides.
 - **Repositório oficial:** GitHub `LucasVitalBR/bancada-instrumentacao` (privado), ver 1.2. Lucas e colega trabalham por pull/push.
@@ -141,7 +141,7 @@ O login do wrangler fica salvo no PC do Ederson.
 
 ## 4. Convenções importantes
 
-- **`const BUILD = "20261115-19"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
+- **`const BUILD = "20261115-20"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
 - **Three.js:** `object.position` é somente leitura. Use o helper `at(obj, pos, scale)`, nunca `Object.assign(mesh, {position})`.
 - **GTAOPass (oclusão ambiente):** deixa sprites/transparentes **pretos**. `overrideVisibility()` foi sobrescrito para esconder `isSprite` e `material.transparent` no G-buffer.
 - **Gráficos:** modo realista ↔ leve. Cai sozinho para o leve se ficar abaixo de 24 fps por 4 s.
@@ -173,7 +173,7 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
   - bomba centrífuga completa (motor, protetor de acoplamento amarelo, voluta, skid);
   - rotâmetro vermelho;
   - 4 válvulas manuais de volante amarelo;
-  - eletrocalha suspensa e eletrodutos;
+  - eletrocalha suspensa (painel → TQ-01 e, desde a BUILD -20, até a linha em x 2,55, z −1,2) e eletrodutos até **todos** os instrumentos elétricos: TQ-01, LIT/LSH/LSL-101, FIT-102, FY-102, VY-01 e motor da bomba. O botão **"🔌 Eletrodutos"** no menu mostra ou esconde os eletrodutos (`S.showCond`, salvo em `localStorage` `cond3d`);
   - painel com CLP DVP20SX2 (LEDs ao vivo, bornes verdes).
 - **Montagem (Bancada de Peças):** 13 instrumentos + termopar que sobra, áreas de encaixe e dicas de erro pelas tags. Botão "⚡ Montar tudo automaticamente".
   - **TQ-01:** TE-104, TT-104, PIT-103, PSH-103, TSH-104, PG.
@@ -323,3 +323,8 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
   - A imagem é de um PowerFlex 523: o "523" da etiqueta foi coberto com o cinza da própria imagem e trocado por "525".
   - As posições das teclas estão em `FACE` (coordenadas da imagem 400 × 885), usadas pelo `hitKey` (cliques no 3D) e pelas áreas clicáveis da IHM ampliada.
   - No teclado azul, ◄ = Esc e ► = ↵.
+- **BUILD -20 (15/11, pedido do Ederson):**
+  - **Eletrodutos da linha:** a eletrocalha continua até x 2,55. Saem eletrodutos para FIT-102, FY-102, LIT-101, LSH-101, LSL-101, VY-01 (novo prensa-cabo no topo da bobina) e motor da bomba (prensa-cabo virado para trás). Os trajetos contornam o tanque de acrílico e os canos, e os pontos finais foram medidos nos prensa-cabos com tudo montado. Cada eletroduto só aparece com o instrumento instalado (o da bomba é fixo). Os prensa-cabos levam `userData.gland`.
+  - **Botão "🔌 Eletrodutos: visíveis/ocultos"** no menu Ações.
+  - **Foto nova do PF525,** vista de frente e já com o potenciômetro (`vendor/pf525-img.js`, 400 × 855). As posições foram refeitas em `FACE`; a reversão ⇆ fica entre o teclado azul e o botão verde.
+  - **Potenciômetro:** o clique (no 3D ou na IHM ampliada) abre uma **barra deslizante vertical** (`PF525.potSlider`), de 0 a 100 %, mostrando os Hz pedidos. Fecha no ✕, com Esc ou clicando fora. No lugar do antigo arrastar/girar, que era difícil.

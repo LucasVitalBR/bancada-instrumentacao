@@ -300,9 +300,9 @@
 
   /* ---------- frente do inversor (imagem + partes animadas) ---------- */
   // coordenadas na imagem recortada (400 × 885): [x, y, raio] ou [x0, y0, x1, y1]
-  const FW = 400, FH = 885;
-  const FACE = { lcd: [80, 108, 300, 180], up: [130, 258, 34], down: [130, 380, 34], esc: [68, 318, 34], enter: [195, 318, 34], sel: [130, 318, 28],
-    start: [287, 268, 30], stop: [287, 353, 30], rev: [287, 414, 16], pot: [334, 62, 24], fault: [290, 198, 6], lbl: [150, 489, 214, 523] };
+  const FW = 400, FH = 855;
+  const FACE = { lcd: [77, 111, 282, 177], up: [143, 253, 26], down: [143, 371, 26], esc: [78, 313, 26], enter: [207, 313, 26], sel: [143, 313, 32],
+    start: [304, 267, 32], stop: [304, 349, 32], rev: [254, 308, 12], pot: [319, 153, 29], fault: [273, 193, 6], lbl: [180, 481, 229, 510] };
   const IMG = new Image(); let imgOk = false;
   IMG.onload = () => { imgOk = true; }; IMG.src = window.PF525_IMG || "";
   function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
@@ -325,41 +325,62 @@
     g.fillStyle = "#AEB4BB"; g.font = "bold 10px Arial"; g.textAlign = "right"; g.fillText("FAULT", FACE.fault[0] - 10, FACE.fault[1] + 4); g.textAlign = "left";
     g.beginPath(); g.arc(FACE.fault[0], FACE.fault[1], FACE.fault[2], 0, 7); g.fillStyle = st.fault && on ? "#FF3B2E" : "#4A2A28"; g.fill();
     if (st.fault && on) { g.beginPath(); g.arc(FACE.fault[0], FACE.fault[1], 13, 0, 7); g.fillStyle = "rgba(255,59,46,.25)"; g.fill(); }
-    // potenciômetro (o PF525 tem; a imagem não mostra)
-    const [px, py, pr] = FACE.pot;
-    g.beginPath(); g.arc(px, py, pr + 4, 0, 7); g.fillStyle = "#3A3E44"; g.fill();
+    // potenciômetro: o botão da imagem gira conforme o valor
+    const [px, py, pr0] = FACE.pot, pr = pr0 - 3;
     const pg = g.createRadialGradient(px - 6, py - 7, 3, px, py, pr); pg.addColorStop(0, "#4A4E55"); pg.addColorStop(1, "#0E0F11");
     g.beginPath(); g.arc(px, py, pr, 0, 7); g.fillStyle = pg; g.fill();
     for (let k = 0; k <= 10; k++) { const an = (-135 + 27 * k) * Math.PI / 180; g.fillStyle = "#8A9098"; g.fillRect(px + Math.sin(an) * (pr + 7) - 1, py - Math.cos(an) * (pr + 7) - 1, 2, 2); }
     const an = (-135 + 270 * st.pot) * Math.PI / 180; g.strokeStyle = "#F2F2F2"; g.lineWidth = 4; g.lineCap = "round";
     g.beginPath(); g.moveTo(px + Math.sin(an) * 6, py - Math.cos(an) * 6); g.lineTo(px + Math.sin(an) * (pr - 4), py - Math.cos(an) * (pr - 4)); g.stroke();
     // tecla de reversão
-    const [rx, ry, rr2] = FACE.rev; g.fillStyle = "#5A6068"; rr(g, rx - rr2 * 1.5, ry - rr2, rr2 * 3, rr2 * 2, 8); g.fill();
-    g.fillStyle = "#fff"; g.font = "bold 18px Arial"; g.textAlign = "center"; g.fillText("⇆", rx, ry + 6); g.textAlign = "left";
+    const [rx, ry, rr2] = FACE.rev; g.fillStyle = "#5A6068"; rr(g, rx - rr2 * 1.5, ry - rr2, rr2 * 3, rr2 * 2, 7); g.fill();
+    g.fillStyle = "#fff"; g.font = "bold 15px Arial"; g.textAlign = "center"; g.fillText("⇆", rx, ry + 5); g.textAlign = "left";
     // etiqueta: o modelo da bancada é o 525
-    const [lx0, ly0, lx1, ly1] = FACE.lbl; if (imgOk) g.drawImage(IMG, 236, ly0, lx1 - lx0, ly1 - ly0, lx0, ly0, lx1 - lx0, ly1 - ly0); else { g.fillStyle = "#D5D6D2"; g.fillRect(lx0, ly0, lx1 - lx0, ly1 - ly0); } // cobre o 523 com o cinza da própria imagem
-    g.fillStyle = "#3B3E43"; g.font = "italic bold 27px Arial"; g.fillText("525", lx0 + 2, ly1 - 5);
+    const [lx0, ly0, lx1, ly1] = FACE.lbl; if (imgOk) g.drawImage(IMG, 240, ly0, lx1 - lx0, ly1 - ly0, lx0, ly0, lx1 - lx0, ly1 - ly0); else { g.fillStyle = "#D5D6D2"; g.fillRect(lx0, ly0, lx1 - lx0, ly1 - ly0); } // cobre o 523 com o cinza da própria imagem
+    g.fillStyle = "#3B3E43"; g.font = "italic bold 30px Arial"; g.fillText("525", lx0 - 1, ly1 - 3);
     // tecla apertada
-    if (st.hit && now - st.hit.t < 220) { const z = FACE[st.hit.k === "pot+" || st.hit.k === "pot-" ? "pot" : st.hit.k]; if (z) { g.fillStyle = "rgba(255,255,255,.4)"; g.beginPath(); g.arc(z[0], z[1], z[2] + 2, 0, 7); g.fill(); } }
+    if (st.hit && now - st.hit.t < 220) { const z = FACE[st.hit.k]; if (z) { g.fillStyle = "rgba(255,255,255,.4)"; g.beginPath(); g.arc(z[0], z[1], z[2] + 2, 0, 7); g.fill(); } }
     g.restore();
   }
   function paint3D(c) { drawFace(c.getContext("2d"), c.width, c.height); }
   // clique na frente: (u, v) da textura → tecla
   function hitKey(u, v) {
     const x = u * FW, y = (1 - v) * FH, d = (p) => Math.hypot(x - p[0], y - p[1]);
-    if (d(FACE.pot) < FACE.pot[2] + 10) return y < FACE.pot[1] ? "pot+" : "pot-";
+    if (d(FACE.pot) < FACE.pot[2] + 8) return "pot";
     for (const k of ["start", "stop", "rev"]) if (d(FACE[k]) < FACE[k][2] + 8) return k;
     const r = d(FACE.sel);
     if (r < FACE.sel[2] + 2) return "sel";
-    if (r < 100) { const dx = x - FACE.sel[0], dy = y - FACE.sel[1]; return Math.abs(dy) > Math.abs(dx) ? (dy < 0 ? "up" : "down") : (dx < 0 ? "esc" : "enter"); }
+    if (r < 92) { const dx = x - FACE.sel[0], dy = y - FACE.sel[1]; return Math.abs(dy) > Math.abs(dx) ? (dy < 0 ? "up" : "down") : (dx < 0 ? "esc" : "enter"); }
     return null;
   }
-  function pressAt(u, v) {
+  function pressAt(u, v, ev) {
     const k = hitKey(u, v); if (!k) return null;
     st.hit = { k, t: performance.now() };
-    if (k === "pot+" || k === "pot-") st.pot = Math.max(0, Math.min(1, st.pot + (k === "pot+" ? 0.05 : -0.05)));
+    if (k === "pot") potSlider(ev ? ev.clientX : innerWidth / 2, ev ? ev.clientY : innerHeight / 2);
     else key(k);
     paint(); return k;
+  }
+  // potenciômetro: ao clicar, abre uma barra deslizante (sobe = mais velocidade)
+  let potPop = null;
+  function potSlider(x, y) {
+    if (!document.getElementById("pf525css")) { const s = document.createElement("style"); s.id = "pf525css"; s.textContent = CSS; document.head.appendChild(s); }
+    if (potPop) potPop.remove();
+    const host = document.fullscreenElement || document.body;
+    const d = document.createElement("div"); d.className = "pf-potpop";
+    d.innerHTML = `<div class="pp-h"><b>Potenciômetro</b><button class="pp-x" aria-label="Fechar">✕</button></div>
+      <div class="pp-b"><input type="range" min="0" max="100" step="1" aria-label="Potenciômetro do inversor"><div class="pp-v"><b class="pp-p"></b><span class="pp-hz"></span></div></div>
+      <div class="pp-n">Arraste para cima ou para baixo. Vale com <b>P047 = 1</b> (Drive Pot).</div>`;
+    host.appendChild(d); potPop = d;
+    const W = 190, H = 300; d.style.left = Math.max(8, Math.min(innerWidth - W - 8, x + 18)) + "px"; d.style.top = Math.max(8, Math.min(innerHeight - H - 8, y - H / 2)) + "px";
+    const r = d.querySelector("input");
+    const upd = () => { r.value = Math.round(st.pot * 100); const hz = P("P043") + st.pot * (P("P044") - P("P043")); d.querySelector(".pp-p").textContent = Math.round(st.pot * 100) + " %"; d.querySelector(".pp-hz").textContent = "≈ " + hz.toFixed(1).replace(".", ",") + " Hz pedidos"; };
+    r.oninput = () => { st.pot = +r.value / 100; upd(); paint(); };
+    const close = () => { d.remove(); if (potPop === d) potPop = null; document.removeEventListener("pointerdown", out, true); document.removeEventListener("keydown", esc, true); };
+    const out = e => { if (!d.contains(e.target)) close(); };
+    const esc = e => { if (e.key === "Escape") { e.stopPropagation(); close(); } };
+    d.querySelector(".pp-x").onclick = close;
+    setTimeout(() => { document.addEventListener("pointerdown", out, true); document.addEventListener("keydown", esc, true); }, 0);
+    upd(); r.focus();
   }
   // área clicável na IHM ampliada (em % da imagem)
   const hot = (k, cls = "hk") => { const [x, y, r] = FACE[k]; return `left:${(x - r) / FW * 100}%;top:${(y - r) / FH * 100}%;width:${2 * r / FW * 100}%;height:${2 * r / FH * 100}%`; };
@@ -396,7 +417,7 @@
   const CSS = `
   .pf-wrap{display:grid;grid-template-columns:330px minmax(0,1fr);gap:16px;align-items:start}
   @media (max-width:820px){.pf-wrap{grid-template-columns:1fr}}
-  .pf-dev2{position:relative;width:300px;aspect-ratio:400/885;margin:0 auto;user-select:none;-webkit-user-select:none;touch-action:none;filter:drop-shadow(0 12px 22px rgba(0,0,0,.35))}
+  .pf-dev2{position:relative;width:300px;aspect-ratio:400/855;margin:0 auto;user-select:none;-webkit-user-select:none;touch-action:none;filter:drop-shadow(0 12px 22px rgba(0,0,0,.35))}
   .pf-dev2 canvas{display:block;width:100%;height:100%}
   .pf-dev2 .hk{position:absolute;border:0;border-radius:50%;background:transparent;cursor:pointer;padding:0}
   .pf-dev2 .hk:active,.pf-dev2 .hk.dn{background:rgba(255,255,255,.22)}
@@ -462,6 +483,14 @@
   .pf-next .x{float:right;border:0;background:none;cursor:pointer;color:#B35A12;font-weight:700}
   .pf-ck li a{margin-left:auto;white-space:nowrap;font-size:12px;color:#2F6DB5;cursor:pointer;text-decoration:underline}
   .pf-ck li.sel{outline:2px solid #E87722}
+  .pf-potpop{position:fixed;z-index:2000;width:190px;background:#fff;border-radius:12px;box-shadow:0 12px 36px rgba(0,0,0,.35);padding:10px 12px;font:14px Calibri,Arial,sans-serif;color:#1F2A37}
+  .pf-potpop .pp-h{display:flex;justify-content:space-between;align-items:center;color:#1E3A5F}
+  .pf-potpop .pp-x{border:0;background:none;font-size:16px;cursor:pointer;color:#5B6B80}
+  .pf-potpop .pp-b{display:flex;gap:14px;align-items:center;margin:8px 0}
+  .pf-potpop input{writing-mode:vertical-lr;direction:rtl;height:190px;width:34px;accent-color:#E87722;cursor:ns-resize}
+  .pf-potpop .pp-v b{display:block;font-size:26px;color:#1E3A5F}
+  .pf-potpop .pp-v span{font-size:13px;color:#5B6B80}
+  .pf-potpop .pp-n{font-size:12px;color:#5B6B80}
   .pf-compact{display:grid;gap:10px}
   .pf-compact .pf-next{max-width:none;margin:0}
   .pf-compact .pf-st b{font-size:17px}
@@ -470,12 +499,12 @@
   .pf-keys kbd{display:inline-block;min-width:22px;text-align:center;border:1px solid #B9C2CC;border-radius:5px;padding:0 4px;background:#fff;font:700 12px Arial;color:#1E3A5F}
   `;
   const COMPACT = `<div class="pf-side pf-compact">
-        <div class="pf-hint3d">Opere as <b>teclas do inversor no painel 3D</b>: clique nelas como no equipamento real. No teclado azul, <b>◄ = Esc</b> e <b>► = ↵ (Enter)</b>. O botão redondo no alto é o potenciômetro, e a tecla ⇆ é a reversão.</div>
+        <div class="pf-hint3d">Opere as <b>teclas do inversor no painel 3D</b>: clique nelas como no equipamento real. No teclado azul, <b>◄ = Esc</b> e <b>► = ↵ (Enter)</b>. O botão redondo ao lado do display é o <b>potenciômetro</b>: clique nele para abrir a barra deslizante. A tecla ⇆ é a reversão.</div>
         <div class="pf-next" id="pfNext"></div>
         <div class="box pf-now" id="pfNow"></div>
         <div class="pf-msg" id="pfMsg"></div>
         <div class="box"><div class="pf-st" id="pfSt"></div>
-          <label class="note" style="display:block;margin-top:8px">Potenciômetro do inversor (o botão redondo, no alto à direita): <b id="pfPotT"></b></label>
+          <label class="note" style="display:block;margin-top:8px">Potenciômetro do inversor (o botão redondo ao lado do display): <b id="pfPotT"></b></label>
           <input type="range" id="pfPotR" min="0" max="100" step="1" style="width:100%"></div>
         <div class="box"><h4>Partida da bomba</h4>
           <div class="seg" id="pfMode"><button data-m="direta">Direta (K1)</button><button data-m="inversor">Inversor PF525</button></div>
@@ -489,12 +518,12 @@
     hosts = hosts.filter(h => h !== el && document.contains(h)); hosts.push(el);
     el.innerHTML = opts.compact ? COMPACT : `<div class="pf-wrap">
       <div>
-        <div class="pf-dev2" id="pfDev"><canvas id="pfCanvas" width="400" height="885"></canvas>
+        <div class="pf-dev2" id="pfDev"><canvas id="pfCanvas" width="400" height="855"></canvas>
           ${["up", "down", "esc", "enter", "sel"].map(k => `<button class="hk" data-k="${k}" style="${hot(k)}" aria-label="${{ up: "Seta para cima", down: "Seta para baixo", esc: "Esc", enter: "Enter", sel: "Sel" }[k]}"></button>`).join("")}
           <button class="hk" data-k="start" style="${hot("start")}" aria-label="Start (partir)" title="Start"></button>
           <button class="hk" data-k="stop" style="${hot("stop")}" aria-label="Stop (parar / limpar falha)" title="Stop"></button>
           <button class="hk" data-k="rev" style="${hot("rev")}" aria-label="Reversão" title="Reversão"></button>
-          <div class="hk potz" id="pfPot" style="${hot("pot")}" title="Potenciômetro: arraste para cima/baixo ou use a roda do mouse"></div>
+          <div class="hk potz" id="pfPot" style="${hot("pot")}" title="Potenciômetro: clique para abrir a barra deslizante"></div>
         </div>
         <div class="pf-keys" style="max-width:310px;margin:8px auto 0">No teclado azul, <kbd>◄</kbd> = <b>Esc</b> e <kbd>►</kbd> = <b>↵ Enter</b>. <kbd>Esc</kbd> volta um nível · <kbd>▲</kbd><kbd>▼</kbd> navegam ou mudam o valor · <kbd>Sel</kbd>/<kbd>↵</kbd> entram · em edição, <kbd>Sel</kbd> troca o dígito e <kbd>↵</kbd> salva.</div>
         <div class="pf-next" id="pfNext"></div>
@@ -522,9 +551,7 @@
     const pr = el.querySelector("#pfPotR"); if (pr) pr.oninput = () => { st.pot = +pr.value / 100; paint(); };
     const pot = el.querySelector("#pfPot") || document.createElement("div");
     let drag = null;
-    pot.addEventListener("pointerdown", e => { drag = { y: e.clientY, v: st.pot }; pot.setPointerCapture(e.pointerId); });
-    pot.addEventListener("pointermove", e => { if (!drag) return; st.pot = Math.max(0, Math.min(1, drag.v + (drag.y - e.clientY) / 160)); paint(); });
-    pot.addEventListener("pointerup", () => { drag = null; });
+    void drag; pot.addEventListener("click", e => { st.hit = { k: "pot", t: performance.now() }; potSlider(e.clientX, e.clientY); });
     pot.addEventListener("wheel", e => { e.preventDefault(); st.pot = Math.max(0, Math.min(1, st.pot + (e.deltaY < 0 ? 0.02 : -0.02))); paint(); }, { passive: false });
     el.querySelectorAll("#pfMode button").forEach(b => b.onclick = () => setMode(b.dataset.m));
     el.querySelectorAll("#pfTab button").forEach(b => b.onclick = () => { tab = b.dataset.t; paint(); });
@@ -606,7 +633,7 @@
   }
 
   window.PF525 = {
-    step, key: k => { key(k); paint(); }, mount, paint, pressAt, hitKey, lcd: () => { const L = lcd(); return { ...L, blink: blinkCell(L) }; }, paint3D,
+    step, key: k => { key(k); paint(); }, mount, paint, pressAt, hitKey, potSlider, lcd: () => { const L = lcd(); return { ...L, blink: blinkCell(L) }; }, paint3D,
     get mode() { return mode; }, setMode, onChange: f => listeners.push(f),
     get state() { return st; }, param: c => val(c), setParam: (c, v) => { if (c in st.par) { st.par[c] = v; changed(); } },
     get faulted() { return !!st.fault; }, defs: DEFS, defaults: () => { st.par = defaults(); changed(); },
