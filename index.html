@@ -314,7 +314,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 20px 30px;color:var(--muted);fon
       <div class="load3d" id="load3d">Carregando a cena 3D…</div>
       <div class="v3d-views" id="v3d-views">
         <button id="v3dToggle" class="vtog" title="Mostrar ou ocultar o menu">☰ Menu</button>
-        <div class="vgrp"><div class="vlbl">Ações</div><button id="b3full" class="full">⛶ Tela cheia</button><button id="b3clp" class="clpb">⌨ Programar CLP</button><button id="b3labels">🏷 Rótulos: compactos</button><button id="b3fx">✨ Gráficos: realista</button><button id="b3therm">🌡 Visão térmica</button><button id="b3reset">↺ Recomeçar</button></div>
+        <div class="vgrp"><div class="vlbl">Ações</div><button id="b3full" class="full">⛶ Tela cheia</button><button id="b3clp" class="clpb">⌨ Programar CLP</button><button id="b3vfd">🎛 Inversor PF525</button><button id="b3labels">🏷 Rótulos: compactos</button><button id="b3fx">✨ Gráficos: realista</button><button id="b3therm">🌡 Visão térmica</button><button id="b3reset">↺ Recomeçar</button></div>
         <div class="vgrp"><div class="vlbl">Vistas</div><button data-view="geral">Vista geral</button><button data-view="topo">Topo do TQ-01</button><button data-view="lateral">Lateral do TQ-01</button><button data-view="acrilico">Tanque de acrílico</button><button data-view="tubulacao">Tubulação</button><button data-view="painel">Painel</button><button data-view="clp">CLP</button></div>
       </div>
       <div class="h3d" id="h3d"></div>
@@ -323,6 +323,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 20px 30px;color:var(--muted);fon
     </div>
     <div class="bot3d"><div class="tray3d" id="tray3d"></div><div class="tip3d" id="tip3d"></div></div>
     <div class="ovl3d" id="ovl3d"><div class="ovlbox"><div class="ovlhead"><b>Ligação do PT100 · TE-104 → TT-104 → CLP</b><button class="btn" id="ovlClose">✕ Fechar e voltar à bancada</button></div><div id="ovlBody"></div></div></div>
+    <div class="ovl3d" id="ovlVfd"><div class="ovlbox" style="max-width:1180px"><div class="ovlhead"><b>Inversor Allen-Bradley PowerFlex 525 · 25B-B5P0N104 · acionamento da bomba</b><button class="btn" id="vfdClose">✕ Fechar e voltar à bancada</button></div><div id="vfdBody"></div></div></div>
   </div>
   <div class="card" style="margin-top:18px;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap">
     <div><div class="kicker">CLP Delta DVP-SX2</div><h2 style="margin:0">Programe o CLP e veja a bancada responder</h2>
@@ -356,7 +357,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 20px 30px;color:var(--muted);fon
       <div id="ldExInfo" class="note" style="margin:-4px 0 10px"></div>
       <div id="ldEditor" class="ldeditor"></div>
       <div id="ldMsg" class="msg neu">Comece por uma rede: escolha <b>NA</b> e toque na primeira célula; depois escolha <b>OUT</b> e toque na saída à direita.</div>
-      <datalist id="ldAddrs"><option value="X0">LSL-101</option><option value="X1">LSH-101</option><option value="X2">Botão LIGA</option><option value="X3">Botão DESLIGA (NF)</option><option value="X4">Seletora AUTO</option><option value="X5">TSH-104</option><option value="X6">PSH-103</option><option value="D1112">FIT-102 (vazão)</option><option value="D1113">PIT-103 (pressão)</option><option value="D220">SP vazão</option><option value="D222">Abertura pedida</option><option value="M1012">clock 100 ms</option><option value="M1013">clock 1 s</option><option value="Y4">Resistência TZ-104</option><option value="D1111">TT-104</option><option value="D200">SP temperatura</option><option value="D210">Nível liga</option><option value="D211">Nível desliga</option><option value="K600">60 °C</option><option value="Y0">Bomba</option><option value="Y1">VY-01</option><option value="Y2">Alarme</option><option value="Y3">Sinaleiro</option><option value="M0"></option><option value="M10"></option><option value="M20"></option><option value="M1000">sempre ON</option><option value="D1110">LIT-101</option><option value="D1115">Modo AI/AO (K7967 = 4–20 mA)</option><option value="D1116">FY-102</option><option value="K800">40%</option><option value="K1400">70%</option></datalist>
+      <datalist id="ldAddrs"><option value="X0">LSL-101</option><option value="X1">LSH-101</option><option value="X2">Botão LIGA</option><option value="X3">Botão DESLIGA (NF)</option><option value="X4">Seletora AUTO</option><option value="X5">TSH-104</option><option value="X6">PSH-103</option><option value="D1112">FIT-102 (vazão)</option><option value="D1113">PIT-103 (pressão)</option><option value="D220">SP vazão</option><option value="D222">Abertura pedida</option><option value="M1012">clock 100 ms</option><option value="M1013">clock 1 s</option><option value="Y4">Resistência TZ-104</option><option value="D1111">TT-104</option><option value="D200">SP temperatura</option><option value="D210">Nível liga</option><option value="D211">Nível desliga</option><option value="K600">60 °C</option><option value="Y0">Bomba</option><option value="Y1">VY-01</option><option value="Y2">Alarme</option><option value="Y3">Sinaleiro</option><option value="M0"></option><option value="M10"></option><option value="M20"></option><option value="M1000">sempre ON</option><option value="D1110">LIT-101</option><option value="D1115">Modo AI/AO (K7967 = 4–20 mA)</option><option value="D1116">FY-102</option><option value="D1117">Velocidade do inversor (4000 = 100%)</option><option value="X7">Falha do inversor</option><option value="K800">40%</option><option value="K1400">70%</option></datalist>
     </div>
     <div class="clpside">
       <div class="clp3dslot" id="clp3dSlot"></div>
@@ -1486,8 +1487,8 @@ const pt = (() => {
   document.addEventListener("keydown", e => { if (e.key === "Escape" && box.classList.contains("max")) { box.classList.remove("max"); document.body.style.overflow = ""; label(); if (typeof closeWiring === "function") closeWiring(); } });
 })();
 let load3dP = null;
-const BUILD = "20261114-13"; // muda a cada versão para o navegador não usar arquivos antigos do cache
-function load3dAll() { if (!load3dP) load3dP = loadScript("vendor/three-bundle.js").then(() => loadScript("app-clp.js?v=" + BUILD)).then(() => loadScript("app-3d.js?v=" + BUILD)); return load3dP; }
+const BUILD = "20261115-14"; // muda a cada versão para o navegador não usar arquivos antigos do cache
+function load3dAll() { if (!load3dP) load3dP = loadScript("vendor/three-bundle.js").then(() => loadScript("app-clp.js?v=" + BUILD)).then(() => loadScript("app-pf525.js?v=" + BUILD)).then(() => loadScript("app-3d.js?v=" + BUILD)); return load3dP; }
 (() => {
   const v = document.getElementById("v3d-views"), t = document.getElementById("v3dToggle");
   const set = (col) => { v.classList.toggle("col", col); t.textContent = col ? "☰ Menu" : "✕ Recolher menu"; try { localStorage.setItem("menu3d", col ? "1" : "0"); } catch (e) { } };
@@ -1516,6 +1517,17 @@ function closeWiring() {
 }
 function backFromWiring() { if (document.getElementById("ovl3d").classList.contains("on")) closeWiring(); else show("bancada3d"); }
 function openClp() { if (isFull3d()) { goFullClp(); } else show("clp"); }
+function openVfd() {
+  if (!window.PF525) return;
+  if (document.getElementById("box3d").classList.contains("dock")) dockOpen(false);
+  if (location.hash !== "#bancada3d") show("bancada3d");
+  window.PF525.mount(document.getElementById("vfdBody"));
+  document.getElementById("ovlVfd").classList.add("on");
+}
+function closeVfd() { document.getElementById("ovlVfd").classList.remove("on"); if (window.App3D && window.App3D.refreshHud) window.App3D.refreshHud(); }
+document.getElementById("vfdClose").addEventListener("click", closeVfd);
+document.getElementById("b3vfd").addEventListener("click", openVfd);
+window.openVfd = openVfd;
 window.openWiring = openWiring; window.openClp = openClp; window.backFromWiring = backFromWiring;
 document.getElementById("ovlClose").addEventListener("click", closeWiring);
 document.addEventListener("fullscreenchange", () => { if (!isFull3d()) closeWiring(); });

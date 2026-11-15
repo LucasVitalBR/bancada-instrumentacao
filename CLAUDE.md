@@ -31,9 +31,9 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 
 ## 0. Situação atual (ler primeiro)
 
-- **Versão:** BUILD `20261114-13` (14/11/2026).
-- **Última etapa feita:** líquido da bancada em rosa claro, igual ao fluido da bancada física (BUILD -13). Antes: régua do tanque de acrílico em % (BUILD -12). Antes: ícone do site (favicon de manômetro + sinal 4–20 mA, BUILD -11). Antes: eletrodutos do TQ-01 ligados aos prensa-cabos dos instrumentos (BUILD -10). Antes: item 2 do plano (endereços e escalas do DVP20SX2 conferidos no manual; saída D1116 corrigida para 0..4000; D1115 = K7967 no 1º scan).
-- **Próxima etapa sugerida:** escolher entre os itens 4 (PID), 6 (exportar/importar ladder) ou 7 (modo avaliação) do plano; itens 1 e 3 dependem de fotos/slides.
+- **Versão:** BUILD `20261115-14` (15/11/2026).
+- **Última etapa feita:** **inversor PowerFlex 525** no painel, com IHM interativa, checklist de parâmetros e seletora de partida da bomba DIRETA/INVERSOR (BUILD -14, fases 1 e 2 do roteiro do inversor). Antes: líquido da bancada em rosa claro, igual ao fluido da bancada física (BUILD -13). Antes: régua do tanque de acrílico em % (BUILD -12). Antes: ícone do site (favicon de manômetro + sinal 4–20 mA, BUILD -11). Antes: eletrodutos do TQ-01 ligados aos prensa-cabos dos instrumentos (BUILD -10). Antes: item 2 do plano (endereços e escalas do DVP20SX2 conferidos no manual; saída D1116 corrigida para 0..4000; D1115 = K7967 no 1º scan).
+- **Próxima etapa sugerida:** fases 3 e 4 do inversor (ver 6.1), ou os itens 4 (PID), 6 (exportar/importar ladder) e 7 (modo avaliação) do plano; itens 1 e 3 dependem de fotos/slides.
 - **Repositório oficial:** GitHub `LucasVitalBR/bancada-instrumentacao` (privado), ver 1.2. Lucas e colega trabalham por pull/push.
 - **Site:** https://bancada-instrumentacao.vercel.app (atualiza a cada push).
 - **Drive:** não é mais usado (desde 14/11 só GitHub; ver 1.1).
@@ -114,6 +114,7 @@ O login do wrangler fica salvo no PC do Ederson.
 | `index.html` | Página principal: abas, telas 2D, CSS, carregamento sob demanda do 3D e do CLP, tela cheia, painel lateral do CLP, janela de ligação do PT100 |
 | `app-3d.js` | Cena 3D (Three.js): sala, TQ-01, tanque de acrílico, bomba, tubulação, instrumentos, montagem, simulação física, animações, câmera e colisão. Expõe `window.App3D` |
 | `app-clp.js` | CLP Delta DVP20SX2 simulado: editor de ladder, varredura, validação, programas-padrão e painel de operação. Expõe `window.PLC` |
+| `app-pf525.js` | Inversor Allen-Bradley PowerFlex 525 (25B-B5P0N104): parâmetros, IHM (display de 7 segmentos e teclas), simulação do acionamento, desenho da frente 3D, checklist de atividades e seletora de partida DIRETA/INVERSOR. Expõe `window.PF525`. Carregado entre `app-clp.js` e `app-3d.js` |
 | `vendor/three-bundle.js` | Three.js 0.170 + OrbitControls, CSS2DRenderer, RoomEnvironment, EffectComposer, RenderPass, OutputPass e GTAOPass, empacotados em IIFE com esbuild (`window.THREE`) |
 | `favicon.svg`, `favicon.ico`, `icons/*.png`, `site.webmanifest` | Ícone do site (manômetro azul/laranja + onda 4–20 mA). PNGs gerados do SVG com `rsvg-convert`; o .ico tem 16/32/48 px. Se mudar o SVG, gerar de novo os PNGs e o .ico |
 | `prompt-chatgpt-bancada-nivel-temperatura.md` | Prompt para refazer uma versão só de nível + temperatura no ChatGPT (não inclui as mudanças posteriores) |
@@ -139,7 +140,7 @@ O login do wrangler fica salvo no PC do Ederson.
 
 ## 4. Convenções importantes
 
-- **`const BUILD = "20261114-13"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
+- **`const BUILD = "20261115-14"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
 - **Three.js:** `object.position` é somente leitura. Use o helper `at(obj, pos, scale)`, nunca `Object.assign(mesh, {position})`.
 - **GTAOPass (oclusão ambiente):** deixa sprites/transparentes **pretos**. `overrideVisibility()` foi sobrescrito para esconder `isSprite` e `material.transparent` no G-buffer.
 - **Gráficos:** modo realista ↔ leve. Cai sozinho para o leve se ficar abaixo de 24 fps por 4 s.
@@ -180,6 +181,45 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
   - colisão de câmera.
 - **Animações:** ondas na água, jato, bolhas, dreno, setas de fluxo nos canos, motor girando, rotâmetro, boias, pulso do ultrassom do LIT, vapor, visão térmica.
 
+### Inversor PowerFlex 525 (BUILD -14)
+- **Modelo:** Allen-Bradley **25B-B5P0N104** (PF525, 240 V trifásico, 5,0 A, 0,75 kW / 1 HP, carcaça A, IP20, sem filtro). Manual: **520-UM001** (set/2025), PDF só na pasta antiga do Ederson, sem ir ao GitHub (material da Rockwell). Páginas usadas: 14 (código), 42–46 (bornes), 61–63 (IHM), 65–66 (Basic Program), 78–80 (Basic Display), 90–92 (t062–t064), 161–163 (falhas).
+- **No 3D:** inversor ao lado do K1 no painel; clicar nele (ou em "🎛 Inversor PF525" no menu, ou "Abrir o inversor" no painel escuro) abre a janela da IHM. A frente 3D mostra o display ao vivo.
+- **Seletora "PARTIDA DA BOMBA" (porta do painel, painel escuro e janela do inversor):**
+  - **DIRETA:** o contator K1 liga o motor em 60 Hz, sem rampa (comportamento antigo);
+  - **INVERSOR:** a rotação do motor vem do PF525, com rampa, e a vazão é proporcional à rotação (lei de afinidade). Em reverso, a bomba centrífuga entrega 25 %.
+  - Fica salva em `localStorage` (`partida-bomba`).
+- **IHM fiel ao manual (pág. 63):**
+  - Esc volta níveis: valor → nº do parâmetro → letra do grupo. ▲▼ navegam. Enter/Sel entram.
+  - Edição dígito a dígito, com "PROGRAM" aceso: Sel troca o dígito, Enter salva, Esc cancela.
+  - Parâmetros com símbolo de Stop no manual recusam a alteração com o motor girando (mostra "StoP").
+  - Start, Stop (também limpa falha), Reverse e potenciômetro (arrastar ou roda do mouse) funcionam.
+- **Grupos simulados:**
+  - b (b001–b009, b012, b013);
+  - P (P030–P053);
+  - t (t062–t068);
+  - A (A544);
+  - M (Modified).
+  - Os padrões são os do modelo: P031 = 230 V, P033/P034 = 5,0 A, P036 = 1750 rpm, P041/P042 = 10 s, P044 = 60 Hz, P046 = 1, P047 = 1, t062 = 48.
+  - Os valores ficam salvos em `localStorage` (`pf525-params-v1`).
+- **Simulação:**
+  - rampas em tempo real (não aceleradas);
+  - parada por rampa ou inércia (P045);
+  - corrente ≈ FLA·(0,32 + 0,6·n³) + extra na aceleração;
+  - tensão V/Hz;
+  - b012 no formato do manual (ex.: 062 = bornes + 4–20 mA);
+  - **F007 Motor Overload** quando a corrente passa do P033 por um tempo;
+  - **F048 Params Defaulted** após P053 = 1/2;
+  - autotune (P040) simplificado.
+- **Partida pelos bornes:** P046 = 2 e t062 = 48 (2-Wire FWD). O Y0 do CLP (ou o botão local) fecha o borne 02. t064 = 0 é por borda, 1 por nível. Velocidade pelo CLP: P047 = 6 e `MOV K... D1117`.
+- **Checklist (janela do inversor), conferido no valor gravado:**
+  - Atividade 1 · Partida pela IHM, com dados de placa de **exemplo** (220 V, 60 Hz, 3,0 A, 4 polos, 1720 rpm: conferir a placa real), rampas 5 s, P046 = 1, P047 = 1, partir e levar a 45 Hz, parar.
+  - Atividade 2 · Partida pelo CLP, 2 fios: P046 = 2, t062 = 48, t064 = 0, P047 = 1 ou 6, ligar pelo Y0.
+- **Testado em 15/11:**
+  - direta: 18 L/min;
+  - IHM: 5 s de rampa, 45 Hz, 2,87 A, 13,5 L/min;
+  - CLP: D1117 = 2000 → 30 Hz, 9 L/min, b012 = 062;
+  - F007 com P033 = 0,5 A → X7 = 1, e o Stop limpa.
+
 ### CLP (aba "Programar CLP" e painel na tela cheia)
 - **Instruções:** NA, NF, ↑P (LDP), OUT, SET, RST, CMP, MOV, ADD, SUB, MUL, DIV. Até 6 contatos + 1 linha paralela por rede, comentários por rede.
 - **Monitoramento:** ao vivo, com unidades de engenharia.
@@ -190,12 +230,14 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
 | X0 / X1 | LSL-101 / LSH-101 | 1 = atuado |
 | X2 / X3 / X4 | LIGA (NA) / DESLIGA (NF) / seletora AUTO | |
 | X5 / X6 | TSH-104 / PSH-103 | |
+| X7 | falha do inversor PF525 (relé R1, padrão “Fault”) | 1 = em falha |
 | Y0 / Y1 / Y2 / Y3 / Y4 | bomba / VY-01 / alarme / sinaleiro / resistência TZ-104 | |
 | D1110 | AI CH0 LIT-101 | 2000 = 100 % |
 | D1111 | AI CH1 TT-104 | 10 contagens = 1 °C |
 | D1112 | AI CH2 FIT-102 | 2000 = 30 L/min |
 | D1113 | AI CH3 PIT-103 | 2000 = 6 bar |
 | D1116 | AO CH0 → FY-102 | **4000 = 100 %** (AO 4–20 mA = 0..4000) |
+| D1117 | AO CH1 → inversor PF525, borne 15 (4–20 mA), usado com P047 = 6 | 4000 = 100 % da faixa P043–P044 |
 | D1115 | modo das E/S analógicas | **H1F1F (K7967)** = AD0–AD3 e DA0 em 4–20 mA; gravado no 1º scan (M1002) |
 | D1062 / D1118 | nº de amostras da média (padrão 2) / tempo de amostragem (2 ms) | não simulados |
 | D200 / D210 / D211 | SP temperatura / nível liga / nível desliga (painel) | |
@@ -222,6 +264,16 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
 9. **Testar em PC do laboratório e no projetor** (desempenho do 3D e modo leve automático).
 10. **Republicar o link** a cada versão estável (mesmo artifact).
 
+### 6.1 Roteiro do inversor PowerFlex 525 (aprovado pelo Ederson em 15/11)
+1. ~~Fase 1: modelo 3D no painel + janela ao clicar~~ **feito (BUILD -14).**
+2. ~~Fase 2: IHM interativa fiel ao manual + checklist da Atividade 1 + seletora DIRETA/INVERSOR~~ **feito (BUILD -14).**
+3. **Fase 3:** refinar o motor e a bomba no inversor: curva de corrente mais fiel, rpm com escorregamento, mostrar Hz e rpm na cena, inércia na partida direta (corrente de partida ~6× FLA).
+4. **Fase 4:**
+   - programa-padrão de CLP para controle de **vazão pela rotação** (FIT-102 → D1117);
+   - relé de falha R1 → X7 já existe;
+   - mais falhas didáticas (F004 subtensão, F012 sobrecorrente, F006 motor travado);
+   - atividade 3 (4–20 mA) e atividade 4 (falhas) no checklist.
+
 ## 7. Histórico resumido (13/11/2026)
 
 - **Começo:** REA 6.9.0 instalado no Claude Code/Codex. Pacote SCORM analisado: ele só carrega do servidor do SENAI (o simulador Unity não está no zip).
@@ -241,3 +293,4 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
 - **14/11 (Ederson):** BUILD -13 no GitHub, mas o site seguiu na -12 apesar da automação (Deploy Hook aceito, PENDING). Problema e opções registrados na seção 0.0 para decisão com o Lucas.
 - **15/11 (Ederson):** criado o site no **Cloudflare Pages** da conta do Ederson (https://bancada-instrumentacao.pages.dev), publicado a partir do PC dele com o wrangler. BUILD -13 no ar. O Vercel continua na -12. Procedimento e pendências na seção 0.0.
 - **15/11 (Ederson, manhã):** combinado que o site oficial será o **Cloudflare Pages** e o Vercel será desligado depois que o Cloudflare publicar sozinho. Pendências do Lucas listadas em "PENDENTE PARA O LUCAS" (seção 0.0).
+- **BUILD -14 (15/11, pedido do Ederson):** inversor **Allen-Bradley PowerFlex 525 (25B-B5P0N104)** no painel: modelo 3D com display ao vivo, IHM interativa fiel ao manual 520-UM001 (navegação, edição por dígito, Start/Stop/Reverse/potenciômetro), parâmetros reais dos grupos b, P, t e A, falhas F007/F048, checklist das Atividades 1 (IHM) e 2 (CLP), e **seletora de partida DIRETA/INVERSOR**. Novo arquivo `app-pf525.js`. CLP: D1117 (velocidade, borne 15) e X7 (falha do inversor). Fases 3–4 do roteiro na seção 6.1.

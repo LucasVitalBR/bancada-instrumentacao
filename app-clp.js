@@ -12,8 +12,8 @@
     X5: "TSH-104 · temperatura alta", X6: "PSH-103 · pressão alta",
     M1011: "clock 10 ms", M1012: "clock 100 ms", M1013: "clock 1 s",
     D1112: "AI CH2 · FIT-102 (vazão)", D1113: "AI CH3 · PIT-103 (pressão)", D220: "SP de vazão (painel)", D222: "Abertura pedida da FV (painel)",
-    Y0: "Bomba (contator K1)", Y1: "VY-01 · solenoide", Y2: "Lâmpada de alarme", Y3: "Sinaleiro bomba ligada", Y4: "Resistência TZ-104 (contator K2)",
-    M1000: "sempre ON em RUN", M1002: "pulso no 1º scan", D1110: "AI CH0 · LIT-101", D1111: "AI CH1 · TT-104", D1116: "AO CH0 · FY-102", D1115: "modo das E/S analógicas (H1F1F = 4–20 mA)",
+    Y0: "Bomba (K1 na partida direta · borne 02 do inversor)", Y1: "VY-01 · solenoide", Y2: "Lâmpada de alarme", Y3: "Sinaleiro bomba ligada", Y4: "Resistência TZ-104 (contator K2)",
+    M1000: "sempre ON em RUN", M1002: "pulso no 1º scan", D1110: "AI CH0 · LIT-101", D1111: "AI CH1 · TT-104", D1116: "AO CH0 · FY-102", D1117: "AO CH1 · velocidade do inversor PF525 (borne 15, 4000 = 100 %)", X7: "Falha do inversor PF525 (relé R1)", D1115: "modo das E/S analógicas (H1F1F = 4–20 mA)",
     D200: "SP de temperatura (painel)", D210: "Nível: liga abaixo de (painel)", D211: "Nível: desliga acima de (painel)",
   };
   const io = { X: new Array(8).fill(false), Y: new Array(6).fill(false), M: {}, D: { 1110: 0, 1116: 0 }, btn: { X2: false, X3: false, X4: false } };
@@ -216,7 +216,7 @@
   function wire(x1, x2, y, on) { return `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" class="w${on ? " on" : ""}"/>`; }
   const SHORT = { X0: "LSL-101", X1: "LSH-101", X2: "LIGA", X3: "DESLIGA", X4: "AUTO", X5: "TSH-104", X6: "PSH-103", M1012: "clock 100ms", M1013: "clock 1s", Y0: "bomba", Y1: "VY-01", Y2: "alarme", Y3: "sinaleiro", Y4: "resistência", M1000: "sempre ON", M1002: "1º scan" };
   // unidade de engenharia de um operando: temperatura (10 contagens = 1 °C) ou nível (20 contagens = 1 %)
-  const unitOf = (a, b) => { const t = [a, b].map(x => String(x).toUpperCase()); if (t.some(x => x === "D1111" || x === "D200")) return "T"; if (t.some(x => x === "D1110" || x === "D210" || x === "D211")) return "L"; if (t.some(x => x === "D1112" || x === "D220")) return "F"; if (t.some(x => x === "D1113")) return "P"; if (t.some(x => x === "D1116" || x === "D222" || x === "D14")) return "V"; return null; };
+  const unitOf = (a, b) => { const t = [a, b].map(x => String(x).toUpperCase()); if (t.some(x => x === "D1111" || x === "D200")) return "T"; if (t.some(x => x === "D1110" || x === "D210" || x === "D211")) return "L"; if (t.some(x => x === "D1112" || x === "D220")) return "F"; if (t.some(x => x === "D1113")) return "P"; if (t.some(x => x === "D1116" || x === "D1117" || x === "D222" || x === "D14")) return "V"; return null; };
   const eng = (v, u) => u === "T" ? (v / 10).toFixed(1).replace(".", ",") + " °C" : u === "L" ? Math.round(v / 20) + " %" : u === "F" ? (v * 30 / 2000).toFixed(1).replace(".", ",") + " L/min" : u === "P" ? (v * 6 / 2000).toFixed(2).replace(".", ",") + " bar" : u === "V" ? Math.round(v / 40) + " %" : "";
   function symb(a) { return SYM[String(a).toUpperCase()] || ""; }
   function lineSVG(cells, y, ri, ln, steps, run) {

@@ -515,6 +515,26 @@
     k1.add(at(mesh(new T.BoxGeometry(0.075, 0.12, 0.09), mat(0xEDEDED, 0.1, 0.6)), v3(0, 0, 0.045)));
     S.k1Lamp = new T.MeshStandardMaterial({ color: 0x333333, emissive: 0 });
     k1.add(at(mesh(new T.BoxGeometry(0.03, 0.02, 0.006), S.k1Lamp), v3(0, 0.01, 0.092)));
+    // inversor Allen-Bradley PowerFlex 525 (25B-B5P0N104, carcaça A), ao lado do K1 · frente desenhada pelo app-pf525.js
+    const vfd = new T.Group(); vfd.position.set(0.335, 1.78, 0.04); pn.add(vfd);
+    const VW = 0.13, VH = 0.27, VD = 0.17, blk = mat(0x1B1D21, 0.25, 0.55);
+    vfd.add(at(mesh(new T.BoxGeometry(VW, VH, VD), blk), v3(0, 0, VD / 2)));
+    vfd.add(at(mesh(new T.BoxGeometry(VW * 0.98, VH * 0.42, 0.012), mat(0xD9DBDD, 0.05, 0.6)), v3(0, -VH * 0.29, VD + 0.004)));
+    for (const sx of [-1, 1]) for (let i = 0; i < 9; i++) vfd.add(at(mesh(new T.BoxGeometry(0.004, VH * 0.5, 0.006), mat(0x2A2D32, 0.3, 0.6)), v3(sx * (VW / 2 + 0.002), VH * 0.08, 0.03 + i * 0.015)));
+    vfd.add(at(mesh(new T.BoxGeometry(VW + 0.03, VH + 0.02, 0.006), M.alu), v3(0, 0, 0.003)));
+    S.vfdScreen = (() => { const c = document.createElement("canvas"); c.width = 300; c.height = 624; const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.anisotropy = 4; return { c, t }; })();
+    vfd.add(at(mesh(new T.PlaneGeometry(VW * 0.98, VH * 0.98), new T.MeshStandardMaterial({ map: S.vfdScreen.t, roughness: 0.5 }), false), v3(0, 0, VD + 0.0115)));
+    // cabo de saída do inversor descendo para a canaleta
+    for (let k = 0; k < 3; k++) pipe(v3(-0.03 + k * 0.03, -VH / 2, VD * 0.6), v3(-0.03 + k * 0.03, -0.2, VD * 0.6), 0.0035, mat([0x1F2328, 0x6E4A2C, 0x6E7782][k], 0.1, 0.6), vfd);
+    S.vfd = vfd; S.clickables = [{ obj: vfd, tag: "PF525", fn: () => window.openVfd ? window.openVfd() : null }];
+    if (window.PF525) window.PF525.paint3D(S.vfdScreen.c);
+    // seletora de partida na porta: DIRETA / INVERSOR
+    const selG = new T.Group(); selG.position.set(-0.45, 0.33, 0.012); hinge.add(selG);
+    selG.add(at(mesh(new T.PlaneGeometry(0.16, 0.055), new T.MeshBasicMaterial({ map: canvasTex(320, 110, (c) => { c.fillStyle = "#1F2328"; c.fillRect(0, 0, 320, 110); c.fillStyle = "#fff"; c.font = "bold 26px Arial"; c.textAlign = "center"; c.fillText("PARTIDA DA BOMBA", 160, 34); c.font = "bold 24px Arial"; c.fillText("DIRETA", 70, 92); c.fillText("INVERSOR", 236, 92); }) }), false), v3(0, 0.07, 0)));
+    selG.add(at(mesh(cylZ(0.03, 0.02, 24), mat(0x1F2328, 0.2, 0.5)), v3(0, 0, 0.01)));
+    S.selHandle = new T.Group(); S.selHandle.position.set(0, 0, 0.022); selG.add(S.selHandle);
+    S.selHandle.add(at(mesh(new T.BoxGeometry(0.012, 0.05, 0.016), mat(0xF2F3F4, 0.1, 0.5)), v3(0, 0, 0.008)));
+    S.clickables.push({ obj: selG, tag: "SELETORA", fn: () => { if (!window.PF525) return; window.PF525.setMode(window.PF525.mode === "inversor" ? "direta" : "inversor"); tip(window.PF525.mode === "inversor" ? "Seletora em <b>INVERSOR</b>: a bomba parte pelo PowerFlex 525, com rampa e velocidade ajustável. Toque no inversor para abrir a IHM." : "Seletora em <b>DIRETA</b>: a bomba parte pelo contator K1, direto na rede, em 60 Hz e sem rampa.", ""); renderHud(); } });
     for (let i = 0; i < 4; i++) pn.add(at(mesh(new T.BoxGeometry(0.045, 0.09, 0.07), mat(0xF4F4F4, 0.1, 0.6)), v3(-0.3 + i * 0.05, 1.38, 0.075)));
     pn.add(at(mesh(new T.BoxGeometry(0.12, 0.1, 0.08), mat(0x6B7684, 0.4, 0.5)), v3(0.08, 1.38, 0.08)));
     pn.add(at(mesh(new T.BoxGeometry(0.14, 0.1, 0.09), mat(0xD9DDE2, 0.3, 0.5)), v3(0.27, 1.38, 0.085)));
@@ -897,6 +917,8 @@
       const L = S.lvl, clp = PLCo().run;
       html += `<div class="sec3"><div class="hh">Malha de nível e vazão</div>
         <div class="small">Comando: <b>${clp ? "CLP em RUN" : "local (CLP em STOP)"}</b></div>
+        <div class="small" style="margin-top:4px">Partida da bomba: <b>${window.PF525 && window.PF525.mode === "inversor" ? "Inversor PF525" : "Direta (contator K1)"}</b></div>
+        <div class="row3"><button class="b3" id="b4mode">${window.PF525 && window.PF525.mode === "inversor" ? "Mudar para direta" : "Mudar para inversor"}</button><button class="b3" id="b4vfd">Abrir o inversor</button></div>
         <div class="row3">${clp ? "" : `<button class="b3 pri" id="b4pump">${L.pump ? "Desligar bomba" : "Ligar bomba"}</button>`}<button class="b3" id="b4drain">${L.drain ? "Fechar dreno" : "Abrir dreno"}</button><button class="b3" id="b4clp">Programar o CLP</button></div>
         <label class="small" style="display:block;margin-top:8px">Liga a bomba abaixo de (D210): <b id="b4lot"></b></label>
         <input type="range" id="b4lo" min="5" max="90" step="1" value="${L.spLo}" style="width:100%">
@@ -920,6 +942,8 @@
       const bp = $("#b4pump");
       if (bp) bp.onclick = () => { const L = S.lvl; if (!L.pump && L.trip) { if (L.L >= 80) { tip("O <b>LSH-101</b> ainda está atuado: o nível precisa baixar de 80% para religar a bomba. Abra o dreno.", "bad"); return; } L.trip = false; } L.pump = !L.pump; renderHud(); };
       $("#b4drain").onclick = () => { S.lvl.drain = !S.lvl.drain; renderHud(); };
+      const bm = $("#b4mode"); if (bm) bm.onclick = () => { const VF = window.PF525; if (VF) VF.setMode(VF.mode === "inversor" ? "direta" : "inversor"); renderHud(); };
+      const bv = $("#b4vfd"); if (bv) bv.onclick = () => window.openVfd && window.openVfd();
       $("#b4clp").onclick = () => window.openClp ? window.openClp() : window.show("clp");
       $("#b4fv").oninput = e => { S.lvl.fvCmd = +e.target.value; updateReadings(); };
       $("#b4fq").oninput = e => { api.setFlowSp(+e.target.value); };
@@ -947,7 +971,20 @@
     io.X[6] = ready("tq") && (P.P >= P.plim ? true : P.P <= P.plim - 0.2 ? false : io.X[6]);                      // PSH-103
     io.D[220] = Math.round(L.spQ * RAW / 30); io.D[222] = Math.round(L.av * RAO / 100);
   }
-  function plcCycle(dt) { if (!window.PLC) return; plcInputs(); PLCo().scan(dt); }
+  function plcCycle(dt) { if (!window.PLC) return; plcInputs(); PLCo().io.X[7] = !!(window.PF525 && window.PF525.faulted); PLCo().scan(dt); }
+  // inversor PowerFlex 525: roda em tempo real (as rampas P041/P042 valem em segundos de verdade)
+  function stepDrive(dt) {
+    const VF = window.PF525, L = S.lvl; if (!VF || !L) return;
+    const PL = PLCo(), clp = !!(PL && PL.run);
+    const cmd = clp ? !!PL.io.Y[0] : !!L.pump;                                   // Y0 (ou botão local) fecha o borne 02
+    const ai = clp ? clamp((PL.io.D[1117] || 0) / RAO, 0, 1) : null;             // AO CH1 do CLP (D1117) → borne 15 (4–20 mA)
+    const inv = VF.mode === "inversor";
+    const r = VF.step(dt, { di02: inv && cmd, ai });
+    if (inv) { L.motorN = Math.abs(r.n); L.motorDir = r.n < 0 ? -1 : 1; }
+    S.vfdT = (S.vfdT || 0) + dt;
+    if (S.vfdScreen && S.vfdT > 0.15) { S.vfdT = 0; VF.paint3D(S.vfdScreen.c); S.vfdScreen.t.needsUpdate = true; }
+    if (S.selHandle) S.selHandle.rotation.z = inv ? -0.75 : 0.75;
+  }
   function setHud(on) { S.hudOn = on; S.wrap.classList.toggle("hud-off", !on); try { localStorage.setItem("hud3d", on ? "1" : "0"); } catch (e) { } }
   function renderClp() { if (window.PLC && PLCo().refresh) PLCo().refresh(); }
 
@@ -973,6 +1010,7 @@
       setNeedle(P.P);
       S.panelScreen.draw(wired ? ["TIC-104", `PV ${fmt(P.T)} · SP ${P.sp} °C`] : ["TIC-104", "FALHA TT-104"], "#1F2A37");
     }
+    if (window.PF525) { const VF = window.PF525, s = VF.state; lab("PF525", VF.faulted ? "FALHA F" + String(s.fault).padStart(3, "0") : (VF.mode === "inversor" ? "" : "fora · partida direta · ") + fmt(s.outF, 1) + " Hz · " + fmt(s.I, 2) + " A", VF.faulted); }
     if (L && ready("ln")) {
       const Q = L.Q, qmA = 4 + 16 * Q / 30, fmA = 4 + 16 * L.fv / 100, PL = { X: PLCo().io.X, D1110: PLCo().io.D[1110], litFail: L.litFail };
       const litPct = PL.D1110 / RAW * 100, lmA = 4 + 16 * litPct / 100;
@@ -1029,17 +1067,26 @@
     } else {
       if (L.L >= 85 && L.pump) { L.trip = true; L.pump = false; renderHud(); tip("<b>LSH-101 atuou!</b> Nível alto: a chave desligou a bomba e a VY-01 fechou. É intertravamento: protege contra transbordar.", "bad"); }
       pumpCmd = L.pump; vyCmd = L.pump;
+      // no comando local, a VY-01 também abre quando o motor gira pelo inversor (partida pela tecla verde da IHM)
+      if (window.PF525 && window.PF525.mode === "inversor" && (L.motorN || 0) > 0.03 && !L.trip) vyCmd = true;
     }
     if (pumpCmd && !vyCmd) { if (!L.deadMsg) { L.deadMsg = true; tip("Bomba ligada (Y0) com a <b>VY-01 fechada</b> (Y1 = 0): não há vazão. Ligue o Y1 junto com o Y0.", "bad"); } } else L.deadMsg = false;
     L.fv += (L.fvCmd - L.fv) * Math.min(1, dt / 1.5);
-    L.pumpOn = pumpCmd; L.vy = vyCmd;
-    L.Q = pumpCmd && vyCmd ? 30 * L.fv / 100 : 0;
+    L.vy = vyCmd;
+    // seletora: DIRETA = contator K1 (60 Hz na hora) · INVERSOR = rotação vem do PowerFlex 525 (stepDrive)
+    const inv = window.PF525 && window.PF525.mode === "inversor";
+    if (!inv) { L.motorN = pumpCmd ? 1 : 0; L.motorDir = 1; }
+    else if (pumpCmd && window.PF525.param("P046") !== 2 && !window.PF525.state.run && !L.vfdMsg) { L.vfdMsg = true; tip("A bomba recebeu o comando, mas o inversor está com <b>P046 = " + window.PF525.param("P046") + "</b>: ele só parte pela tecla verde da IHM. Para partir pelo CLP/botão (borne 02), use <b>P046 = 2</b> e <b>t062 = 48</b>.", "bad"); }
+    if (!pumpCmd) L.vfdMsg = false;
+    L.pumpOn = (L.motorN || 0) > 0.03;
+    const nEff = clamp(L.motorN || 0, 0, 1.25) * (L.motorDir < 0 ? 0.25 : 1);   // vazão ∝ rotação (lei de afinidade); ao contrário, a centrífuga entrega pouco
+    L.Q = vyCmd && L.pumpOn ? 30 * L.fv / 100 * nEff : 0;
     const out = (L.drain ? 14 : 3) * Math.sqrt(Math.max(L.L, 0) / 100);
     L.L = clamp(L.L + (L.Q - out) / 60 / 300 * 100 * dt * 4, 0, 100);
     if (L.L >= 99.5 && L.Q > 0) { if (!L.overMsg) { L.overMsg = true; tip("<b>Transbordou!</b> O tanque de acrílico encheu até a borda. Nada desligou a bomba: use o LSH-101 (X1, contato NF) como proteção no programa.", "bad"); } } else if (L.L < 95) L.overMsg = false;
     setWater(L.L);
-    S.pumpLamp.emissive.setHex(pumpCmd ? 0x2EE07A : 0); S.pumpLamp.emissiveIntensity = pumpCmd ? 1.4 : 0;
-    S.k1Lamp.emissive.setHex(pumpCmd ? 0x2EE07A : 0); S.k1Lamp.emissiveIntensity = pumpCmd ? 1.2 : 0;
+    S.pumpLamp.emissive.setHex(L.pumpOn ? 0x2EE07A : 0); S.pumpLamp.emissiveIntensity = L.pumpOn ? 1.4 : 0;
+    const k1 = pumpCmd && !inv; S.k1Lamp.emissive.setHex(k1 ? 0x2EE07A : 0); S.k1Lamp.emissiveIntensity = k1 ? 1.2 : 0;
     if (S.doorLamps) { const on = [PL.io.Y[3] || (!PL.run && pumpCmd), PL.io.Y[2], false]; S.doorLamps.forEach((m, i) => { m.emissiveIntensity = on[i] ? 1.6 : 0.08; }); }
     if (S.vyLamp) { S.vyLamp.emissive.setHex(vyCmd ? 0xFFB020 : 0); S.vyLamp.emissiveIntensity = vyCmd ? 1.4 : 0; }
     if (S.fvMark) S.fvMark.position.y = 0.15 + 0.035 * L.fv / 100;
@@ -1165,8 +1212,10 @@
     const op = Q > 0.2 ? Math.min(0.9, 0.35 + Q / 30) : 0;
     for (const f of [...A.suc, ...A.dis]) { f.m.opacity += (op - f.m.opacity) * Math.min(1, dt * 4); f.o.visible = f.m.opacity > 0.02; f.tex.offset.y = -A.flowDist / 0.11; }
     // ---- motor: partida/parada suaves e vibração
-    A.pumpW += ((pumpOn ? 1 : 0) - A.pumpW) * Math.min(1, dt * (pumpOn ? 1.6 : 0.8));
-    if (S.pumpFan) S.pumpFan.rotation.x += dt * 55 * A.pumpW;
+    // com inversor, a rotação já vem com a rampa; na partida direta, o motor sobe rápido
+    const invM = window.PF525 && window.PF525.mode === "inversor", mN = invM ? clamp(L.motorN || 0, 0, 1.25) : (pumpOn ? 1 : 0);
+    A.pumpW += (mN - A.pumpW) * Math.min(1, dt * (invM ? 8 : pumpOn ? 1.6 : 0.8));
+    if (S.pumpFan) S.pumpFan.rotation.x += dt * 55 * A.pumpW * (invM && L.motorDir < 0 ? -1 : 1);
     if (S.pumpG) { const v = 0.0009 * A.pumpW; S.pumpG.position.set(S.pumpBase.x + (Math.random() - 0.5) * v, S.pumpBase.y + (Math.random() - 0.5) * v, S.pumpBase.z + (Math.random() - 0.5) * v); }
     // ---- rotâmetro "dançando"
     if (S.rotaFloat && Q > 0.2) S.rotaFloat.position.y += Math.sin(t * 13) * 0.004 + Math.sin(t * 29) * 0.002;
@@ -1299,6 +1348,8 @@
     addLabel("TQAC", S.ac, v3(0.42, 1.25, 0.1), "<b>Tanque de acrílico</b><i>nível</i>", "tank");
     addLabel("ROTA", root, v3(2.82, 1.15, -0.9), "<b>Rotâmetro</b><i>indicação local</i>", "pre");
     addLabel("BOMBA", root, v3(1.3, 0.42, -0.95), "<b>Bomba</b>", "pre");
+    addLabel("PF525", S.vfd, v3(0, 0.18, 0.12), "<b>Inversor PF525</b><i></i>", "pre");
+    if (window.PF525) window.PF525.onChange(() => { if (S.hudOn) renderHud(); });
     S.proc = { T: 25, P: 0, sp: 60, lim: 90, plim: 2.2, run: false, stuck: false, trip: false, heat: false, ctrl: false };
     S.lvl = { L: 40, Q: 0, fv: 60, fvCmd: 60, pump: false, pumpOn: false, vy: false, trip: false, drain: false, litFail: false, spLo: 40, spHi: 70, spQ: 15, av: 50 };
     setWater(S.lvl.L);
@@ -1312,6 +1363,11 @@
       const ghosts = Object.values(S.slots).map(s => s.ghost).filter(g => g && g.visible);
       const hitsG = ray.intersectObjects(ghosts, false);
       const hitsP = ray.intersectObjects(Object.values(S.parts), true);
+      const cl = S.clickables || [], hitsC = ray.intersectObjects(cl.map(c => c.obj), true);
+      if (hitsC.length && (!hitsG.length || hitsC[0].distance < hitsG[0].distance) && (!hitsP.length || hitsC[0].distance < hitsP[0].distance)) {
+        let o = hitsC[0].object; while (o && !cl.find(c => c.obj === o)) o = o.parent;
+        const c = cl.find(x => x.obj === o); if (c) return { click: c };
+      }
       if (hitsG.length && (!hitsP.length || hitsG[0].distance < hitsP[0].distance + 0.05)) return { slot: hitsG[0].object.userData.slot };
       if (hitsP.length) return { part: hitsP[0].object.userData.tag };
       return null;
@@ -1322,6 +1378,7 @@
       down = null;
       const h = pick(e);
       if (!h) return;
+      if (h.click) { h.click.fn(); return; }
       if (h.slot) tryInstall(h.slot);
       else if (h.part) {
         const r = window.readTag ? window.readTag(h.part).text : h.part;
@@ -1333,7 +1390,7 @@
       if (e.buttons) return;
       const h = pick(e);
       renderer.domElement.style.cursor = h ? "pointer" : "grab";
-      const hot = h && h.part ? h.part : null;
+      const hot = h && h.part ? h.part : h && h.click ? h.click.tag : null;
       if (hot !== S.hot) { if (S.hot && S.labels[S.hot]) S.labels[S.hot].el.classList.remove("hot"); S.hot = hot; if (hot && S.labels[hot]) S.labels[hot].el.classList.add("hot"); }
       Object.values(S.slots).forEach(s => { if (s.ghost) s.ghost.userData.hover = h && h.slot === s.ghost.userData.slot; });
     });
@@ -1370,6 +1427,7 @@
       Object.values(S.parts).forEach(p => { const a = p.userData.anim; if (a && a.t < 1) { a.t = Math.min(1, a.t + dt * 2.2); const k = 1 - Math.pow(1 - a.t, 3); p.position.lerpVectors(a.from, a.to, k); } });
       if (ready("tq") || ready("ln")) plcCycle(dt * 5);
       if (ready("tq")) stepProc(dt * 5);
+      stepDrive(dt);
       if (ready("ln")) stepLevel(dt * 5);
       stepAnims(dt);
       acc += dt; if (acc > 0.25) { acc = 0; updateReadings(); }
@@ -1414,7 +1472,7 @@
     for (const k of ["pitScreen", "pgNeedle", "tshLamp", "pshLamp", "lshLamp", "lslLamp", "fitScreen", "fvMark", "vyLamp", "litScreen", "lshPivot", "lslPivot"]) S[k] = null;
     for (const id in SLOTDEF) S.slots[id].ghost.visible = !SLOTDEF[id].req;
     Object.assign(S.proc, { T: 25, P: 0, run: false, stuck: false, trip: false, heat: false, ctrl: false });
-    Object.assign(S.lvl, { L: 40, Q: 0, fv: 60, fvCmd: 60, pump: false, pumpOn: false, vy: false, trip: false, drain: false, litFail: false });
+    Object.assign(S.lvl, { L: 40, Q: 0, motorN: 0, motorDir: 1, fv: 60, fvCmd: 60, pump: false, pumpOn: false, vy: false, trip: false, drain: false, litFail: false });
     if (window.PLC) window.PLC.reset();
     setWater(40); S.tzLamp.emissive.setHex(0); S.pumpLamp.emissive.setHex(0); S.k1Lamp.emissive.setHex(0); S.rotaFloat.position.y = 0.7;
     S.panelScreen.draw(["HMI", "aguardando"], "#1F2A37"); drawPlc();
@@ -1440,6 +1498,6 @@
     setLitFail(v) { S.lvl.litFail = !!v; if (v) tip("<b>LIT-101 travado em 10%</b>: o CLP acha que o tanque está quase vazio. Se o programa não usar o LSH-101 (X1), o tanque transborda.", "bad"); },
     ready: () => ready("ln"),
     autoInstall() { for (const p of PARTS) if (p.slot && !S.installed[p.tag]) { S.sel = p.tag; install(p, p.slot); const a = S.parts[p.tag].userData.anim; a.t = 1; S.parts[p.tag].position.copy(a.to); } },
-    _tick(dt) { if (ready("tq") || ready("ln")) plcCycle(dt); if (ready("tq")) stepProc(dt); if (ready("ln")) stepLevel(dt); updateReadings(); },
+    _tick(dt) { if (ready("tq") || ready("ln")) plcCycle(dt); if (ready("tq")) stepProc(dt); stepDrive(dt); if (ready("ln")) stepLevel(dt); updateReadings(); },
   };
 })();
