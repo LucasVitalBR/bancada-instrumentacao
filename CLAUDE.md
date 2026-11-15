@@ -31,9 +31,9 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 
 ## 0. Situação atual (ler primeiro)
 
-- **Versão:** BUILD `20261115-21` (15/11/2026).
-- **Última etapa feita:** **inversor PowerFlex 525** no painel, com IHM interativa, checklist de parâmetros e seletora de partida da bomba DIRETA/INVERSOR (BUILD -14, fases 1 e 2 do roteiro do inversor). Antes: líquido da bancada em rosa claro, igual ao fluido da bancada física (BUILD -13). Antes: régua do tanque de acrílico em % (BUILD -12). Antes: ícone do site (favicon de manômetro + sinal 4–20 mA, BUILD -11). Antes: eletrodutos do TQ-01 ligados aos prensa-cabos dos instrumentos (BUILD -10). Antes: item 2 do plano (endereços e escalas do DVP20SX2 conferidos no manual; saída D1116 corrigida para 0..4000; D1115 = K7967 no 1º scan).
-- **Próxima etapa sugerida:** fases 3 e 4 do inversor (ver 6.1), ou os itens 4 (PID), 6 (exportar/importar ladder) e 7 (modo avaliação) do plano; itens 1 e 3 dependem de fotos/slides.
+- **Versão:** BUILD `20261115-22` (15/11/2026).
+- **Última etapa feita:** **três inversores no painel** (BUILD -22): PowerFlex 525, **Schneider Altivar ATV12** e **WEG CFW500** lado a lado num painel de inversores novo, com seletora de partida de 4 posições (Direta / PF525 / ATV12 / CFW500). Antes: **inversor PowerFlex 525** no painel, com IHM interativa, checklist de parâmetros e seletora de partida da bomba DIRETA/INVERSOR (BUILD -14, fases 1 e 2 do roteiro do inversor). Antes: líquido da bancada em rosa claro, igual ao fluido da bancada física (BUILD -13). Antes: régua do tanque de acrílico em % (BUILD -12). Antes: ícone do site (favicon de manômetro + sinal 4–20 mA, BUILD -11). Antes: eletrodutos do TQ-01 ligados aos prensa-cabos dos instrumentos (BUILD -10). Antes: item 2 do plano (endereços e escalas do DVP20SX2 conferidos no manual; saída D1116 corrigida para 0..4000; D1115 = K7967 no 1º scan).
+- **Próxima etapa sugerida:** o Ederson testar os três inversores e conferir os dados de placa do motor real; depois as fases 3 e 4 do inversor (ver 6.1), ou os itens 4 (PID), 6 (exportar/importar ladder) e 7 (modo avaliação) do plano; itens 1 e 3 dependem de fotos/slides.
 - **Repositório oficial:** GitHub `LucasVitalBR/bancada-instrumentacao` (**público desde 15/11**), ver 1.2. Lucas e colega trabalham por pull/push.
 - **Site:** https://bancada-instrumentacao.vercel.app (atualiza a cada push).
 - **Drive:** não é mais usado (desde 14/11 só GitHub; ver 1.1).
@@ -123,6 +123,8 @@ O login do wrangler fica salvo no PC do Ederson.
 | `app-3d.js` | Cena 3D (Three.js): sala, TQ-01, tanque de acrílico, bomba, tubulação, instrumentos, montagem, simulação física, animações, câmera e colisão. Expõe `window.App3D` |
 | `app-clp.js` | CLP Delta DVP20SX2 simulado: editor de ladder, varredura, validação, programas-padrão e painel de operação. Expõe `window.PLC` |
 | `app-pf525.js` | Inversor Allen-Bradley PowerFlex 525 (25B-B5P0N104): parâmetros, IHM (display de 7 segmentos e teclas), simulação do acionamento, desenho da frente 3D, checklist de atividades e seletora de partida DIRETA/INVERSOR. Expõe `window.PF525`. Carregado entre `app-clp.js` e `app-3d.js` |
+| `app-drives.js` | Inversores **WEG CFW500** e **Schneider Altivar ATV12** (parâmetros, IHM, simulação, frente desenhada sobre a foto, checklists) e a **seletora de partida** de 4 posições. Expõe `window.DRV` = `{ sel, names, list: { pf525, atv12, cfw500 }, setSel, onChange, active, renderSel }`. Carregado depois de `app-pf525.js` e antes de `app-3d.js` |
+| `vendor/cfw500-img.js`, `vendor/atv12-img.js` | Fotos da frente (imagens do ChatGPT enviadas pelo Ederson, recortadas para 400 × 1046 e 400 × 721), em `window.CFW500_IMG` e `window.ATV12_IMG`. A etiqueta da imagem do Schneider dizia ATV312: é coberta e redesenhada como **ATV12H075M2** |
 | `vendor/pf525-img.js` | Foto da frente do inversor em JPEG embutido (data URI, ~72 KB), em `window.PF525_IMG`. Vem de uma imagem do ChatGPT enviada pelo Ederson, recortada para 400 × 885. Embutida para não “contaminar” o canvas do WebGL quando o HTML é aberto direto do disco |
 | `vendor/three-bundle.js` | Three.js 0.170 + OrbitControls, CSS2DRenderer, RoomEnvironment, EffectComposer, RenderPass, OutputPass, GTAOPass, **UnrealBloomPass e SMAAPass** (desde a BUILD -21), empacotados em IIFE com esbuild (`window.THREE`) |
 | `favicon.svg`, `favicon.ico`, `icons/*.png`, `site.webmanifest` | Ícone do site (manômetro azul/laranja + onda 4–20 mA). PNGs gerados do SVG com `rsvg-convert`; o .ico tem 16/32/48 px. Se mudar o SVG, gerar de novo os PNGs e o .ico |
@@ -149,7 +151,7 @@ O login do wrangler fica salvo no PC do Ederson.
 
 ## 4. Convenções importantes
 
-- **`const BUILD = "20261115-21"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
+- **`const BUILD = "20261115-22"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
 - **Three.js:** `object.position` é somente leitura. Use o helper `at(obj, pos, scale)`, nunca `Object.assign(mesh, {position})`.
 - **GTAOPass (oclusão ambiente):** deixa sprites/transparentes **pretos**. `overrideVisibility()` foi sobrescrito para esconder `isSprite` e `material.transparent` no G-buffer.
 - **Gráficos (desde a BUILD -21): três níveis no botão ✨ Gráficos** (`S.setQuality`, salvo em `localStorage` `gfx3d` só quando a escolha é manual):
@@ -199,6 +201,27 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
   - janela de ligação do PT100 em tela cheia;
   - colisão de câmera.
 - **Animações:** ondas na água, jato, bolhas, dreno, setas de fluxo nos canos, motor girando, rotâmetro, boias, pulso do ultrassom do LIT, vapor, visão térmica.
+
+### Painel de inversores (BUILD -22)
+- **Três inversores lado a lado** num painel novo, à esquerda do painel do CLP (`S.drvPanel`, no `buildPanel` do `app-3d.js`): **PowerFlex 525** (mais perto do CLP), **Altivar ATV12** no meio e **WEG CFW500**. Cada um tem a frente com display ao vivo (`S.drv3d[k]`) e rótulo na cena (`VFD-pf525` etc.).
+- **Seletora "PARTIDA DA BOMBA" de 4 posições** (porta do painel do CLP, painel escuro e painel de cada inversor): **Direta (K1) / PF525 / ATV12 / CFW500**. Fica em `window.DRV` (`localStorage` `partida-bomba`; o valor antigo "inversor" vira "pf525").
+  - Só o inversor escolhido recebe o comando do Y0 (PF525 borne 02 · ATV12 LI1 · CFW500 DI1) e a referência D1117 (AI 4–20 mA) e gira a bomba. X7 = falha do inversor escolhido.
+  - Os outros podem ser parametrizados e até partir pela IHM, mas não acionam o motor (o painel avisa).
+  - Se a bomba recebe o comando e o inversor escolhido não está programado para partir pelos bornes, a dica diz o que falta (`drvExtMsg`).
+- **Painel lateral** (`#vfdDock`): abas PF525 / ATV12 / CFW500 (⚡ marca o que aciona a bomba). `openVfd(k)`, `openVfdBig(k)`; `isVfdDockOpen()` devolve a chave do inversor aberto (ou `false`). Vistas `inversor` (os três), `inv-pf525`, `inv-atv12`, `inv-cfw500`. A aba aberta fica em `localStorage` `vfd-aba`.
+- **Parâmetros salvos** em `localStorage` `drv-cfw500-v1` e `drv-atv12-v1` (o PF525 continua em `pf525-params-v1`).
+- **WEG CFW500** (manual de programação 10001469555, software 1.8x; págs. 9–19 referência rápida e 40–45 HMI; PDF só na pasta antiga do Ederson). Modelo de referência 200–240 V, 4,3 A, motor 0,75 kW.
+  - HMI: BACK/ESC, MENU/ENTER, ▲▼ (segurar acelera), giro, LOC/REM, JOG, I, O. Display com mostrador principal, secundário, unidade, LOC/REM, RUN e barra.
+  - Navegação: monitoração (P0205/P0206; ▲▼ mudam P0121 quando a referência é a HMI) → nível 1 grupos PARAM/READ/MODIF/BASIC/MOTOR/I/O → nível 2 parâmetro → nível 3 edição (ENTER salva, ESC cancela). Parâmetros "cfg" só mudam com o motor parado.
+  - Parâmetros: P0001–P0007, P0012, P0018, P0037, P0049 (leitura), P0100/P0101, P0121/P0122, P0133/P0134, P0135, P0156, P0202, P0204 (5/6 = padrão WEG 60/50 Hz), P0205/P0206, P0220–P0227, P0229, P0233, P0263/P0264, P0400–P0404.
+  - Falha F0072 (sobrecarga, alarme A0046 antes); a tecla O reseta. AI1: P0233 = 1 é 4–20 mA; com 0 lê 0–20 mA (4 mA = 20 %).
+  - Atividade 1 (LOCAL): dados do motor, rampas 5 s, P0134 = 60, P0220 = 2, I/O e 45 Hz. Atividade 2 (REMOTO): P0220 = 1 ou 3, P0227 = 1, P0263 = 1, P0222 = 1, P0233 = 1.
+- **Schneider Altivar ATV12** (ATV12H075M2, manual BBV28581; págs. 33–38, 40–41, 47–52, 60–61, 65–66; PDF só na pasta antiga). O Ederson escolheu simular o ATV12 (a imagem dizia ATV312).
+  - Display de 4 dígitos, LEDs REF/MON/CONF e valor/unidade, botão giratório (no 3D e na IHM: clique à **esquerda** = −, **direita** = +, **centro** = ENT), ESC, MODE, RUN e STOP/RESET (desenhados na tampa oval).
+  - Modos: rEF (AIU1 pelo botão giratório, quando Fr1 = AIU1), MOn (rFr, LCr, ULn, tHr, StAt), ConF (bFr, Fr1, ACC, dEC, LSP, HSP, nCr, AI1t, tCC, UnS, FrS, nSP, tFr, rIn, FCS). Mostra **rdY** parado.
+  - **ENT segurado 2 s** para gravar bFr, AI1t, tCC e FCS (a ampulheta do manual). O tempo do toque vem do `pointerdown`/`pointerup` da cena 3D (`holdMs`) e dos botões da IHM.
+  - De fábrica Fr1 = AI1 e tCC = 2C: RUN só funciona com **Fr1 = AIU1**. AI1t = 0A para ler 4–20 mA. Falha OLF; STOP reseta.
+  - Atividade 1: bFr = 60, UnS, nCr, FrS/nSP, ACC/dEC, HSP, Fr1 = AIU1, RUN e 45 Hz (AIU1 = 75 %). Atividade 2: Fr1 = AI1, tCC = 2C, AI1t = 0A.
 
 ### Inversor PowerFlex 525 (BUILD -14)
 - **Modelo:** Allen-Bradley **25B-B5P0N104** (PF525, 240 V trifásico, 5,0 A, 0,75 kW / 1 HP, carcaça A, IP20, sem filtro). Manual: **520-UM001** (set/2025), PDF só na pasta antiga do Ederson, sem ir ao GitHub (material da Rockwell). Páginas usadas: 14 (código), 42–46 (bornes), 61–63 (IHM), 65–66 (Basic Program), 78–80 (Basic Display), 90–92 (t062–t064), 161–163 (falhas).
@@ -253,14 +276,14 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
 | X0 / X1 | LSL-101 / LSH-101 | 1 = atuado |
 | X2 / X3 / X4 | LIGA (NA) / DESLIGA (NF) / seletora AUTO | |
 | X5 / X6 | TSH-104 / PSH-103 | |
-| X7 | falha do inversor PF525 (relé R1, padrão “Fault”) | 1 = em falha |
+| X7 | falha do inversor escolhido na seletora (PF525 relé R1 “Fault”; ATV12/CFW500 relé de falha) | 1 = em falha |
 | Y0 / Y1 / Y2 / Y3 / Y4 | bomba / VY-01 / alarme / sinaleiro / resistência TZ-104 | |
 | D1110 | AI CH0 LIT-101 | 2000 = 100 % |
 | D1111 | AI CH1 TT-104 | 10 contagens = 1 °C |
 | D1112 | AI CH2 FIT-102 | 2000 = 30 L/min |
 | D1113 | AI CH3 PIT-103 | 2000 = 6 bar |
 | D1116 | AO CH0 → FY-102 | **4000 = 100 %** (AO 4–20 mA = 0..4000) |
-| D1117 | AO CH1 → inversor PF525, borne 15 (4–20 mA), usado com P047 = 6 | 4000 = 100 % da faixa P043–P044 |
+| D1117 | AO CH1 → AI do inversor escolhido (PF525 borne 15 com P047 = 6 · ATV12 AI1 com AI1t = 0A · CFW500 AI1 com P0233 = 1) | 4000 = 100 % da faixa P043–P044 |
 | D1115 | modo das E/S analógicas | **H1F1F (K7967)** = AD0–AD3 e DA0 em 4–20 mA; gravado no 1º scan (M1002) |
 | D1062 / D1118 | nº de amostras da média (padrão 2) / tempo de amostragem (2 ms) | não simulados |
 | D200 / D210 / D211 | SP temperatura / nível liga / nível desliga (painel) | |
@@ -287,7 +310,8 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
 9. **Testar em PC do laboratório e no projetor** (desempenho do 3D e modo leve automático).
 10. **Republicar o link** a cada versão estável (mesmo artifact).
 
-### 6.1 Roteiro do inversor PowerFlex 525 (aprovado pelo Ederson em 15/11)
+### 6.1 Roteiro dos inversores (aprovado pelo Ederson em 15/11)
+0. ~~ATV12 e CFW500 ao lado do PF525, seletora de 4 posições~~ **feito (BUILD -22).** Pendências: o Ederson conferir na bancada real qual inversor existe de fato e os dados de placa do motor.
 1. ~~Fase 1: modelo 3D no painel + janela ao clicar~~ **feito (BUILD -14).**
 2. ~~Fase 2: IHM interativa fiel ao manual + checklist da Atividade 1 + seletora DIRETA/INVERSOR~~ **feito (BUILD -14).**
 3. **Fase 3:** refinar o motor e a bomba no inversor: curva de corrente mais fiel, rpm com escorregamento, mostrar Hz e rpm na cena, inércia na partida direta (corrente de partida ~6× FLA).
@@ -352,3 +376,4 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
   - Testado no navegador interno; **falta testar o desempenho no PC do laboratório e no projetor.**
 - **15/11 (Ederson):** repositório agora **público** (feito pelo Lucas). CLAUDE.md atualizado: tirado o link da pasta do Drive e anotado na seção 0.0 que o Vercel deve passar a publicar os envios do Ederson.
 - **15/11 (Ederson):** escolhido o **Vercel** como site oficial (https://bancada-instrumentacao.vercel.app). A publicação no Cloudflare foi encerrada.
+- **BUILD -22 (15/11, pedido do Ederson):** mais dois inversores para os alunos aprenderem a trabalhar com marcas diferentes: **WEG CFW500** e **Schneider Altivar ATV12** (o Ederson escolheu o ATV12 no lugar do ATV312 da imagem, por causa do manual). Os três ficam lado a lado num **painel de inversores** novo; o PF525 saiu do painel do CLP. Seletora de partida de **4 posições** (`window.DRV`), abas no painel lateral, vistas por inversor, checklists das Atividades 1 e 2 de cada um, ENT segurado 2 s no ATV12. Arquivos novos: `app-drives.js`, `vendor/cfw500-img.js`, `vendor/atv12-img.js`. Testado no navegador interno (IHMs, partida local e por bornes, vazão, sem erros no console).

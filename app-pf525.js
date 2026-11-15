@@ -73,13 +73,15 @@
   };
   let mode = "direta";
   function defaults() { const p = {}; DEFS.forEach(d => { if (!d.ro) p[d.c] = d.d; }); return p; }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(st.par)); localStorage.setItem(KMODE, mode); } catch (e) { } }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(st.par)); } catch (e) { } }
   (function load() {
     st.par = defaults();
     try { const j = JSON.parse(localStorage.getItem(KEY) || "null"); if (j) for (const k in j) if (k in st.par) st.par[k] = j[k]; } catch (e) { }
     try { const m = localStorage.getItem(KMODE); if (m === "inversor" || m === "direta") mode = m; } catch (e) { }
   })();
   const P = c => st.par[c];
+  // a seletora de partida agora fica em window.DRV (app-drives.js): Direta / PF525 / ATV12 / CFW500
+  const curMode = () => window.DRV ? (window.DRV.sel === "pf525" ? "inversor" : "direta") : mode;
   const val = c => { const d = BY[c]; return d.ro ? d.get(st) : st.par[c]; };
   const running = () => st.run || st.outF > 0.01;
   const listeners = [];
@@ -388,7 +390,7 @@
   /* ---------- janela da IHM + checklist ---------- */
   const EX = {
     a1: { t: "Atividade 1 · Partida pela IHM", note: "Dados de placa de um motor de 0,75 kW usados como <b>exemplo</b>: confira a placa do motor da bancada e ajuste.", items: [
-      ["Seletora de partida em <b>INVERSOR</b>", () => mode === "inversor"],
+      ["Seletora de partida em <b>PowerFlex 525</b>", () => curMode() === "inversor"],
       ["P031 [Motor NP Volts] = 220 V", () => P("P031") === 220],
       ["P032 [Motor NP Hertz] = 60 Hz", () => P("P032") === 60],
       ["P033 [Motor OL Current] = 3,0 A", () => Math.abs(P("P033") - 3) < 0.05],
@@ -405,7 +407,7 @@
       ["Parar pela tecla vermelha (O) e observar a rampa de desaceleração", () => st.stopAfter45],
     ] },
     a2: { t: "Atividade 2 · Partida pelo CLP (2 fios)", note: "O Y0 do CLP fecha o borne 02 (Run FWD). A seletora precisa estar em INVERSOR e a bomba recebe o comando do CLP (RUN) ou do botão local.", items: [
-      ["Seletora de partida em <b>INVERSOR</b>", () => mode === "inversor"],
+      ["Seletora de partida em <b>PowerFlex 525</b>", () => curMode() === "inversor"],
       ["P046 [Start Source 1] = 2 (DigIn TrmBlk)", () => P("P046") === 2],
       ["t062 [DigIn TermBlk 02] = 48 (2-Wire FWD)", () => P("t062") === 48],
       ["t064 [2-Wire Mode] = 0 (Edge Trigger)", () => P("t064") === 0],
@@ -507,7 +509,7 @@
           <label class="note" style="display:block;margin-top:8px">Potenciômetro do inversor (o botão redondo ao lado do display): <b id="pfPotT"></b></label>
           <input type="range" id="pfPotR" min="0" max="100" step="1" style="width:100%"></div>
         <div class="box"><h4>Partida da bomba</h4>
-          <div class="seg" id="pfMode"><button data-m="direta">Direta (K1)</button><button data-m="inversor">Inversor PF525</button></div>
+          <div class="dv-sel" id="pfMode"></div>
           <div class="note" style="margin-top:6px" id="pfModeNote"></div></div>
         <div class="box"><div class="seg" id="pfTab"><button data-t="a1">Atividade 1 · IHM</button><button data-t="a2">Atividade 2 · CLP</button></div>
           <div id="pfCk"></div>
@@ -530,7 +532,7 @@
       </div>
       <div class="pf-side">
         <div class="box"><h4>Partida da bomba</h4>
-          <div class="seg" id="pfMode"><button data-m="direta">Direta (contator K1)</button><button data-m="inversor">Inversor PF525</button></div>
+          <div class="dv-sel" id="pfMode"></div>
           <div class="note" style="margin-top:6px" id="pfModeNote"></div></div>
         <div class="box"><div class="pf-st" id="pfSt"></div></div>
         <div class="box pf-now" id="pfNow"></div>
@@ -553,7 +555,6 @@
     let drag = null;
     void drag; pot.addEventListener("click", e => { st.hit = { k: "pot", t: performance.now() }; potSlider(e.clientX, e.clientY); });
     pot.addEventListener("wheel", e => { e.preventDefault(); st.pot = Math.max(0, Math.min(1, st.pot + (e.deltaY < 0 ? 0.02 : -0.02))); paint(); }, { passive: false });
-    el.querySelectorAll("#pfMode button").forEach(b => b.onclick = () => setMode(b.dataset.m));
     el.querySelectorAll("#pfTab button").forEach(b => b.onclick = () => { tab = b.dataset.t; paint(); });
     const bd = el.querySelector("#pfDefaults");
     let armed = 0;
@@ -575,10 +576,12 @@
     if ($("#pfPot")) $("#pfPot").style.setProperty("--a", (-135 + 270 * st.pot) + "deg");
     const pr = $("#pfPotR"); if (pr && document.activeElement !== pr) pr.value = Math.round(st.pot * 100);
     if ($("#pfPotT")) $("#pfPotT").textContent = Math.round(st.pot * 100) + " %";
-    host.querySelectorAll("#pfMode button").forEach(b => b.classList.toggle("on", b.dataset.m === mode));
-    $("#pfModeNote").innerHTML = mode === "inversor"
-      ? "O motor da bomba é alimentado pelo <b>inversor</b>: rampa de aceleração e velocidade ajustável. A vazão acompanha a rotação."
-      : "O motor parte <b>direto na rede</b> pelo contator K1: 60 Hz na hora, sem rampa. O inversor fica fora do circuito.";
+    if (window.DRV) window.DRV.renderSel($("#pfMode"));
+    const sel = window.DRV ? window.DRV.sel : "pf525";
+    $("#pfModeNote").innerHTML = sel === "pf525"
+      ? "O motor da bomba é alimentado por <b>este inversor</b> (PowerFlex 525): rampa de aceleração e velocidade ajustável. A vazão acompanha a rotação."
+      : sel === "direta" ? "O motor parte <b>direto na rede</b> pelo contator K1: 60 Hz na hora, sem rampa. Os inversores ficam fora do circuito."
+      : `A bomba está em <b>${window.DRV.names[sel]}</b>. Este inversor pode ser parametrizado, mas não aciona o motor.`;
     const sit = st.fault ? `<span style="color:#B83A2E">FALHA F${String(st.fault).padStart(3, "0")}</span>` : st.tune > 0 ? "Autotune" : running() ? (st.accel ? "Acelerando" : st.decel ? "Desacelerando" : "Rodando") : "Parado";
     const rpm = Math.round(Math.abs(st.n) * (P("P036") || 1750));
     $("#pfSt").innerHTML = `<div><span>Situação</span><b>${sit}</b></div><div><span>b001 saída</span><b>${st.outF.toFixed(2)} Hz</b></div><div><span>b003 corrente</span><b>${st.I.toFixed(2)} A</b></div>
@@ -626,6 +629,7 @@
   }
   function setMode(m) {
     if (m !== "direta" && m !== "inversor") return;
+    if (window.DRV) { window.DRV.setSel(m === "inversor" ? "pf525" : "direta"); return; }
     if (m === mode) return;
     mode = m; if (m === "direta") st.run = false;
     msg(m === "inversor" ? "Seletora em <b>INVERSOR</b>: o motor da bomba agora é alimentado pelo PowerFlex 525." : "Seletora em <b>DIRETA</b>: o motor parte pelo contator K1, direto na rede.", "");
@@ -633,8 +637,9 @@
   }
 
   window.PF525 = {
-    step, key: k => { key(k); paint(); }, mount, paint, pressAt, hitKey, potSlider, lcd: () => { const L = lcd(); return { ...L, blink: blinkCell(L) }; }, paint3D,
-    get mode() { return mode; }, setMode, onChange: f => listeners.push(f),
+    step, press: k => { key(k); paint(); }, mount, paint, pressAt, hitKey, potSlider, lcd: () => { const L = lcd(); return { ...L, blink: blinkCell(L) }; }, paint3D,
+    key: "pf525", name: "PowerFlex 525", model: "25B-B5P0N104 · 200–240 V · 5,0 A", FW, FH,
+    get mode() { return curMode(); }, setMode, onChange: f => listeners.push(f),
     get state() { return st; }, param: c => val(c), setParam: (c, v) => { if (c in st.par) { st.par[c] = v; changed(); } },
     get faulted() { return !!st.fault; }, defs: DEFS, defaults: () => { st.par = defaults(); changed(); },
   };

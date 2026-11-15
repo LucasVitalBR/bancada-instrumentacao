@@ -158,6 +158,7 @@ table.t tr.hl td{background:#FFF4EA;font-weight:700}
 .box3d.dock .clpdock{display:block}
 .vfddock{display:none;flex:0 0 38%;max-width:560px;min-width:340px;overflow:auto;background:var(--bg);border-radius:var(--r);padding:10px}
 .box3d.vdock .vfddock{display:block}
+.vfdtabs{display:flex;gap:4px;flex-wrap:wrap}.vfdtabs button{border:1.5px solid var(--navy);background:#fff;color:var(--navy);border-radius:8px;padding:4px 9px;font-weight:700;cursor:pointer;font-size:13px}.vfdtabs button.on{background:var(--navy);color:#fff}.vfdtabs button.sel::after{content:" ⚡";color:#E87722}
 .box3d.vdock .h3d,.box3d.vdock .h3dshow{display:none}
 .box3d:fullscreen .vfddock,.box3d.max .vfddock{max-height:100%}
 @media (max-width:760px){.box3d.vdock .stage3d{flex-direction:column}.vfddock{min-width:0;max-height:60vh;flex:none}}
@@ -315,13 +316,13 @@ footer{max-width:1240px;margin:0 auto;padding:0 20px 30px;color:var(--muted);fon
   <div class="box3d" id="box3d">
     <div class="stage3d" id="stage3d">
     <div class="clpdock" id="clpDock"><div class="dockhead"><b>CLP DVP20SX2 · programação</b><button class="btn" id="dockClose">✕ Fechar painel</button></div></div>
-    <div class="vfddock" id="vfdDock"><div class="dockhead"><b>Inversor PF525 · parametrização</b><span style="display:flex;gap:6px"><button class="btn" id="vfdBig" title="Abre a IHM ampliada numa janela">IHM ampliada</button><button class="btn" id="vfdDockClose">✕ Fechar</button></span></div><div id="vfdDockBody"></div></div>
+    <div class="vfddock" id="vfdDock"><div class="dockhead"><span class="vfdtabs" id="vfdTabs"><button data-d="pf525">PF525</button><button data-d="atv12">ATV12</button><button data-d="cfw500">CFW500</button></span><span style="display:flex;gap:6px"><button class="btn" id="vfdBig" title="Abre a IHM ampliada numa janela">IHM ampliada</button><button class="btn" id="vfdDockClose">✕ Fechar</button></span></div><div id="vfdDockBody"></div></div>
     <div class="w3d" id="w3d">
       <div class="load3d" id="load3d">Carregando a cena 3D…</div>
       <div class="v3d-views" id="v3d-views">
         <button id="v3dToggle" class="vtog" title="Mostrar ou ocultar o menu">☰ Menu</button>
-        <div class="vgrp"><div class="vlbl">Ações</div><button id="b3full" class="full">⛶ Tela cheia</button><button id="b3clp" class="clpb">⌨ Programar CLP</button><button id="b3vfd">🎛 Inversor PF525</button><button id="b3labels">🏷 Rótulos: compactos</button><button id="b3cond">🔌 Eletrodutos: visíveis</button><button id="b3fx" title="Alto: sombreamento, brilho e bordas lisas · Médio: sem sombreamento · Leve: para PCs mais simples">✨ Gráficos: alto</button><button id="b3therm">🌡 Visão térmica</button><button id="b3reset">↺ Recomeçar</button></div>
-        <div class="vgrp"><div class="vlbl">Vistas</div><button data-view="geral">Vista geral</button><button data-view="topo">Topo do TQ-01</button><button data-view="lateral">Lateral do TQ-01</button><button data-view="acrilico">Tanque de acrílico</button><button data-view="tubulacao">Tubulação</button><button data-view="painel">Painel</button><button data-view="clp">CLP</button><button data-view="inversor">Inversor</button></div>
+        <div class="vgrp"><div class="vlbl">Ações</div><button id="b3full" class="full">⛶ Tela cheia</button><button id="b3clp" class="clpb">⌨ Programar CLP</button><button id="b3vfd">🎛 Inversores</button><button id="b3labels">🏷 Rótulos: compactos</button><button id="b3cond">🔌 Eletrodutos: visíveis</button><button id="b3fx" title="Alto: sombreamento, brilho e bordas lisas · Médio: sem sombreamento · Leve: para PCs mais simples">✨ Gráficos: alto</button><button id="b3therm">🌡 Visão térmica</button><button id="b3reset">↺ Recomeçar</button></div>
+        <div class="vgrp"><div class="vlbl">Vistas</div><button data-view="geral">Vista geral</button><button data-view="topo">Topo do TQ-01</button><button data-view="lateral">Lateral do TQ-01</button><button data-view="acrilico">Tanque de acrílico</button><button data-view="tubulacao">Tubulação</button><button data-view="painel">Painel</button><button data-view="clp">CLP</button><button data-view="inversor">Inversores</button></div>
       </div>
       <div class="h3d" id="h3d"></div>
       <button class="h3dshow" id="h3dShow" title="Mostrar o painel do processo">📊 Painel</button>
@@ -329,7 +330,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 20px 30px;color:var(--muted);fon
     </div>
     <div class="bot3d"><div class="tray3d" id="tray3d"></div><div class="tip3d" id="tip3d"></div></div>
     <div class="ovl3d" id="ovl3d"><div class="ovlbox"><div class="ovlhead"><b>Ligação do PT100 · TE-104 → TT-104 → CLP</b><button class="btn" id="ovlClose">✕ Fechar e voltar à bancada</button></div><div id="ovlBody"></div></div></div>
-    <div class="ovl3d" id="ovlVfd"><div class="ovlbox" style="max-width:1180px"><div class="ovlhead"><b>Inversor Allen-Bradley PowerFlex 525 · 25B-B5P0N104 · acionamento da bomba</b><button class="btn" id="vfdClose">✕ Fechar e voltar à bancada</button></div><div id="vfdBody"></div></div></div>
+    <div class="ovl3d" id="ovlVfd"><div class="ovlbox" style="max-width:1180px"><div class="ovlhead"><b id="vfdTitle">Inversor</b><button class="btn" id="vfdClose">✕ Fechar e voltar à bancada</button></div><div id="vfdBody"></div></div></div>
   </div>
   <div class="card" style="margin-top:18px;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap">
     <div><div class="kicker">CLP Delta DVP-SX2</div><h2 style="margin:0">Programe o CLP e veja a bancada responder</h2>
@@ -1493,8 +1494,8 @@ const pt = (() => {
   document.addEventListener("keydown", e => { if (e.key === "Escape" && box.classList.contains("max")) { box.classList.remove("max"); document.body.style.overflow = ""; label(); if (typeof closeWiring === "function") closeWiring(); } });
 })();
 let load3dP = null;
-const BUILD = "20261115-21"; // muda a cada versão para o navegador não usar arquivos antigos do cache
-function load3dAll() { if (!load3dP) load3dP = loadScript("vendor/three-bundle.js").then(() => loadScript("app-clp.js?v=" + BUILD)).then(() => loadScript("vendor/pf525-img.js?v=" + BUILD)).then(() => loadScript("app-pf525.js?v=" + BUILD)).then(() => loadScript("app-3d.js?v=" + BUILD)); return load3dP; }
+const BUILD = "20261115-22"; // muda a cada versão para o navegador não usar arquivos antigos do cache
+function load3dAll() { if (!load3dP) load3dP = loadScript("vendor/three-bundle.js").then(() => loadScript("app-clp.js?v=" + BUILD)).then(() => loadScript("vendor/pf525-img.js?v=" + BUILD)).then(() => loadScript("app-pf525.js?v=" + BUILD)).then(() => loadScript("vendor/cfw500-img.js?v=" + BUILD)).then(() => loadScript("vendor/atv12-img.js?v=" + BUILD)).then(() => loadScript("app-drives.js?v=" + BUILD)).then(() => loadScript("app-3d.js?v=" + BUILD)); return load3dP; }
 (() => {
   const v = document.getElementById("v3d-views"), t = document.getElementById("v3dToggle");
   const set = (col) => { v.classList.toggle("col", col); t.textContent = col ? "☰ Menu" : "✕ Recolher menu"; try { localStorage.setItem("menu3d", col ? "1" : "0"); } catch (e) { } };
@@ -1523,34 +1524,47 @@ function closeWiring() {
 }
 function backFromWiring() { if (document.getElementById("ovl3d").classList.contains("on")) closeWiring(); else show("bancada3d"); }
 function openClp() { if (isFull3d()) { goFullClp(); } else show("clp"); }
-function openVfdBig() {
-  if (!window.PF525) return;
+// inversores: PF525 (app-pf525.js), ATV12 e CFW500 (app-drives.js); a seletora fica em window.DRV
+const VFD_TITLES = { pf525: "Inversor Allen-Bradley PowerFlex 525 · 25B-B5P0N104", atv12: "Inversor Schneider Altivar ATV12 · ATV12H075M2", cfw500: "Inversor WEG CFW500 · 200–240 V · 4,3 A" };
+let vfdCur = "pf525";
+try { const v = localStorage.getItem("vfd-aba"); if (VFD_TITLES[v]) vfdCur = v; } catch (e) { }
+const vfdDev = (k) => (window.DRV && window.DRV.list[k]) || (k === "pf525" ? window.PF525 : null);
+function vfdTabs() { document.querySelectorAll("#vfdTabs button").forEach(b => { b.classList.toggle("on", b.dataset.d === vfdCur); b.classList.toggle("sel", !!window.DRV && window.DRV.sel === b.dataset.d); b.title = window.DRV && window.DRV.sel === b.dataset.d ? "Este inversor aciona a bomba" : ""; }); }
+document.querySelectorAll("#vfdTabs button").forEach(b => b.addEventListener("click", () => openVfdDock(b.dataset.d)));
+function openVfdBig(which) {
+  if (typeof which === "string" && VFD_TITLES[which]) vfdCur = which;
+  const D = vfdDev(vfdCur); if (!D) return;
+  document.getElementById("vfdTitle").textContent = VFD_TITLES[vfdCur] + " · acionamento da bomba";
   closeVfdDock();
   if (document.getElementById("box3d").classList.contains("dock")) dockOpen(false);
   if (location.hash !== "#bancada3d") show("bancada3d");
-  window.PF525.mount(document.getElementById("vfdBody"));
+  D.mount(document.getElementById("vfdBody"));
   document.getElementById("ovlVfd").classList.add("on");
 }
 function closeVfd() { document.getElementById("ovlVfd").classList.remove("on"); if (window.App3D && window.App3D.refreshHud) window.App3D.refreshHud(); }
 document.getElementById("vfdClose").addEventListener("click", closeVfd);
 // painel do inversor ao lado da cena 3D (as teclas do PF525 3D ficam clicáveis)
-function openVfdDock() {
-  if (!window.PF525) return;
+function openVfdDock(which) {
+  if (typeof which === "string" && VFD_TITLES[which]) vfdCur = which;
+  const D = vfdDev(vfdCur); if (!D) return;
+  try { localStorage.setItem("vfd-aba", vfdCur); } catch (e) { }
+  vfdTabs();
   const box = document.getElementById("box3d");
   if (box.classList.contains("dock")) dockOpen(false);
   if (location.hash !== "#bancada3d") show("bancada3d");
-  window.PF525.mount(document.getElementById("vfdDockBody"), { compact: true });
+  D.mount(document.getElementById("vfdDockBody"), { compact: true });
   box.classList.add("vdock");
   // recolhe o menu da cena para o inversor ficar à vista (sem mudar a preferência salva)
   const vv = document.getElementById("v3d-views"); if (!vv.classList.contains("col")) { vv.classList.add("col"); document.getElementById("v3dToggle").textContent = "☰ Menu"; }
   window.dispatchEvent(new Event("resize"));
-  if (window.App3D && window.App3D.view) window.App3D.view("inversor");
+  if (window.App3D && window.App3D.view) window.App3D.view("inv-" + vfdCur);
 }
 function closeVfdDock() { const box = document.getElementById("box3d"); if (!box.classList.contains("vdock")) return; box.classList.remove("vdock"); window.dispatchEvent(new Event("resize")); if (window.App3D && window.App3D.refreshHud) window.App3D.refreshHud(); }
 document.getElementById("b3vfd").addEventListener("click", () => { if (document.getElementById("box3d").classList.contains("vdock")) closeVfdDock(); else openVfdDock(); });
-document.getElementById("vfdBig").addEventListener("click", openVfdBig);
+document.getElementById("vfdBig").addEventListener("click", () => openVfdBig());
 document.getElementById("vfdDockClose").addEventListener("click", closeVfdDock);
-window.openVfd = openVfdDock; window.openVfdBig = openVfdBig; window.isVfdDockOpen = () => document.getElementById("box3d").classList.contains("vdock");
+window.openVfd = openVfdDock; window.openVfdBig = openVfdBig; window.isVfdDockOpen = () => document.getElementById("box3d").classList.contains("vdock") ? vfdCur : false;
+window.vfdTabs = vfdTabs;
 window.openWiring = openWiring; window.openClp = openClp; window.backFromWiring = backFromWiring;
 document.getElementById("ovlClose").addEventListener("click", closeWiring);
 document.addEventListener("fullscreenchange", () => { if (!isFull3d()) closeWiring(); });
