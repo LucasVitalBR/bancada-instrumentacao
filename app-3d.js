@@ -522,7 +522,7 @@
     vfd.add(at(mesh(new T.BoxGeometry(VW * 0.98, VH * 0.42, 0.012), mat(0xD9DBDD, 0.05, 0.6)), v3(0, -VH * 0.29, VD + 0.004)));
     for (const sx of [-1, 1]) for (let i = 0; i < 9; i++) vfd.add(at(mesh(new T.BoxGeometry(0.004, VH * 0.5, 0.006), mat(0x2A2D32, 0.3, 0.6)), v3(sx * (VW / 2 + 0.002), VH * 0.08, 0.03 + i * 0.015)));
     vfd.add(at(mesh(new T.BoxGeometry(VW + 0.03, VH + 0.02, 0.006), M.alu), v3(0, 0, 0.003)));
-    S.vfdScreen = (() => { const c = document.createElement("canvas"); c.width = 300; c.height = 624; const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.anisotropy = 4; return { c, t }; })();
+    S.vfdScreen = (() => { const c = document.createElement("canvas"); c.width = 400; c.height = 885; const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.anisotropy = 4; return { c, t }; })();
     S.vfdFront = at(mesh(new T.PlaneGeometry(VW * 0.98, VH * 0.98), new T.MeshStandardMaterial({ map: S.vfdScreen.t, roughness: 0.5 }), false), v3(0, 0, VD + 0.0115)); vfd.add(S.vfdFront);
     // cabo de saída do inversor descendo para a canaleta
     for (let k = 0; k < 3; k++) pipe(v3(-0.03 + k * 0.03, -VH / 2, VD * 0.6), v3(-0.03 + k * 0.03, -0.2, VD * 0.6), 0.0035, mat([0x1F2328, 0x6E4A2C, 0x6E7782][k], 0.1, 0.6), vfd);

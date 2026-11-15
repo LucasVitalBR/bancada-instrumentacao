@@ -298,57 +298,60 @@
     return 5 - cs.length + pos;
   }
 
-  /* ---------- desenho para a textura 3D ---------- */
-  function paint3D(c) {
-    const g = c.getContext("2d"), W = c.width, H = c.height, k = W / 300;
-    g.save(); g.scale(k, k);
-    const w = 300, h = H / k;
-    // corpo superior preto e inferior cinza
-    let gr = g.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, "#1A1C20"); gr.addColorStop(0.5, "#26292E"); gr.addColorStop(1, "#16181B");
-    g.fillStyle = gr; g.fillRect(0, 0, w, h * 0.56);
-    g.fillStyle = "#D9DBDD"; g.fillRect(0, h * 0.56, w, h * 0.44);
-    g.fillStyle = "#C4C7CA"; for (let i = 0; i < 12; i++) g.fillRect(38 + i * 20, h * 0.6, 8, h * 0.22);
-    g.fillStyle = "#B23A2E"; g.font = "italic bold 40px Arial"; g.fillText("PowerFlex", 18, h * 0.95);
-    g.font = "italic bold 20px Arial"; g.fillText("525", 216, h * 0.95);
-    g.fillStyle = "#3A3D42"; g.font = "13px Arial"; ["PORT", "MOD", "NET A", "NET B"].forEach((t, i) => { g.fillText(t, 222, h * 0.83 + i * 15); g.beginPath(); g.arc(275, h * 0.83 - 4 + i * 15, 4, 0, 7); g.fillStyle = i === 0 ? "#2EE07A" : "#3A3D42"; g.fill(); g.fillStyle = "#3A3D42"; });
-    // logotipo e display
-    g.fillStyle = "#C9CDD2"; g.font = "bold 15px Arial"; g.fillText("Allen-Bradley", 46, 30); g.beginPath(); g.arc(30, 25, 11, 0, 7); g.lineWidth = 2; g.strokeStyle = "#C9CDD2"; g.stroke(); g.font = "bold 10px Arial"; g.fillText("AB", 23, 29);
-    g.fillStyle = "#AEB8AC"; g.fillRect(22, 44, 178, 62);
-    const L = lcd(), on = Math.floor(performance.now() / 350) % 2 === 0;
-    const cs = cells(L.txt), bc = blinkCell(L);
-    g.fillStyle = "#1C211C"; g.font = "bold 46px 'Courier New', monospace";
-    cs.forEach((cc, i) => { const hide = (bc === "all" || bc === i) && !on; if (!hide) { g.fillText(cc.ch, 28 + i * 33, 94); if (cc.dp) g.fillRect(28 + i * 33 + 27, 86, 6, 6); } });
-    g.font = "bold 10px Arial"; if (L.unit) g.fillText(L.unit, 150, 56); if (L.fwd) g.fillText("FWD", 26, 56); if (L.prog) g.fillText("PROGRAM", 140, 104);
-    // LED FAULT
-    g.fillStyle = "#C9CDD2"; g.font = "bold 11px Arial"; g.fillText("FAULT", 140, 124);
-    g.beginPath(); g.arc(188, 120, 6, 0, 7); g.fillStyle = st.fault && on ? "#FF3B2E" : "#4A2A28"; g.fill();
-    // teclado: anel azul, Sel, botões
-    g.fillStyle = "#2E6FBF"; g.beginPath(); g.arc(104, 196, 62, 0, 7); g.fill();
-    g.strokeStyle = "#1A1C20"; g.lineWidth = 4; g.beginPath(); g.moveTo(60, 152); g.lineTo(148, 240); g.moveTo(148, 152); g.lineTo(60, 240); g.stroke();
-    g.fillStyle = "#9AA3AD"; g.beginPath(); g.arc(104, 196, 22, 0, 7); g.fill();
-    g.fillStyle = "#fff"; g.font = "bold 14px Arial"; g.fillText("Sel", 93, 201); g.fillText("Esc", 52, 201); g.fillText("↵", 140, 201); g.fillText("▲", 98, 154); g.fillText("▼", 98, 248);
-    // potenciômetro
-    g.fillStyle = "#0E0F11"; g.beginPath(); g.arc(250, 70, 26, 0, 7); g.fill(); g.strokeStyle = "#7A8088"; g.lineWidth = 2; g.stroke();
-    const a = (-135 + 270 * st.pot) * Math.PI / 180; g.strokeStyle = "#E8E8E8"; g.lineWidth = 3; g.beginPath(); g.moveTo(250, 70); g.lineTo(250 + Math.sin(a) * 20, 70 - Math.cos(a) * 20); g.stroke();
-    // start, reversão, stop
-    g.fillStyle = "#1E9A4A"; g.beginPath(); g.arc(258, 156, 15, 0, 7); g.fill(); g.fillStyle = "#fff"; g.fillRect(256, 148, 4, 16);
-    g.fillStyle = "#5A6068"; g.beginPath(); g.arc(214, 205, 13, 0, 7); g.fill();
-    g.fillStyle = "#C8342A"; g.fillRect(238, 188, 40, 40); g.strokeStyle = "#fff"; g.lineWidth = 3; g.beginPath(); g.arc(258, 208, 9, 0, 7); g.stroke();
-    if (st.hit && performance.now() - st.hit.t < 220) { const z = KEYPOS[st.hit.k]; if (z) { g.fillStyle = "rgba(255,255,255,.45)"; g.beginPath(); g.arc(z[0], z[1], z[2], 0, 7); g.fill(); } }
+  /* ---------- frente do inversor (imagem + partes animadas) ---------- */
+  // coordenadas na imagem recortada (400 × 885): [x, y, raio] ou [x0, y0, x1, y1]
+  const FW = 400, FH = 885;
+  const FACE = { lcd: [80, 108, 300, 180], up: [130, 258, 34], down: [130, 380, 34], esc: [68, 318, 34], enter: [195, 318, 34], sel: [130, 318, 28],
+    start: [287, 268, 30], stop: [287, 353, 30], rev: [287, 414, 16], pot: [334, 62, 24], fault: [290, 198, 6], lbl: [150, 489, 214, 523] };
+  const IMG = new Image(); let imgOk = false;
+  IMG.onload = () => { imgOk = true; }; IMG.src = window.PF525_IMG || "";
+  function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+  function drawFace(g, W, H) {
+    g.save(); g.setTransform(W / FW, 0, 0, H / FH, 0, 0);
+    if (imgOk) g.drawImage(IMG, 0, 0, FW, FH); else { g.fillStyle = "#26292E"; g.fillRect(0, 0, FW, FH * 0.5); g.fillStyle = "#D6D7D3"; g.fillRect(0, FH * 0.5, FW, FH * 0.5); }
+    const now = performance.now(), on = Math.floor(now / 350) % 2 === 0;
+    // display de cristal líquido verde com o conteúdo da simulação
+    const [x0, y0, x1, y1] = FACE.lcd, L = lcd(), cs = cells(L.txt), bc = blinkCell(L);
+    const gr = g.createLinearGradient(0, y0, 0, y1); gr.addColorStop(0, "#B4DB6A"); gr.addColorStop(1, "#93C247");
+    g.fillStyle = gr; rr(g, x0, y0, x1 - x0, y1 - y0, 4); g.fill();
+    g.fillStyle = "rgba(0,40,0,.07)"; for (let yy = y0 + 3; yy < y1; yy += 3) g.fillRect(x0 + 2, yy, x1 - x0 - 4, 1);
+    g.fillStyle = "#14320B"; g.textBaseline = "alphabetic";
+    g.font = "bold 46px 'Courier New', monospace";
+    cs.forEach((c, i) => { const hide = (bc === "all" || bc === i) && !on; if (hide) return; const x = x0 + 26 + i * 33; g.fillText(c.ch, x, y1 - 14); if (c.dp) g.fillRect(x + 27, y1 - 21, 6, 6); });
+    g.font = "bold 11px Arial";
+    g.textAlign = "left"; if (L.fwd) g.fillText("FWD", x0 + 6, y0 + 14); if (L.rev) g.fillText("REV", x0 + 6, y0 + 14); if (L.prog) g.fillText("PROGRAM", x0 + 6, y1 - 4);
+    g.textAlign = "right"; if (L.unit) g.fillText(L.unit, x1 - 6, y0 + 14); g.textAlign = "left";
+    // LED de falha
+    g.fillStyle = "#AEB4BB"; g.font = "bold 10px Arial"; g.textAlign = "right"; g.fillText("FAULT", FACE.fault[0] - 10, FACE.fault[1] + 4); g.textAlign = "left";
+    g.beginPath(); g.arc(FACE.fault[0], FACE.fault[1], FACE.fault[2], 0, 7); g.fillStyle = st.fault && on ? "#FF3B2E" : "#4A2A28"; g.fill();
+    if (st.fault && on) { g.beginPath(); g.arc(FACE.fault[0], FACE.fault[1], 13, 0, 7); g.fillStyle = "rgba(255,59,46,.25)"; g.fill(); }
+    // potenciômetro (o PF525 tem; a imagem não mostra)
+    const [px, py, pr] = FACE.pot;
+    g.beginPath(); g.arc(px, py, pr + 4, 0, 7); g.fillStyle = "#3A3E44"; g.fill();
+    const pg = g.createRadialGradient(px - 6, py - 7, 3, px, py, pr); pg.addColorStop(0, "#4A4E55"); pg.addColorStop(1, "#0E0F11");
+    g.beginPath(); g.arc(px, py, pr, 0, 7); g.fillStyle = pg; g.fill();
+    for (let k = 0; k <= 10; k++) { const an = (-135 + 27 * k) * Math.PI / 180; g.fillStyle = "#8A9098"; g.fillRect(px + Math.sin(an) * (pr + 7) - 1, py - Math.cos(an) * (pr + 7) - 1, 2, 2); }
+    const an = (-135 + 270 * st.pot) * Math.PI / 180; g.strokeStyle = "#F2F2F2"; g.lineWidth = 4; g.lineCap = "round";
+    g.beginPath(); g.moveTo(px + Math.sin(an) * 6, py - Math.cos(an) * 6); g.lineTo(px + Math.sin(an) * (pr - 4), py - Math.cos(an) * (pr - 4)); g.stroke();
+    // tecla de reversão
+    const [rx, ry, rr2] = FACE.rev; g.fillStyle = "#5A6068"; rr(g, rx - rr2 * 1.5, ry - rr2, rr2 * 3, rr2 * 2, 8); g.fill();
+    g.fillStyle = "#fff"; g.font = "bold 18px Arial"; g.textAlign = "center"; g.fillText("⇆", rx, ry + 6); g.textAlign = "left";
+    // etiqueta: o modelo da bancada é o 525
+    const [lx0, ly0, lx1, ly1] = FACE.lbl; if (imgOk) g.drawImage(IMG, 236, ly0, lx1 - lx0, ly1 - ly0, lx0, ly0, lx1 - lx0, ly1 - ly0); else { g.fillStyle = "#D5D6D2"; g.fillRect(lx0, ly0, lx1 - lx0, ly1 - ly0); } // cobre o 523 com o cinza da própria imagem
+    g.fillStyle = "#3B3E43"; g.font = "italic bold 27px Arial"; g.fillText("525", lx0 + 2, ly1 - 5);
+    // tecla apertada
+    if (st.hit && now - st.hit.t < 220) { const z = FACE[st.hit.k === "pot+" || st.hit.k === "pot-" ? "pot" : st.hit.k]; if (z) { g.fillStyle = "rgba(255,255,255,.4)"; g.beginPath(); g.arc(z[0], z[1], z[2] + 2, 0, 7); g.fill(); } }
     g.restore();
   }
-
-  // posições das teclas no desenho da frente (coordenadas de 300 × 624)
-  const KEYPOS = { up: [104, 152, 22], down: [104, 240, 22], esc: [60, 196, 22], enter: [148, 196, 22], sel: [104, 196, 22], start: [258, 156, 17], rev: [214, 205, 15], stop: [258, 208, 24], "pot+": [250, 58, 14], "pot-": [250, 82, 14] };
+  function paint3D(c) { drawFace(c.getContext("2d"), c.width, c.height); }
+  // clique na frente: (u, v) da textura → tecla
   function hitKey(u, v) {
-    const x = u * 300, y = (1 - v) * 624, d = (a, b) => Math.hypot(x - a, y - b);
-    if (d(250, 70) < 32) return y < 70 ? "pot+" : "pot-";
-    if (d(258, 156) < 22) return "start";
-    if (d(214, 205) < 18) return "rev";
-    if (x > 230 && x < 286 && y > 180 && y < 236) return "stop";
-    const r = d(104, 196);
-    if (r < 26) return "sel";
-    if (r < 70) { const dx = x - 104, dy = y - 196; return Math.abs(dy) > Math.abs(dx) ? (dy < 0 ? "up" : "down") : (dx < 0 ? "esc" : "enter"); }
+    const x = u * FW, y = (1 - v) * FH, d = (p) => Math.hypot(x - p[0], y - p[1]);
+    if (d(FACE.pot) < FACE.pot[2] + 10) return y < FACE.pot[1] ? "pot+" : "pot-";
+    for (const k of ["start", "stop", "rev"]) if (d(FACE[k]) < FACE[k][2] + 8) return k;
+    const r = d(FACE.sel);
+    if (r < FACE.sel[2] + 2) return "sel";
+    if (r < 100) { const dx = x - FACE.sel[0], dy = y - FACE.sel[1]; return Math.abs(dy) > Math.abs(dx) ? (dy < 0 ? "up" : "down") : (dx < 0 ? "esc" : "enter"); }
     return null;
   }
   function pressAt(u, v) {
@@ -358,6 +361,8 @@
     else key(k);
     paint(); return k;
   }
+  // área clicável na IHM ampliada (em % da imagem)
+  const hot = (k, cls = "hk") => { const [x, y, r] = FACE[k]; return `left:${(x - r) / FW * 100}%;top:${(y - r) / FH * 100}%;width:${2 * r / FW * 100}%;height:${2 * r / FH * 100}%`; };
 
   /* ---------- janela da IHM + checklist ---------- */
   const EX = {
@@ -391,6 +396,11 @@
   const CSS = `
   .pf-wrap{display:grid;grid-template-columns:330px minmax(0,1fr);gap:16px;align-items:start}
   @media (max-width:820px){.pf-wrap{grid-template-columns:1fr}}
+  .pf-dev2{position:relative;width:300px;aspect-ratio:400/885;margin:0 auto;user-select:none;-webkit-user-select:none;touch-action:none;filter:drop-shadow(0 12px 22px rgba(0,0,0,.35))}
+  .pf-dev2 canvas{display:block;width:100%;height:100%}
+  .pf-dev2 .hk{position:absolute;border:0;border-radius:50%;background:transparent;cursor:pointer;padding:0}
+  .pf-dev2 .hk:active,.pf-dev2 .hk.dn{background:rgba(255,255,255,.22)}
+  .pf-dev2 .potz{cursor:ns-resize}
   .pf-dev{position:relative;width:310px;height:600px;margin:0 auto;border-radius:10px;background:linear-gradient(90deg,#141518,#25282d 50%,#141518);box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:none}
   .pf-dev .low{position:absolute;left:0;right:0;bottom:0;height:258px;background:#D9DBDD;border-top:2px solid #0d0e10}
   .pf-dev .vent{position:absolute;left:34px;right:70px;top:18px;height:130px;background:repeating-linear-gradient(90deg,#c3c6c9 0 9px,transparent 9px 21px)}
@@ -460,7 +470,7 @@
   .pf-keys kbd{display:inline-block;min-width:22px;text-align:center;border:1px solid #B9C2CC;border-radius:5px;padding:0 4px;background:#fff;font:700 12px Arial;color:#1E3A5F}
   `;
   const COMPACT = `<div class="pf-side pf-compact">
-        <div class="pf-hint3d">Opere as <b>teclas do inversor no painel 3D</b>: clique nelas como no equipamento real. O display do inversor mostra o resultado.</div>
+        <div class="pf-hint3d">Opere as <b>teclas do inversor no painel 3D</b>: clique nelas como no equipamento real. No teclado azul, <b>◄ = Esc</b> e <b>► = ↵ (Enter)</b>. O botão redondo no alto é o potenciômetro, e a tecla ⇆ é a reversão.</div>
         <div class="pf-next" id="pfNext"></div>
         <div class="box pf-now" id="pfNow"></div>
         <div class="pf-msg" id="pfMsg"></div>
@@ -479,24 +489,14 @@
     hosts = hosts.filter(h => h !== el && document.contains(h)); hosts.push(el);
     el.innerHTML = opts.compact ? COMPACT : `<div class="pf-wrap">
       <div>
-        <div class="pf-dev" id="pfDev">
-          <div class="logo"><b>A·B</b>Allen-Bradley</div>
-          <div class="lcd" id="pfLcd"></div>
-          <div class="enet">ENET&nbsp;&nbsp;LINK</div>
-          <div class="fault">FAULT <i id="pfFault"></i></div>
-          <div class="pot" id="pfPot" title="Potenciômetro: arraste para cima/baixo ou use a roda do mouse"><span class="marks"></span></div>
-          <div class="pad"><span class="ring"></span>
-            <button class="q up" data-k="up" aria-label="Seta para cima">▲</button><button class="q dw" data-k="down" aria-label="Seta para baixo">▼</button>
-            <button class="q es" data-k="esc" aria-label="Esc">Esc</button><button class="q en" data-k="enter" aria-label="Enter">↵</button>
-            <span class="gap"></span><button class="sel" data-k="sel" aria-label="Sel">Sel</button></div>
-          <button class="kb kstart" data-k="start" aria-label="Start (partir)" title="Start"></button>
-          <button class="kb krev" data-k="rev" aria-label="Reversão" title="Reversão">⇆</button>
-          <button class="kb kstop" data-k="stop" aria-label="Stop (parar / limpar falha)" title="Stop"></button>
-          <div class="tag">25B-B5P0N104 · 0,75 kW · 230 V · 5,0 A</div>
-          <div class="low"><div class="vent"></div><div class="brand">PowerFlex<small>525</small></div>
-            <div class="nets">PORT<i class="g"></i><br>MOD<i></i><br>NET A<i></i><br>NET B<i></i></div></div>
+        <div class="pf-dev2" id="pfDev"><canvas id="pfCanvas" width="400" height="885"></canvas>
+          ${["up", "down", "esc", "enter", "sel"].map(k => `<button class="hk" data-k="${k}" style="${hot(k)}" aria-label="${{ up: "Seta para cima", down: "Seta para baixo", esc: "Esc", enter: "Enter", sel: "Sel" }[k]}"></button>`).join("")}
+          <button class="hk" data-k="start" style="${hot("start")}" aria-label="Start (partir)" title="Start"></button>
+          <button class="hk" data-k="stop" style="${hot("stop")}" aria-label="Stop (parar / limpar falha)" title="Stop"></button>
+          <button class="hk" data-k="rev" style="${hot("rev")}" aria-label="Reversão" title="Reversão"></button>
+          <div class="hk potz" id="pfPot" style="${hot("pot")}" title="Potenciômetro: arraste para cima/baixo ou use a roda do mouse"></div>
         </div>
-        <div class="pf-keys" style="max-width:310px;margin:8px auto 0"><kbd>Esc</kbd> volta um nível · <kbd>▲</kbd><kbd>▼</kbd> navegam ou mudam o valor · <kbd>Sel</kbd>/<kbd>↵</kbd> entram · em edição, <kbd>Sel</kbd> troca o dígito e <kbd>↵</kbd> salva.</div>
+        <div class="pf-keys" style="max-width:310px;margin:8px auto 0">No teclado azul, <kbd>◄</kbd> = <b>Esc</b> e <kbd>►</kbd> = <b>↵ Enter</b>. <kbd>Esc</kbd> volta um nível · <kbd>▲</kbd><kbd>▼</kbd> navegam ou mudam o valor · <kbd>Sel</kbd>/<kbd>↵</kbd> entram · em edição, <kbd>Sel</kbd> troca o dígito e <kbd>↵</kbd> salva.</div>
         <div class="pf-next" id="pfNext"></div>
       </div>
       <div class="pf-side">
@@ -513,7 +513,7 @@
     // teclas (com repetição ao segurar ▲▼)
     el.querySelectorAll("[data-k]").forEach(b => {
       let rep = null;
-      const go = () => { key(b.dataset.k); paint(); };
+      const go = () => { st.hit = { k: b.dataset.k, t: performance.now() }; key(b.dataset.k); paint(); };
       b.addEventListener("pointerdown", e => { e.preventDefault(); b.classList.add("dn"); go(); if (b.dataset.k === "up" || b.dataset.k === "down") rep = setTimeout(function r() { go(); rep = setTimeout(r, 90); }, 450); });
       const end = () => { b.classList.remove("dn"); clearTimeout(rep); rep = null; };
       b.addEventListener("pointerup", end); b.addEventListener("pointerleave", end);
@@ -543,6 +543,7 @@
     const $ = s => host.querySelector(s);
     const L = lcd(), on = Math.floor(performance.now() / 350) % 2 === 0;
     if ($("#pfLcd")) $("#pfLcd").innerHTML = lcdSVG({ ...L, blink: blinkCell(L) }, on);
+    const cv = $("#pfCanvas"); if (cv) drawFace(cv.getContext("2d"), cv.width, cv.height);
     if ($("#pfFault")) $("#pfFault").classList.toggle("on", !!st.fault && on);
     if ($("#pfPot")) $("#pfPot").style.setProperty("--a", (-135 + 270 * st.pot) + "deg");
     const pr = $("#pfPotR"); if (pr && document.activeElement !== pr) pr.value = Math.round(st.pot * 100);

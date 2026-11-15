@@ -31,7 +31,7 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 
 ## 0. Situação atual (ler primeiro)
 
-- **Versão:** BUILD `20261115-18` (15/11/2026).
+- **Versão:** BUILD `20261115-19` (15/11/2026).
 - **Última etapa feita:** **inversor PowerFlex 525** no painel, com IHM interativa, checklist de parâmetros e seletora de partida da bomba DIRETA/INVERSOR (BUILD -14, fases 1 e 2 do roteiro do inversor). Antes: líquido da bancada em rosa claro, igual ao fluido da bancada física (BUILD -13). Antes: régua do tanque de acrílico em % (BUILD -12). Antes: ícone do site (favicon de manômetro + sinal 4–20 mA, BUILD -11). Antes: eletrodutos do TQ-01 ligados aos prensa-cabos dos instrumentos (BUILD -10). Antes: item 2 do plano (endereços e escalas do DVP20SX2 conferidos no manual; saída D1116 corrigida para 0..4000; D1115 = K7967 no 1º scan).
 - **Próxima etapa sugerida:** fases 3 e 4 do inversor (ver 6.1), ou os itens 4 (PID), 6 (exportar/importar ladder) e 7 (modo avaliação) do plano; itens 1 e 3 dependem de fotos/slides.
 - **Repositório oficial:** GitHub `LucasVitalBR/bancada-instrumentacao` (privado), ver 1.2. Lucas e colega trabalham por pull/push.
@@ -115,6 +115,7 @@ O login do wrangler fica salvo no PC do Ederson.
 | `app-3d.js` | Cena 3D (Three.js): sala, TQ-01, tanque de acrílico, bomba, tubulação, instrumentos, montagem, simulação física, animações, câmera e colisão. Expõe `window.App3D` |
 | `app-clp.js` | CLP Delta DVP20SX2 simulado: editor de ladder, varredura, validação, programas-padrão e painel de operação. Expõe `window.PLC` |
 | `app-pf525.js` | Inversor Allen-Bradley PowerFlex 525 (25B-B5P0N104): parâmetros, IHM (display de 7 segmentos e teclas), simulação do acionamento, desenho da frente 3D, checklist de atividades e seletora de partida DIRETA/INVERSOR. Expõe `window.PF525`. Carregado entre `app-clp.js` e `app-3d.js` |
+| `vendor/pf525-img.js` | Foto da frente do inversor em JPEG embutido (data URI, ~72 KB), em `window.PF525_IMG`. Vem de uma imagem do ChatGPT enviada pelo Ederson, recortada para 400 × 885. Embutida para não “contaminar” o canvas do WebGL quando o HTML é aberto direto do disco |
 | `vendor/three-bundle.js` | Three.js 0.170 + OrbitControls, CSS2DRenderer, RoomEnvironment, EffectComposer, RenderPass, OutputPass e GTAOPass, empacotados em IIFE com esbuild (`window.THREE`) |
 | `favicon.svg`, `favicon.ico`, `icons/*.png`, `site.webmanifest` | Ícone do site (manômetro azul/laranja + onda 4–20 mA). PNGs gerados do SVG com `rsvg-convert`; o .ico tem 16/32/48 px. Se mudar o SVG, gerar de novo os PNGs e o .ico |
 | `prompt-chatgpt-bancada-nivel-temperatura.md` | Prompt para refazer uma versão só de nível + temperatura no ChatGPT (não inclui as mudanças posteriores) |
@@ -140,7 +141,7 @@ O login do wrangler fica salvo no PC do Ederson.
 
 ## 4. Convenções importantes
 
-- **`const BUILD = "20261115-18"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
+- **`const BUILD = "20261115-19"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
 - **Three.js:** `object.position` é somente leitura. Use o helper `at(obj, pos, scale)`, nunca `Object.assign(mesh, {position})`.
 - **GTAOPass (oclusão ambiente):** deixa sprites/transparentes **pretos**. `overrideVisibility()` foi sobrescrito para esconder `isSprite` e `material.transparent` no G-buffer.
 - **Gráficos:** modo realista ↔ leve. Cai sozinho para o leve se ficar abaixo de 24 fps por 4 s.
@@ -314,3 +315,11 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
   - **Q/E ou PageDown/PageUp** para descer e subir;
   - **Shift** anda mais rápido;
   - não reage enquanto se digita num campo ou com uma janela (`.ovl3d.on`) aberta.
+- **BUILD -19 (15/11, pedido do Ederson):** a frente do PF525 (3D e IHM ampliada) passou a usar a **imagem enviada pelo Ederson** (`vendor/pf525-img.js`) no lugar do desenho simples. Por cima da imagem, `drawFace()` desenha:
+  - o display verde com o conteúdo da simulação (pisca, FWD/REV, unidade, PROGRAM);
+  - o LED FAULT;
+  - o **potenciômetro** e a tecla de **reversão**, que o PF525 tem e a imagem não mostra;
+  - o destaque da tecla apertada.
+  - A imagem é de um PowerFlex 523: o "523" da etiqueta foi coberto com o cinza da própria imagem e trocado por "525".
+  - As posições das teclas estão em `FACE` (coordenadas da imagem 400 × 885), usadas pelo `hitKey` (cliques no 3D) e pelas áreas clicáveis da IHM ampliada.
+  - No teclado azul, ◄ = Esc e ► = ↵.

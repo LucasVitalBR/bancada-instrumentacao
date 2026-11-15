@@ -1493,8 +1493,8 @@ const pt = (() => {
   document.addEventListener("keydown", e => { if (e.key === "Escape" && box.classList.contains("max")) { box.classList.remove("max"); document.body.style.overflow = ""; label(); if (typeof closeWiring === "function") closeWiring(); } });
 })();
 let load3dP = null;
-const BUILD = "20261115-18"; // muda a cada versão para o navegador não usar arquivos antigos do cache
-function load3dAll() { if (!load3dP) load3dP = loadScript("vendor/three-bundle.js").then(() => loadScript("app-clp.js?v=" + BUILD)).then(() => loadScript("app-pf525.js?v=" + BUILD)).then(() => loadScript("app-3d.js?v=" + BUILD)); return load3dP; }
+const BUILD = "20261115-19"; // muda a cada versão para o navegador não usar arquivos antigos do cache
+function load3dAll() { if (!load3dP) load3dP = loadScript("vendor/three-bundle.js").then(() => loadScript("app-clp.js?v=" + BUILD)).then(() => loadScript("vendor/pf525-img.js?v=" + BUILD)).then(() => loadScript("app-pf525.js?v=" + BUILD)).then(() => loadScript("app-3d.js?v=" + BUILD)); return load3dP; }
 (() => {
   const v = document.getElementById("v3d-views"), t = document.getElementById("v3dToggle");
   const set = (col) => { v.classList.toggle("col", col); t.textContent = col ? "☰ Menu" : "✕ Recolher menu"; try { localStorage.setItem("menu3d", col ? "1" : "0"); } catch (e) { } };
