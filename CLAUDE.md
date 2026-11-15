@@ -47,6 +47,20 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
   1. **(Recomendado) Lucas libera o repositório para o Cloudflare.** No GitHub dele: Settings → Applications → "Cloudflare Workers and Pages" → Configure, com acesso a `bancada-instrumentacao`. Depois o Ederson liga o projeto ao repositório no painel do Cloudflare (Settings → Builds → Connect to Git). A partir daí, **qualquer push de qualquer um dos dois publica sozinho** e não é mais preciso publicar na mão.
   2. O Ederson convida o Lucas como membro da conta Cloudflare dele (Manage account → Members). Aí o Lucas também pode publicar na mão, com o mesmo comando do wrangler.
 
+### PENDENTE PARA O LUCAS (combinado com o Ederson em 15/11, manhã)
+
+1. **Autorizar o Cloudflare no GitHub** (a autorização é no **GitHub**, não no Vercel):
+   - Abrir https://github.com/apps/cloudflare-workers-and-pages → Install/Configure na conta `LucasVitalBR`.
+   - Em "Repository access", liberar `bancada-instrumentacao`.
+   - Avisar o Ederson. O Claude dele liga o projeto `bancada-instrumentacao` do Cloudflare (conta do Ederson) ao repositório.
+2. **Depois que o Cloudflare publicar sozinho**, o **Vercel deixa de ser necessário.** Decisão do Ederson: ficar só com o Cloudflare (`https://bancada-instrumentacao.pages.dev`). Então:
+   - excluir ou pausar o projeto no Vercel, o que também fecha o `CLAUDE.md` exposto em `vercel.app/CLAUDE.md`;
+   - apagar `.github/workflows/vercel-deploy.yml` e o segredo `VERCEL_DEPLOY_HOOK`;
+   - trocar neste arquivo as menções ao site do Vercel pelo do Cloudflare.
+3. **Fechar o compartilhamento da pasta do Drive** ("qualquer pessoa com o link = Editor"). O Drive não é mais usado.
+
+**Fluxo final esperado:** Ederson ou Lucas editam pelo Claude → push no GitHub → o Cloudflare publica sozinho → todos veem o mesmo link.
+
 ## 0.0 Publicação do site (LEIA, Lucas)
 
 **Desde 15/11/2026 há um segundo site, no Cloudflare Pages da conta do Ederson:** https://bancada-instrumentacao.pages.dev (BUILD -13 no ar, com o líquido rosa e a régua em %).
@@ -226,3 +240,4 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
 - **BUILD -13 (14/11, pedido do Ederson):** líquido da bancada trocado de azul-claro para **rosa claro**, porque a bancada física usa fluido dessa cor. Mudou: água do tanque de acrílico, superfície com ondas, jato de entrada, filete do dreno, bolhas (`app-3d.js`) e a cor `--water` das telas 2D (planta). Canos continuam verdes (NBR 6493). Testado na cena.
 - **14/11 (Ederson):** BUILD -13 no GitHub, mas o site seguiu na -12 apesar da automação (Deploy Hook aceito, PENDING). Problema e opções registrados na seção 0.0 para decisão com o Lucas.
 - **15/11 (Ederson):** criado o site no **Cloudflare Pages** da conta do Ederson (https://bancada-instrumentacao.pages.dev), publicado a partir do PC dele com o wrangler. BUILD -13 no ar. O Vercel continua na -12. Procedimento e pendências na seção 0.0.
+- **15/11 (Ederson, manhã):** combinado que o site oficial será o **Cloudflare Pages** e o Vercel será desligado depois que o Cloudflare publicar sozinho. Pendências do Lucas listadas em "PENDENTE PARA O LUCAS" (seção 0.0).
