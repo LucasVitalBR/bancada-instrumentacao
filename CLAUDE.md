@@ -66,7 +66,8 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 **Atualização 15/11, tarde:** o Lucas deixou o repositório **público**. No plano Hobby do Vercel, o bloqueio dos envios de quem não é dono só vale para repositório privado: agora os envios do Ederson devem publicar sozinhos no Vercel. Teste feito com o envio deste CLAUDE.md (ver histórico). Com isso, ficam disponíveis os dois sites:
 - **Vercel:** https://bancada-instrumentacao.vercel.app (automático para os dois);
 - **Cloudflare:** https://bancada-instrumentacao.pages.dev (publicado à mão do PC do Ederson).
-Decidam qual fica como oficial. **Segurança com o repositório público:**
+**Decisão (Ederson, 15/11): o site oficial é o Vercel.** Todo push no `main`, de qualquer um dos dois, publica sozinho. O Cloudflare **não é mais atualizado** e ficou parado na BUILD -21; pode ser excluído do painel do Cloudflare quando o Ederson quiser.
+**Lucas:** como o repositório é público, a automação `.github/workflows/vercel-deploy.yml` (Deploy Hook) virou redundante, porque o Vercel já publica os envios de todos. Pode apagar o arquivo e o segredo `VERCEL_DEPLOY_HOOK`. **Segurança com o repositório público:**
 - o histórico do git ainda contém o link antigo da pasta do Drive (editável por qualquer um com o link): **fechar o compartilhamento da pasta**;
 - os commits mostram o e-mail de quem enviou.
 
@@ -350,3 +351,4 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
   - O bundle subiu de 755 KB para 821 KB.
   - Testado no navegador interno; **falta testar o desempenho no PC do laboratório e no projetor.**
 - **15/11 (Ederson):** repositório agora **público** (feito pelo Lucas). CLAUDE.md atualizado: tirado o link da pasta do Drive e anotado na seção 0.0 que o Vercel deve passar a publicar os envios do Ederson.
+- **15/11 (Ederson):** escolhido o **Vercel** como site oficial (https://bancada-instrumentacao.vercel.app). A publicação no Cloudflare foi encerrada.
