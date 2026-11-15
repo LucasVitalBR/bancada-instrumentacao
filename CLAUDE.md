@@ -31,7 +31,7 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 
 ## 0. Situação atual (ler primeiro)
 
-- **Versão:** BUILD `20261115-20` (15/11/2026).
+- **Versão:** BUILD `20261115-21` (15/11/2026).
 - **Última etapa feita:** **inversor PowerFlex 525** no painel, com IHM interativa, checklist de parâmetros e seletora de partida da bomba DIRETA/INVERSOR (BUILD -14, fases 1 e 2 do roteiro do inversor). Antes: líquido da bancada em rosa claro, igual ao fluido da bancada física (BUILD -13). Antes: régua do tanque de acrílico em % (BUILD -12). Antes: ícone do site (favicon de manômetro + sinal 4–20 mA, BUILD -11). Antes: eletrodutos do TQ-01 ligados aos prensa-cabos dos instrumentos (BUILD -10). Antes: item 2 do plano (endereços e escalas do DVP20SX2 conferidos no manual; saída D1116 corrigida para 0..4000; D1115 = K7967 no 1º scan).
 - **Próxima etapa sugerida:** fases 3 e 4 do inversor (ver 6.1), ou os itens 4 (PID), 6 (exportar/importar ladder) e 7 (modo avaliação) do plano; itens 1 e 3 dependem de fotos/slides.
 - **Repositório oficial:** GitHub `LucasVitalBR/bancada-instrumentacao` (privado), ver 1.2. Lucas e colega trabalham por pull/push.
@@ -116,7 +116,7 @@ O login do wrangler fica salvo no PC do Ederson.
 | `app-clp.js` | CLP Delta DVP20SX2 simulado: editor de ladder, varredura, validação, programas-padrão e painel de operação. Expõe `window.PLC` |
 | `app-pf525.js` | Inversor Allen-Bradley PowerFlex 525 (25B-B5P0N104): parâmetros, IHM (display de 7 segmentos e teclas), simulação do acionamento, desenho da frente 3D, checklist de atividades e seletora de partida DIRETA/INVERSOR. Expõe `window.PF525`. Carregado entre `app-clp.js` e `app-3d.js` |
 | `vendor/pf525-img.js` | Foto da frente do inversor em JPEG embutido (data URI, ~72 KB), em `window.PF525_IMG`. Vem de uma imagem do ChatGPT enviada pelo Ederson, recortada para 400 × 885. Embutida para não “contaminar” o canvas do WebGL quando o HTML é aberto direto do disco |
-| `vendor/three-bundle.js` | Three.js 0.170 + OrbitControls, CSS2DRenderer, RoomEnvironment, EffectComposer, RenderPass, OutputPass e GTAOPass, empacotados em IIFE com esbuild (`window.THREE`) |
+| `vendor/three-bundle.js` | Three.js 0.170 + OrbitControls, CSS2DRenderer, RoomEnvironment, EffectComposer, RenderPass, OutputPass, GTAOPass, **UnrealBloomPass e SMAAPass** (desde a BUILD -21), empacotados em IIFE com esbuild (`window.THREE`) |
 | `favicon.svg`, `favicon.ico`, `icons/*.png`, `site.webmanifest` | Ícone do site (manômetro azul/laranja + onda 4–20 mA). PNGs gerados do SVG com `rsvg-convert`; o .ico tem 16/32/48 px. Se mudar o SVG, gerar de novo os PNGs e o .ico |
 | `prompt-chatgpt-bancada-nivel-temperatura.md` | Prompt para refazer uma versão só de nível + temperatura no ChatGPT (não inclui as mudanças posteriores) |
 | `bloco1.pptx` | Slides da Aula 01 (fonte do conteúdo) |
@@ -141,10 +141,15 @@ O login do wrangler fica salvo no PC do Ederson.
 
 ## 4. Convenções importantes
 
-- **`const BUILD = "20261115-20"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
+- **`const BUILD = "20261115-21"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
 - **Three.js:** `object.position` é somente leitura. Use o helper `at(obj, pos, scale)`, nunca `Object.assign(mesh, {position})`.
 - **GTAOPass (oclusão ambiente):** deixa sprites/transparentes **pretos**. `overrideVisibility()` foi sobrescrito para esconder `isSprite` e `material.transparent` no G-buffer.
-- **Gráficos:** modo realista ↔ leve. Cai sozinho para o leve se ficar abaixo de 24 fps por 4 s.
+- **Gráficos (desde a BUILD -21): três níveis no botão ✨ Gráficos** (`S.setQuality`, salvo em `localStorage` `gfx3d` só quando a escolha é manual):
+  - **Alto:** GTAO + brilho + MSAA 4×, até 2× de resolução;
+  - **Médio:** sem GTAO, até 1,5×;
+  - **Leve:** sem composer, até 1,25×.
+  - Abaixo de 24 fps por 4 s, desce um nível sozinho, sem salvar.
+  - Para recompilar o bundle: `entry.js` + `npx esbuild entry.js --bundle --minify --format=iife`, na pasta three-build do scratchpad (precisa de `npm i three@0.170.0 esbuild`).
 - **Janelas do navegador:** não usar `confirm/alert/prompt` (não funcionam no link publicado). Use `armed()` em `app-clp.js`: o primeiro clique pede "Clique de novo para confirmar".
 - **localStorage**, sempre com try/catch:
   - `clp-sx2-programa-v1` (programa);
@@ -328,3 +333,12 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
   - **Botão "🔌 Eletrodutos: visíveis/ocultos"** no menu Ações.
   - **Foto nova do PF525,** vista de frente e já com o potenciômetro (`vendor/pf525-img.js`, 400 × 855). As posições foram refeitas em `FACE`; a reversão ⇆ fica entre o teclado azul e o botão verde.
   - **Potenciômetro:** o clique (no 3D ou na IHM ampliada) abre uma **barra deslizante vertical** (`PF525.potSlider`), de 0 a 100 %, mostrando os Hz pedidos. Fecha no ✕, com Esc ou clicando fora. No lugar do antigo arrastar/girar, que era difícil.
+- **BUILD -21 (15/11, pedido do Ederson: pacote 1 de renderização):**
+  - **MSAA 4×** no buffer do composer: bordas lisas com os efeitos ligados.
+  - **Brilho (UnrealBloomPass,** limiar 1,05) só no que acende: lâmpadas e LEDs ganharam intensidade maior quando ligados; o vidro das janelas virou `MeshBasic` para não estourar.
+  - **Reflexos da própria sala:** `S.captureEnv()` gera o mapa de ambiente (PMREM) a partir de um ponto à frente do TQ-01, deslocando a cena, sem o TQ-01 e os ghosts.
+  - **Acrílico com paredes de 10 mm,** verniz (clearcoat) e quinas aparentes, no lugar da caixa única com linhas.
+  - **Tom de cor `NeutralToneMapping`,** que preserva as cores.
+  - **Níveis Alto/Médio/Leve.**
+  - O bundle subiu de 755 KB para 821 KB.
+  - Testado no navegador interno; **falta testar o desempenho no PC do laboratório e no projetor.**

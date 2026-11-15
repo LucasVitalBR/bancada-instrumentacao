@@ -202,7 +202,7 @@
     scene.add(at(mesh(new T.BoxGeometry(0.02, 0.08, RZ1 - RZ0), skirt, false), v3(-RX + 0.01, 0.04, (RZ0 + RZ1) / 2)));
     scene.add(at(mesh(new T.BoxGeometry(0.02, 0.08, RZ1 - RZ0), skirt, false), v3(RX - 0.01, 0.04, (RZ0 + RZ1) / 2)));
     // janelas com caixilho azul
-    const blue = mat(0x1E4FB4, 0.35, 0.45), glass = new T.MeshStandardMaterial({ color: 0xF4F8FC, emissive: 0xEAF2FA, emissiveIntensity: 0.85, roughness: 0.9 });
+    const blue = mat(0x1E4FB4, 0.35, 0.45), glass = new T.MeshBasicMaterial({ color: 0xDDE7F1 }); // céu claro sem emissão: não estoura o brilho (bloom)
     const windowAt = (cx) => {
       const W = 2.0, H = 1.95, y0 = 0.95, z = RZ0 + 0.02;
       scene.add(at(mesh(new T.PlaneGeometry(W, H), glass, false, false), v3(cx, y0 + H / 2, z)));
@@ -310,7 +310,7 @@
     return { holder: h, kind: "side", mount: v3(0, 0, 0.06) };
   }
   function buildTank(root, slots) {
-    const g = new T.Group(); root.add(g);
+    const g = new T.Group(); root.add(g); S.tqG = g;
     for (let k = 0; k < 4; k++) {
       const a = Math.PI / 4 + k * Math.PI / 2, x = Math.sin(a) * 0.46, z = Math.cos(a) * 0.46;
       pipe(v3(x, 0.02, z), v3(x, 0.9, z), 0.035, M.paint, g);
@@ -427,12 +427,18 @@
     const ac = new T.Group(); ac.position.set(1.9, 0, -1.0); root.add(ac);
     for (const [x, z] of [[-0.35, -0.3], [0.35, -0.3], [-0.35, 0.3], [0.35, 0.3]]) { ac.add(at(mesh(new T.BoxGeometry(0.04, 0.62, 0.04), M.support), v3(x, 0.31, z))); ac.add(at(mesh(new T.BoxGeometry(0.1, 0.01, 0.1), M.support), v3(x, 0.005, z))); }
     ac.add(at(mesh(new T.BoxGeometry(0.8, 0.03, 0.7), M.support), v3(0, 0.625, 0)));
-    const acr = new T.MeshPhysicalMaterial({ color: 0xDDEEFF, metalness: 0, roughness: 0.05, transparent: true, opacity: 0.2, depthWrite: false, side: T.DoubleSide });
-    ac.add(at(mesh(new T.BoxGeometry(0.66, 0.9, 0.56), acr, false, false), v3(0, 1.09, 0)));
+    // acrílico: paredes com espessura (10 mm), verniz brilhante e bordas aparentes (o acrílico fica mais escuro/esverdeado na quina)
+    const acr = new T.MeshPhysicalMaterial({ color: 0xE8F3FF, metalness: 0, roughness: 0.03, transparent: true, opacity: 0.13, clearcoat: 1, clearcoatRoughness: 0.03, envMapIntensity: 1.6, depthWrite: false, side: T.DoubleSide });
+    const acrEdge = new T.MeshPhysicalMaterial({ color: 0xBFE0DA, metalness: 0, roughness: 0.05, transparent: true, opacity: 0.5, clearcoat: 1, depthWrite: false });
+    const AW = 0.66, AH = 0.9, AD = 0.56, AT = 0.01, AY = 1.09;
+    for (const [w, h, d, x, y, z] of [[AW, AH, AT, 0, AY, AD / 2 - AT / 2], [AW, AH, AT, 0, AY, -AD / 2 + AT / 2], [AT, AH, AD - 2 * AT, AW / 2 - AT / 2, AY, 0], [AT, AH, AD - 2 * AT, -AW / 2 + AT / 2, AY, 0], [AW, AT, AD, 0, AY - AH / 2 + AT / 2, 0]])
+      ac.add(at(mesh(new T.BoxGeometry(w, h, d), acr, false, false), v3(x, y, z)));
+    const eb = (w, h, d, x, y, z) => ac.add(at(mesh(new T.BoxGeometry(w, h, d), acrEdge, false, false), v3(x, y, z)));
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) eb(AT * 1.2, AH, AT * 1.2, sx * (AW / 2 - AT / 2), AY, sz * (AD / 2 - AT / 2));
+    for (const sy of [-1, 1]) { for (const sz of [-1, 1]) eb(AW, AT * 1.2, AT * 1.2, 0, AY + sy * (AH / 2 - AT / 2), sz * (AD / 2 - AT / 2)); for (const sx of [-1, 1]) eb(AT * 1.2, AT * 1.2, AD, sx * (AW / 2 - AT / 2), AY + sy * (AH / 2 - AT / 2), 0); }
     ac.add(at(mesh(new T.BoxGeometry(0.7, 0.02, 0.6), new T.MeshPhysicalMaterial({ color: 0xDDEEFF, transparent: true, opacity: 0.35, roughness: 0.1, depthWrite: false }), false, false), v3(0, 1.55, 0)));
     S.water = mesh(new T.BoxGeometry(0.64, 1, 0.54), new T.MeshStandardMaterial({ color: 0xDE6FA3, transparent: true, opacity: 0.64, roughness: 0.1, depthWrite: false }), false, false);
     ac.add(S.water);
-    const edges = new T.LineSegments(new T.EdgesGeometry(new T.BoxGeometry(0.66, 0.9, 0.56)), new T.LineBasicMaterial({ color: 0x9FB6CC })); edges.position.set(0, 1.09, 0); ac.add(edges);
     // régua de nível em %: 0 % no fundo (y 0,65) e 100 % no nível máximo (y 1,53), igual ao setWater e ao LIT-101
     const RY0 = 0.63, RY1 = 1.55, RH = 1024, ppm = RH / (RY1 - RY0), ry = (pct) => RH - (0.65 + 0.88 * pct / 100 - RY0) * ppm;
     ac.add(at(mesh(new T.PlaneGeometry(0.1, RY1 - RY0), new T.MeshBasicMaterial({ map: canvasTex(176, RH, (c, w) => {
@@ -1068,9 +1074,9 @@
     P.heat = !P.trip && (P.stuck || cmd);
     P.T += ((P.heat ? 1.6 : 0) - 0.01 * (P.T - 25)) * dt;
     P.P = Math.max(0, (P.T - 25) * 0.035);
-    S.tzLamp.emissive.setHex(P.heat ? 0xFF7A1A : 0x000000); S.tzLamp.emissiveIntensity = P.heat ? 1.6 : 0;
-    if (S.tshLamp) { S.tshLamp.emissive.setHex(P.trip === "tsh" ? 0xE0503C : 0x1a6b3a); S.tshLamp.emissiveIntensity = P.trip === "tsh" ? 1.8 : 0.6; }
-    if (S.pshLamp) { S.pshLamp.emissive.setHex(P.trip === "psh" ? 0xE0503C : 0x1a6b3a); S.pshLamp.emissiveIntensity = P.trip === "psh" ? 1.8 : 0.6; }
+    S.tzLamp.emissive.setHex(P.heat ? 0xFF7A1A : 0x000000); S.tzLamp.emissiveIntensity = P.heat ? 4.5 : 0;
+    if (S.tshLamp) { S.tshLamp.emissive.setHex(P.trip === "tsh" ? 0xE0503C : 0x1a6b3a); S.tshLamp.emissiveIntensity = P.trip === "tsh" ? 5 : 0.6; }
+    if (S.pshLamp) { S.pshLamp.emissive.setHex(P.trip === "psh" ? 0xE0503C : 0x1a6b3a); S.pshLamp.emissiveIntensity = P.trip === "psh" ? 5 : 0.6; }
   }
   function stepLevel(dt) {
     const L = S.lvl, PL = PLCo();
@@ -1101,13 +1107,13 @@
     L.L = clamp(L.L + (L.Q - out) / 60 / 300 * 100 * dt * 4, 0, 100);
     if (L.L >= 99.5 && L.Q > 0) { if (!L.overMsg) { L.overMsg = true; tip("<b>Transbordou!</b> O tanque de acrílico encheu até a borda. Nada desligou a bomba: use o LSH-101 (X1, contato NF) como proteção no programa.", "bad"); } } else if (L.L < 95) L.overMsg = false;
     setWater(L.L);
-    S.pumpLamp.emissive.setHex(L.pumpOn ? 0x2EE07A : 0); S.pumpLamp.emissiveIntensity = L.pumpOn ? 1.4 : 0;
-    const k1 = pumpCmd && !inv; S.k1Lamp.emissive.setHex(k1 ? 0x2EE07A : 0); S.k1Lamp.emissiveIntensity = k1 ? 1.2 : 0;
-    if (S.doorLamps) { const on = [PL.io.Y[3] || (!PL.run && pumpCmd), PL.io.Y[2], false]; S.doorLamps.forEach((m, i) => { m.emissiveIntensity = on[i] ? 1.6 : 0.08; }); }
-    if (S.vyLamp) { S.vyLamp.emissive.setHex(vyCmd ? 0xFFB020 : 0); S.vyLamp.emissiveIntensity = vyCmd ? 1.4 : 0; }
+    S.pumpLamp.emissive.setHex(L.pumpOn ? 0x2EE07A : 0); S.pumpLamp.emissiveIntensity = L.pumpOn ? 3 : 0;
+    const k1 = pumpCmd && !inv; S.k1Lamp.emissive.setHex(k1 ? 0x2EE07A : 0); S.k1Lamp.emissiveIntensity = k1 ? 3 : 0;
+    if (S.doorLamps) { const on = [PL.io.Y[3] || (!PL.run && pumpCmd), PL.io.Y[2], false]; S.doorLamps.forEach((m, i) => { m.emissiveIntensity = on[i] ? (i === 0 ? 3 : 5) : 0.08; }); }
+    if (S.vyLamp) { S.vyLamp.emissive.setHex(vyCmd ? 0xFFB020 : 0); S.vyLamp.emissiveIntensity = vyCmd ? 3 : 0; }
     if (S.fvMark) S.fvMark.position.y = 0.15 + 0.035 * L.fv / 100;
-    if (S.lshLamp) { const on = L.trip || PL.io.X[1]; S.lshLamp.emissive.setHex(on ? 0xE0503C : 0x1a6b3a); S.lshLamp.emissiveIntensity = on ? 1.8 : 0.6; }
-    if (S.lslLamp) { const on = PL.io.X[0]; S.lslLamp.emissive.setHex(on ? 0xE0503C : 0x1a6b3a); S.lslLamp.emissiveIntensity = on ? 1.8 : 0.6; }
+    if (S.lshLamp) { const on = L.trip || PL.io.X[1]; S.lshLamp.emissive.setHex(on ? 0xE0503C : 0x1a6b3a); S.lshLamp.emissiveIntensity = on ? 5 : 0.6; }
+    if (S.lslLamp) { const on = PL.io.X[0]; S.lslLamp.emissive.setHex(on ? 0xE0503C : 0x1a6b3a); S.lslLamp.emissiveIntensity = on ? 5 : 0.6; }
     S.rotaFloat.position.y = 0.7 + 0.38 * L.Q / 30;
   }
 
@@ -1308,7 +1314,7 @@
     catch (e) { $("#load3d").textContent = "Este computador não conseguiu iniciar o 3D (WebGL). Atualize o navegador ou o driver de vídeo."; return; }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFSoftShadowMap;
-    renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+    renderer.toneMapping = T.NeutralToneMapping; renderer.toneMappingExposure = 1.0; // Neutral: preserva as cores (canos verdes, fluido rosa, azul/laranja)
     renderer.outputColorSpace = T.SRGBColorSpace;
     renderer.domElement.className = "c3d";
     wrap.prepend(renderer.domElement);
@@ -1345,21 +1351,36 @@
       if (ctl.target.y < 0.1) { const d = 0.1 - ctl.target.y; ctl.target.y += d; cam.position.y += d; }
     };
     Object.assign(S, { renderer, lr, scene, cam, ctl, wrap });
-    S.fx = true; S.composer = null;
+    S.fx = true; S.composer = null; S.pm = pm;
     try {
-      const comp = new T.EffectComposer(renderer);
+      // MSAA 4× no buffer do composer: bordas lisas também com os efeitos ligados
+      const comp = new T.EffectComposer(renderer, new T.WebGLRenderTarget(1, 1, { type: T.HalfFloatType, samples: 4 }));
       comp.addPass(new T.RenderPass(scene, cam));
       const ao = new T.GTAOPass(scene, cam, 800, 600);
       ao.output = T.GTAOPass.OUTPUT.Default; ao.blendIntensity = 1.0;
       ao.updateGtaoMaterial({ radius: 0.45, distanceExponent: 1.4, thickness: 1.2, scale: 1.0, samples: 12 });
       const ov = ao.overrideVisibility.bind(ao);
       ao.overrideVisibility = function () { ov(); this.scene.traverse(o => { if (o.isSprite || (o.material && !Array.isArray(o.material) && o.material.transparent)) o.visible = false; }); };
-      comp.addPass(ao); comp.addPass(new T.OutputPass());
-      S.composer = comp; S.ao = ao;
+      comp.addPass(ao);
+      // brilho só no que acende de verdade (LEDs, lâmpadas, resistência): limiar alto no HDR, antes do tom de cor
+      const bloom = new T.UnrealBloomPass(new T.Vector2(512, 512), 0.45, 0.5, 1.05); comp.addPass(bloom);
+      comp.addPass(new T.OutputPass());
+      S.composer = comp; S.ao = ao; S.bloom = bloom;
     } catch (e) { S.fx = false; }
-    const fxBtn = () => { const b = $("#b3fx"); if (b) b.textContent = S.fx ? "✨ Gráficos: realista" : "⚡ Gráficos: leve"; };
-    const bfx = $("#b3fx"); if (bfx) bfx.onclick = () => { if (!S.composer) return; S.fx = !S.fx; S.slow = 0; fxBtn(); };
-    fxBtn();
+    // níveis de gráfico: alto (sombreamento + brilho + MSAA), médio (brilho + MSAA), leve (direto, mais leve)
+    const QN = { alto: "✨ Gráficos: alto", medio: "✨ Gráficos: médio", leve: "⚡ Gráficos: leve" }, QO = ["alto", "medio", "leve"];
+    S.setQuality = (q, save = true) => {
+      if (!S.composer) q = "leve";
+      S.q = q; S.fx = q !== "leve"; S.slow = 0;
+      if (S.ao) S.ao.enabled = q === "alto";
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, q === "alto" ? 2 : q === "medio" ? 1.5 : 1.25));
+      const b = $("#b3fx"); if (b) b.textContent = QN[q];
+      if (save) try { localStorage.setItem("gfx3d", q); } catch (e) { }
+      if (S.wrap) resize();
+    };
+    let q0 = "alto"; try { q0 = localStorage.getItem("gfx3d") || "alto"; } catch (e) { } if (!QN[q0]) q0 = "alto";
+    const bfx = $("#b3fx"); if (bfx) bfx.onclick = () => S.setQuality(QO[(QO.indexOf(S.q) + 1) % 3]);
+    S.q = q0;
 
     scene.add(new T.HemisphereLight(0xffffff, 0x9A9690, 0.75));
     const sun = new T.DirectionalLight(0xfff8f0, 1.35); sun.position.set(2.5, 7.5, 3.5); sun.castShadow = true;
@@ -1383,6 +1404,16 @@
     buildPanel(root);
     for (const id in SLOTDEF) makeGhost(id, S.slots[id]);
     initAnims(root);
+    S.captureEnv = () => {
+      const P = v3(0.7, 1.45, 1.7), hid = [];
+      const hide = o => { if (o && o.visible) { o.visible = false; hid.push(o); } };
+      hide(S.tqG); Object.values(S.slots).forEach(s => hide(s.ghost));
+      scene.position.set(-P.x, -P.y, -P.z); scene.updateMatrixWorld(true);
+      const old = scene.environment, rt = pm.fromScene(scene, 0.015, 0.05, 30);
+      scene.position.set(0, 0, 0); scene.updateMatrixWorld(true); hid.forEach(o => { o.visible = true; });
+      scene.environment = rt.texture; scene.environmentIntensity = 0.75; if (old && old.dispose) old.dispose();
+    };
+    try { S.captureEnv(); } catch (e) { console.warn("reflexo da sala:", e); }
     addLabel("TZ-104", S.tz, v3(0, 0.15, 0.1), "<b>TZ-104</b><i>resistência</i>", "pre");
     addLabel("CLP", S.plc3d, v3(0, 0.2, 0.1), "<b>CLP DVP-SX2</b><i>TIC-104 e malha de nível</i>", "pre");
     addLabel("TQ01", root, v3(0.45, 0.5, 0.5), "<b>TQ-01</b><i>tanque inox</i>", "tank");
@@ -1452,6 +1483,7 @@
 
     new ResizeObserver(resize).observe(wrap);
     resize();
+    if (S.setQuality) S.setQuality(S.q || "alto", false);
     $("#load3d").style.display = "none";
     renderTray();
     tip("Escolha uma peça na Bancada de Peças, leia a tag e toque na área azul onde ela deve ser instalada. Arraste para girar, use a roda ou dois dedos para aproximar. Teclado: <b>W A S D</b> ou <b>setas</b> para andar, <b>Q/E</b> para descer/subir (Shift = mais rápido).");
@@ -1480,7 +1512,7 @@
       if (S.fx && S.composer) S.composer.render(); else renderer.render(scene, cam);
       lr.render(scene, cam);
       fpsN++; fpsT += dt;
-      if (fpsT >= 1) { const fps = fpsN / fpsT; fpsN = 0; fpsT = 0; if (S.fx && fps < 24 && document.visibilityState === "visible") { S.slow = (S.slow || 0) + 1; if (S.slow >= 4) { S.fx = false; const b = $("#b3fx"); if (b) b.textContent = "⚡ Gráficos: leve"; tip("Este computador ficou lento com os gráficos realistas: troquei para o modo <b>leve</b>. Dá para voltar no botão ✨ Gráficos.", ""); } } else S.slow = 0; }
+      if (fpsT >= 1) { const fps = fpsN / fpsT; fpsN = 0; fpsT = 0; if (S.fx && fps < 24 && document.visibilityState === "visible") { S.slow = (S.slow || 0) + 1; if (S.slow >= 4) { const nq = S.q === "alto" ? "medio" : "leve"; S.setQuality(nq, false); tip(`Este computador ficou lento: baixei os gráficos para <b>${nq === "medio" ? "médio" : "leve"}</b>. Dá para mudar no botão ✨ Gráficos.`, ""); } } else S.slow = 0; }
       dc += dt; if (dc > 0.15) { dc = 0; declutter(); }
     }
     let dc = 0, fpsN = 0, fpsT = 0;
