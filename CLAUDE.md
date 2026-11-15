@@ -31,8 +31,8 @@ App web didático para as aulas de **Instrumentação** do curso técnico de **E
 
 ## 0. Situação atual (ler primeiro)
 
-- **Versão:** BUILD `20261115-22` (15/11/2026).
-- **Última etapa feita:** **três inversores no painel** (BUILD -22): PowerFlex 525, **Schneider Altivar ATV12** e **WEG CFW500** lado a lado num painel de inversores novo, com seletora de partida de 4 posições (Direta / PF525 / ATV12 / CFW500). Antes: **inversor PowerFlex 525** no painel, com IHM interativa, checklist de parâmetros e seletora de partida da bomba DIRETA/INVERSOR (BUILD -14, fases 1 e 2 do roteiro do inversor). Antes: líquido da bancada em rosa claro, igual ao fluido da bancada física (BUILD -13). Antes: régua do tanque de acrílico em % (BUILD -12). Antes: ícone do site (favicon de manômetro + sinal 4–20 mA, BUILD -11). Antes: eletrodutos do TQ-01 ligados aos prensa-cabos dos instrumentos (BUILD -10). Antes: item 2 do plano (endereços e escalas do DVP20SX2 conferidos no manual; saída D1116 corrigida para 0..4000; D1115 = K7967 no 1º scan).
+- **Versão:** BUILD `20261115-23` (15/11/2026).
+- **Última etapa feita:** **instrumentos no estilo Smar e Hiter** (BUILD -23): PIT-103 e FIT-102 viraram Smar LD301, TT-104 virou Smar TT301 e a FV-102/FY-102 virou a válvula globo azul Hiter com posicionador, a partir da imagem `Instrumentação industrial SMAR e HITER.png` do Ederson. Antes: **três inversores no painel** (BUILD -22): PowerFlex 525, **Schneider Altivar ATV12** e **WEG CFW500** lado a lado num painel de inversores novo, com seletora de partida de 4 posições (Direta / PF525 / ATV12 / CFW500). Antes: **inversor PowerFlex 525** no painel, com IHM interativa, checklist de parâmetros e seletora de partida da bomba DIRETA/INVERSOR (BUILD -14, fases 1 e 2 do roteiro do inversor). Antes: líquido da bancada em rosa claro, igual ao fluido da bancada física (BUILD -13). Antes: régua do tanque de acrílico em % (BUILD -12). Antes: ícone do site (favicon de manômetro + sinal 4–20 mA, BUILD -11). Antes: eletrodutos do TQ-01 ligados aos prensa-cabos dos instrumentos (BUILD -10). Antes: item 2 do plano (endereços e escalas do DVP20SX2 conferidos no manual; saída D1116 corrigida para 0..4000; D1115 = K7967 no 1º scan).
 - **Próxima etapa sugerida:** o Ederson testar os três inversores e conferir os dados de placa do motor real; depois as fases 3 e 4 do inversor (ver 6.1), ou os itens 4 (PID), 6 (exportar/importar ladder) e 7 (modo avaliação) do plano; itens 1 e 3 dependem de fotos/slides.
 - **Repositório oficial:** GitHub `LucasVitalBR/bancada-instrumentacao` (**público desde 15/11**), ver 1.2. Lucas e colega trabalham por pull/push.
 - **Site:** https://bancada-instrumentacao.vercel.app (atualiza a cada push).
@@ -151,7 +151,7 @@ O login do wrangler fica salvo no PC do Ederson.
 
 ## 4. Convenções importantes
 
-- **`const BUILD = "20261115-22"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
+- **`const BUILD = "20261115-23"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
 - **Three.js:** `object.position` é somente leitura. Use o helper `at(obj, pos, scale)`, nunca `Object.assign(mesh, {position})`.
 - **GTAOPass (oclusão ambiente):** deixa sprites/transparentes **pretos**. `overrideVisibility()` foi sobrescrito para esconder `isSprite` e `material.transparent` no G-buffer.
 - **Gráficos (desde a BUILD -21): três níveis no botão ✨ Gráficos** (`S.setQuality`, salvo em `localStorage` `gfx3d` só quando a escolha é manual):
@@ -201,6 +201,15 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
   - janela de ligação do PT100 em tela cheia;
   - colisão de câmera.
 - **Animações:** ondas na água, jato, bolhas, dreno, setas de fluxo nos canos, motor girando, rotâmetro, boias, pulso do ultrassom do LIT, vapor, visão térmica.
+
+### Instrumentos Smar e Hiter (BUILD -23)
+- Referência: imagem `Instrumentação industrial SMAR e HITER.png` (pasta antiga do Ederson, não vai ao GitHub).
+- Helpers em `app-3d.js`: `smarHousing(g, centro, raio, comprimento, tela)` (corpo de alumínio, tampas azuis com nervuras, visor, marca "smar", entradas elétricas) e `smarScreen(tag, faixa)` (display verde com tag, valor + unidade e % da faixa; `draw([valor, unidade])` como o `screen` antigo).
+- **PIT-103:** Smar LD301 (módulo sensor inox com flanges aparafusados + carcaça), faixa 0–6 bar.
+- **TT-104:** Smar TT301 montado sobre o cabeçote do PT100 (a peça continua instalando no cabeçote do TE-104); display `S.ttScreen`, faixa 0–200 °C, mostra "----" sem a ligação do PT100.
+- **FIT-102:** placa de orifício entre flanges + Smar LD301 de pressão diferencial (lados L e H), faixa 0–30 L/min.
+- **FV-102:** corpo globo, castelo, arcada e atuador em azul Hiter, com "HITER" e seta de fluxo no corpo. **FY-102:** caixa cinza do posicionador com plaqueta HITER e indicador, 2 manômetros; as tomadas OUT 1 / IN / OUT 2 e os tubos azuis continuam.
+- As posições dos prensa-cabos (`gland`) foram mantidas, então os eletrodutos continuam chegando certo.
 
 ### Painel de inversores (BUILD -22)
 - **Três inversores lado a lado** num painel novo, à esquerda do painel do CLP (`S.drvPanel`, no `buildPanel` do `app-3d.js`): **PowerFlex 525** (mais perto do CLP), **Altivar ATV12** no meio e **WEG CFW500**. Cada um tem a frente com display ao vivo (`S.drv3d[k]`) e rótulo na cena (`VFD-pf525` etc.).
@@ -377,3 +386,4 @@ Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertr
 - **15/11 (Ederson):** repositório agora **público** (feito pelo Lucas). CLAUDE.md atualizado: tirado o link da pasta do Drive e anotado na seção 0.0 que o Vercel deve passar a publicar os envios do Ederson.
 - **15/11 (Ederson):** escolhido o **Vercel** como site oficial (https://bancada-instrumentacao.vercel.app). A publicação no Cloudflare foi encerrada.
 - **BUILD -22 (15/11, pedido do Ederson):** mais dois inversores para os alunos aprenderem a trabalhar com marcas diferentes: **WEG CFW500** e **Schneider Altivar ATV12** (o Ederson escolheu o ATV12 no lugar do ATV312 da imagem, por causa do manual). Os três ficam lado a lado num **painel de inversores** novo; o PF525 saiu do painel do CLP. Seletora de partida de **4 posições** (`window.DRV`), abas no painel lateral, vistas por inversor, checklists das Atividades 1 e 2 de cada um, ENT segurado 2 s no ATV12. Arquivos novos: `app-drives.js`, `vendor/cfw500-img.js`, `vendor/atv12-img.js`. Testado no navegador interno (IHMs, partida local e por bornes, vazão, sem erros no console).
+- **BUILD -23 (15/11, pedido do Ederson):** transmissores e válvula de controle deixaram de ser genéricos e seguem a imagem Smar/Hiter enviada pelo Ederson: PIT-103 e FIT-102 = Smar LD301 (o FIT como ΔP com placa de orifício), TT-104 = Smar TT301, FV-102 + FY-102 = válvula globo Hiter com posicionador. Displays dos transmissores mostram tag, valor e % ao vivo. Testado na cena (sem erros no console).

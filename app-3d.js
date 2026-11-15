@@ -10,7 +10,7 @@
   /* ---------- catálogo ---------- */
   const PARTS = [
     { tag: "TE-104", name: "Sensor PT100 com poço", slot: "te", icon: "probe", grp: "tq" },
-    { tag: "TT-104", name: "Transmissor de cabeçote", slot: "tt", icon: "tt", grp: "tq" },
+    { tag: "TT-104", name: "Transmissor de temperatura", slot: "tt", icon: "tt", grp: "tq" },
     { tag: "PIT-103", name: "Transmissor de pressão", slot: "pit", icon: "pit", grp: "tq" },
     { tag: "PSH-103", name: "Pressostato", slot: "psh", icon: "psh", grp: "tq" },
     { tag: "TSH-104", name: "Termostato de imersão", slot: "tsh", icon: "tsh", grp: "tq" },
@@ -18,7 +18,7 @@
     { tag: "LIT-101", name: "Transmissor de nível ultrassônico", slot: "lit", icon: "lit", grp: "ln" },
     { tag: "LSH-101", name: "Chave boia", slot: "lsh", icon: "float", grp: "ln" },
     { tag: "LSL-101", name: "Chave boia", slot: "lsl", icon: "float", grp: "ln" },
-    { tag: "FIT-102", name: "Medidor de vazão", slot: "fit", icon: "flow", grp: "ln" },
+    { tag: "FIT-102", name: "Medidor de vazão (ΔP)", slot: "fit", icon: "flow", grp: "ln" },
     { tag: "FV-102", name: "Válvula de controle", slot: "fv", icon: "fv", grp: "ln" },
     { tag: "FY-102", name: "Posicionador", slot: "fy", icon: "fy", grp: "ln" },
     { tag: "VY-01", name: "Válvula solenoide", slot: "vy", icon: "vy", grp: "ln" },
@@ -142,6 +142,42 @@
       if (lines[1]) { g.font = `bold ${Math.round(h * 0.2)}px Arial`; g.fillText(lines[1], w / 2, h * 0.78); }
       t.needsUpdate = true;
     } };
+  }
+  // display de cristal líquido dos transmissores Smar (LD301/TT301): tag, valor com unidade e % da faixa
+  function smarScreen(tag, span) {
+    const c = document.createElement("canvas"); c.width = c.height = 256;
+    const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace;
+    return { tex: t, canvas: c, draw(lines) {
+      const g = c.getContext("2d"), gr = g.createRadialGradient(118, 100, 20, 128, 128, 140);
+      gr.addColorStop(0, "#D3DFBB"); gr.addColorStop(1, "#9DAE88"); g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
+      g.fillStyle = "#1A2216"; g.textBaseline = "middle"; g.textAlign = "center";
+      g.font = "bold 30px Arial"; g.fillText(tag, 128, 64);
+      const v = String(lines[0]), u = lines[1] || "";
+      let fs = 66; g.font = `bold ${fs}px Arial`; let wv = g.measureText(v).width; if (wv > 150) { fs = Math.floor(fs * 150 / wv); g.font = `bold ${fs}px Arial`; wv = g.measureText(v).width; }
+      g.font = "bold 24px Arial"; const wu = g.measureText(u).width, x0 = 128 - (wv + 6 + wu) / 2;
+      g.textAlign = "left"; g.font = `bold ${fs}px Arial`; g.fillText(v, x0, 128); g.font = "bold 24px Arial"; g.fillText(u, x0 + wv + 6, 140);
+      const n = parseFloat(v.replace(",", ".")); g.textAlign = "center"; g.font = "bold 30px Arial";
+      g.fillText(isFinite(n) && span ? (n / span * 100).toFixed(1).replace(".", ",") + " %" : "-- %", 128, 192);
+      t.needsUpdate = true;
+    } };
+  }
+  // carcaça de transmissor no estilo Smar: corpo de alumínio, tampas azuis rosqueadas com nervuras, visor e marca
+  function smarHousing(g, c, r, len, scr) {
+    const alu = mat(0xB4BBC4, 0.65, 0.32), blue = mat(0x4E6BB5, 0.35, 0.42), blueD = mat(0x3D5698, 0.4, 0.45);
+    g.add(at(mesh(cylZ(r, len, 40), alu), c));
+    for (const sg of [1, -1]) {
+      const z = c.z + sg * (len / 2 + 0.011);
+      g.add(at(mesh(cylZ(r * 1.08, 0.022, 40), blue), v3(c.x, c.y, z)));
+      for (let i = 0; i < 18; i++) { const a = i / 18 * Math.PI * 2; g.add(at(mesh(new T.BoxGeometry(0.004, 0.004, 0.02), blueD), v3(c.x + Math.cos(a) * r * 1.085, c.y + Math.sin(a) * r * 1.085, z))); }
+      g.add(at(mesh(new T.TorusGeometry(r * 0.9, r * 0.07, 10, 40), blue), v3(c.x, c.y, z + sg * 0.011)));
+    }
+    const zf = c.z + len / 2 + 0.0225;
+    if (scr) g.add(at(mesh(new T.CircleGeometry(r * 0.7, 40), new T.MeshBasicMaterial({ map: scr.tex })), v3(c.x, c.y, zf)));
+    g.add(at(mesh(new T.CircleGeometry(r * 0.84, 40), new T.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: 0.1, roughness: 0, clearcoat: 1, depthWrite: false })), v3(c.x, c.y, zf + 0.001)));
+    g.add(at(mesh(new T.PlaneGeometry(r * 0.62, r * 0.17), new T.MeshBasicMaterial({ map: canvasTex(128, 36, (cc) => { cc.clearRect(0, 0, 128, 36); cc.fillStyle = "#D5DDF2"; cc.font = "bold 30px Arial"; cc.textAlign = "center"; cc.fillText("smar", 64, 28); }), transparent: true, depthWrite: false }), false, false), v3(c.x, c.y + r * 0.97, zf + 0.0125)));
+    // entradas elétricas laterais (a do lado −x fica tampada com bujão)
+    for (const sx of [1, -1]) g.add(at(mesh(cylX(r * 0.3, 0.024, 16), alu), v3(c.x + sx * (r + 0.004), c.y, c.z - len * 0.3)));
+    g.add(at(mesh(cylX(r * 0.24, 0.01, 6), M.dark), v3(c.x - r - 0.018, c.y, c.z - len * 0.3)));
   }
   function gland(parent, p, dir, r = 0.009) {
     const g = new T.Group(); g.position.copy(p); g.quaternion.setFromUnitVectors(v3(0, 1, 0), dir); g.userData.gland = true; parent.add(g);
@@ -676,27 +712,25 @@
       add(cylX(0.016, 0.03, 16), head, v3(0.055, 0.185, 0));
       gland(g, v3(0.07, 0.185, 0), v3(1, 0, 0), 0.009);
     } else if (tag === "TT-104") {
-      // transmissor de cabeçote (disco) + tampa do cabeçote
+      // transmissor de temperatura Smar TT301: módulo de ligação dentro do cabeçote, adaptador sextavado, pescoço e carcaça com display
       add(new T.CylinderGeometry(0.03, 0.03, 0.012, 32), mat(0xF4F6F8, 0.05, 0.5), v3(0, -0.004, 0));
-      for (let i = 0; i < 5; i++) add(new T.CylinderGeometry(0.004, 0.004, 0.006, 10), M.steel, v3(-0.018 + i * 0.009, 0.004, 0.012));
-      const cap = new T.Group(); cap.position.set(-0.01, 0.014, 0); cap.rotation.z = 0.22; g.add(cap);
-      const hd = mat(0x4A4F57, 0.45, 0.45);
-      cap.add(mesh(new T.CylinderGeometry(0.047, 0.047, 0.02, 32), hd));
-      cap.add(at(mesh(new T.SphereGeometry(0.047, 32, 12, 0, Math.PI * 2, 0, Math.PI / 2), hd), v3(0, 0.01, 0), v3(1, 0.3, 1)));
-      cap.add(at(mesh(new T.CylinderGeometry(0.007, 0.007, 0.01, 6), M.bolt), v3(0, 0.025, 0)));
-      cap.add(at(mesh(new T.BoxGeometry(0.018, 0.012, 0.02), hd), v3(-0.045, 0, 0)));
+      const ss = mat(0xC4C9CE, 0.85, 0.25);
+      add(new T.CylinderGeometry(0.047, 0.047, 0.012, 32), mat(0x4A4F57, 0.45, 0.45), v3(0, 0.006, 0));
+      add(new T.CylinderGeometry(0.02, 0.02, 0.016, 6), ss, v3(0, 0.02, 0));
+      add(new T.CylinderGeometry(0.013, 0.015, 0.03, 20), ss, v3(0, 0.04, 0));
+      S.ttScreen = smarScreen("TT-104", 200); S.ttScreen.draw(["----", "°C"]);
+      smarHousing(g, v3(0, 0.094, 0), 0.044, 0.078, S.ttScreen);
     } else if (tag === "PIT-103") {
-      add(new T.CylinderGeometry(0.024, 0.024, 0.03, 6), M.steel, v3(0, 0.015, 0));
-      add(new T.CylinderGeometry(0.026, 0.026, 0.06, 24), M.steel, v3(0, 0.06, 0));
-      add(new T.CylinderGeometry(0.02, 0.02, 0.03, 16), M.steel, v3(0, 0.105, 0));
-      add(cylZ(0.052, 0.12, 32), M.housing, v3(0, 0.165, 0));
-      for (const z of [0.066, -0.066]) add(cylZ(0.056, 0.022, 32), M.housingDark, v3(0, 0.165, z));
-      S.pitScreen = screen(200, 120);
-      add(new T.CircleGeometry(0.04, 32), new T.MeshBasicMaterial({ map: S.pitScreen.tex }), v3(0, 0.165, 0.0775));
-      add(new T.CircleGeometry(0.047, 32), new T.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: 0.12, roughness: 0, depthWrite: false }), v3(0, 0.165, 0.0785));
-      S.pitScreen.draw(["-.--", "bar"]);
+      // transmissor de pressão Smar LD301: conexão, módulo sensor inox com flanges aparafusados, pescoço e carcaça com display
+      const ss = mat(0xC4C9CE, 0.85, 0.25);
+      add(new T.CylinderGeometry(0.022, 0.022, 0.024, 6), M.steel, v3(0, 0.012, 0));
+      add(new T.BoxGeometry(0.07, 0.05, 0.05), ss, v3(0, 0.05, 0));
+      for (const x of [-0.044, 0.044]) add(new T.BoxGeometry(0.018, 0.058, 0.058), ss, v3(x, 0.05, 0));
+      for (const x of [-0.044, 0.044]) for (const y of [0.031, 0.069]) for (const z of [-0.02, 0.02]) add(cylX(0.0055, 0.024, 6), M.bolt, v3(x * 1.08, y, z));
+      add(new T.CylinderGeometry(0.016, 0.022, 0.04, 20), ss, v3(0, 0.095, 0));
+      S.pitScreen = smarScreen("PIT-103", 6); S.pitScreen.draw(["-.--", "bar"]);
+      smarHousing(g, v3(0, 0.165, 0), 0.052, 0.095, S.pitScreen);
       gland(g, v3(0.05, 0.165, -0.03), v3(1, 0, 0), 0.008);
-      add(new T.BoxGeometry(0.03, 0.018, 0.002), mat(0xC9D1DA, 0.6, 0.3), v3(0, 0.2, 0.05));
     } else if (tag === "PSH-103") {
       add(new T.CylinderGeometry(0.022, 0.022, 0.028, 6), M.steel, v3(0, 0.014, 0));
       add(new T.CylinderGeometry(0.03, 0.03, 0.03, 24), M.steel, v3(0, 0.043, 0));
@@ -753,33 +787,36 @@
       add(new T.SphereGeometry(0.007, 12, 8), lamp, v3(0, 0.024, 0.05));
       S[tag === "LSH-101" ? "lshLamp" : "lslLamp"] = lamp;
     } else if (tag === "FIT-102") {
-      const cast = mat(0x5A616B, 0.55, 0.5);
+      // medidor de vazão por pressão diferencial: placa de orifício entre flanges + transmissor Smar LD301 (lados L e H)
+      const ss = mat(0xC4C9CE, 0.85, 0.25);
       add(cylX(0.036, 0.19, 32), M.steel, v3(0, 0, 0));
       for (const x of [-0.105, 0.105]) { flange(v3(x, 0, 0), v3(1, 0, 0), 0.024, g, 4); }
-      add(new T.BoxGeometry(0.1, 0.085, 0.09), cast, v3(0, 0.005, 0));
-      add(new T.BoxGeometry(0.06, 0.03, 0.06), cast, v3(0, 0.06, 0));
-      add(new T.CylinderGeometry(0.016, 0.016, 0.05, 12), M.steel, v3(0, 0.08, 0));
-      add(cylZ(0.046, 0.1, 32), M.housing, v3(0, 0.145, 0));
-      for (const z of [0.055, -0.055]) add(cylZ(0.05, 0.018, 32), M.housingDark, v3(0, 0.145, z));
-      S.fitScreen = screen(200, 120);
-      add(new T.CircleGeometry(0.036, 28), new T.MeshBasicMaterial({ map: S.fitScreen.tex }), v3(0, 0.145, 0.0645));
-      S.fitScreen.draw(["0,0", "L/min"]);
+      for (const x of [-0.009, 0.009]) add(cylX(0.05, 0.016, 32), M.flange, v3(x, 0, 0));
+      for (let i = 0; i < 4; i++) { const a = i / 4 * Math.PI * 2 + Math.PI / 4; add(cylX(0.005, 0.05, 6), M.bolt, v3(0, Math.cos(a) * 0.04, Math.sin(a) * 0.04)); }
+      add(new T.BoxGeometry(0.003, 0.025, 0.02), M.steel, v3(0, -0.06, 0));            // aba da placa de orifício
+      for (const x of [-0.026, 0.026]) add(new T.CylinderGeometry(0.004, 0.004, 0.04, 8), M.steel, v3(x, 0.05, 0.0));   // tomadas de impulso
+      add(new T.BoxGeometry(0.044, 0.034, 0.05), ss, v3(0, 0.078, 0));
+      for (const sx of [-1, 1]) { add(new T.BoxGeometry(0.022, 0.044, 0.058), ss, v3(sx * 0.033, 0.078, 0)); for (const y of [0.064, 0.092]) for (const z of [-0.019, 0.019]) add(cylX(0.005, 0.01, 6), M.bolt, v3(sx * 0.047, y, z)); }
+      const LH = (t) => new T.MeshBasicMaterial({ map: canvasTex(48, 48, (cc) => { cc.clearRect(0, 0, 48, 48); cc.fillStyle = "#1F2328"; cc.font = "bold 40px Arial"; cc.textAlign = "center"; cc.fillText(t, 24, 40); }), transparent: true, depthWrite: false });
+      add(new T.PlaneGeometry(0.016, 0.016), LH("L"), v3(-0.033, 0.078, 0.0295)); add(new T.PlaneGeometry(0.016, 0.016), LH("H"), v3(0.033, 0.078, 0.0295));
+      add(new T.CylinderGeometry(0.014, 0.014, 0.012, 16), ss, v3(0, 0.1, 0));
+      S.fitScreen = smarScreen("FIT-102", 30); S.fitScreen.draw(["0,0", "L/min"]);
+      smarHousing(g, v3(0, 0.145, 0), 0.046, 0.085, S.fitScreen);
       gland(g, v3(0.046, 0.145, -0.03), v3(1, 0, 0), 0.007);
-      add(new T.TubeGeometry(new T.CatmullRomCurve3([v3(0.07, 0.145, -0.03), v3(0.11, 0.16, -0.03), v3(0.125, 0.23, -0.05), v3(0.125, 0.27, -0.12)]), 24, 0.008, 10, false), mat(0x6E7782, 0.5, 0.5), v3(0, 0, 0));
-      add(new T.CylinderGeometry(0.011, 0.011, 0.02, 12), M.dark, v3(0.125, 0.275, -0.125));
     } else if (tag === "FV-102") {
-      // ---- corpo tipo globo flangeado
-      const iron = M.castIron;
+      // ---- corpo tipo globo flangeado, pintado de azul (válvula de controle Hiter com atuador de diafragma)
+      const iron = mat(0x2456B8, 0.35, 0.42);
       g.add(at(mesh(new T.SphereGeometry(0.052, 32, 18), iron), v3(0, 0, 0), v3(1.18, 0.95, 0.92)));
       add(cylX(0.031, 0.2, 24), iron, v3(0, 0, 0));
-      for (const x of [-0.1, 0.1]) flange(v3(x, 0, 0), v3(1, 0, 0), 0.024, g, 4);
+      for (const x of [-0.1, 0.1]) { flange(v3(x, 0, 0), v3(1, 0, 0), 0.024, g, 4); add(cylX(0.0562, 0.034, 32), iron, v3(x, 0, 0)); }
       add(new T.CylinderGeometry(0.012, 0.012, 0.016, 6), M.bolt, v3(0, -0.055, 0));
+      add(new T.PlaneGeometry(0.06, 0.03), new T.MeshBasicMaterial({ map: canvasTex(200, 100, (cc) => { cc.clearRect(0, 0, 200, 100); cc.fillStyle = "#9DB6EA"; cc.font = "bold 44px Arial"; cc.textAlign = "center"; cc.fillText("HITER", 100, 46); cc.fillRect(50, 70, 80, 8); cc.beginPath(); cc.moveTo(150, 74); cc.lineTo(126, 60); cc.lineTo(126, 88); cc.fill(); }), transparent: true, depthWrite: false }), v3(0, -0.004, 0.0505));
       // ---- castelo com flange
       add(new T.CylinderGeometry(0.028, 0.036, 0.05, 24), iron, v3(0, 0.07, 0));
-      flange(v3(0, 0.097, 0), v3(0, 1, 0), 0.019, g, 6);
+      flange(v3(0, 0.097, 0), v3(0, 1, 0), 0.019, g, 6); add(new T.CylinderGeometry(0.0447, 0.0447, 0.032, 32), iron, v3(0, 0.097, 0));
       add(new T.CylinderGeometry(0.016, 0.016, 0.02, 16), M.steel, v3(0, 0.113, 0));
       // ---- arcada (yoke): base, colunas e travessa
-      const yoke = mat(0x3D4A5C, 0.5, 0.45);
+      const yoke = mat(0x2456B8, 0.35, 0.42);
       add(new T.CylinderGeometry(0.046, 0.046, 0.012, 32), yoke, v3(0, 0.108, 0));
       for (const x of [-0.042, 0.042]) add(new T.BoxGeometry(0.013, 0.125, 0.018), yoke, v3(x, 0.175, 0));
       add(new T.BoxGeometry(0.11, 0.014, 0.04), yoke, v3(0, 0.243, 0));
@@ -793,7 +830,7 @@
       const scale = canvasTex(40, 200, (c) => { c.fillStyle = "#fff"; c.fillRect(0, 0, 40, 200); c.fillStyle = "#1F2A37"; c.font = "bold 11px Arial"; for (let i = 0; i <= 4; i++) { const y = 180 - i * 40; c.fillRect(0, y, i % 2 ? 12 : 20, 3); c.fillText(i * 25, 22, y + 5); } });
       add(new T.PlaneGeometry(0.018, 0.075), new T.MeshStandardMaterial({ map: scale, roughness: 0.5 }), v3(0.046, 0.168, 0.0095));
       // ---- atuador de diafragma: carcaça inferior, anel aparafusado, carcaça superior e olhal
-      const blue = mat(0x2C5FC0, 0.35, 0.38), blueD = mat(0x1E3F8A, 0.4, 0.4);
+      const blue = mat(0x2456B8, 0.35, 0.38), blueD = mat(0x1C4596, 0.4, 0.4);
       add(new T.CylinderGeometry(0.118, 0.09, 0.045, 48), blue, v3(0, 0.272, 0));
       add(new T.CylinderGeometry(0.128, 0.128, 0.012, 48), blueD, v3(0, 0.3, 0));
       for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2; add(new T.CylinderGeometry(0.0045, 0.0045, 0.026, 6), M.bolt, v3(Math.cos(a) * 0.121, 0.3, Math.sin(a) * 0.121)); }
@@ -815,16 +852,18 @@
       add(new T.BoxGeometry(0.14, 0.04, 0.034), alu, v3(0, 0, 0.032));
       add(new T.BoxGeometry(0.142, 0.006, 0.036), mat(0x9AA3AD, 0.6, 0.35), v3(0, 0.021, 0.032));
       const face = canvasTex(64, 64, c => { c.fillStyle = "#fff"; c.beginPath(); c.arc(32, 32, 31, 0, 7); c.fill(); c.strokeStyle = "#1F2A37"; c.lineWidth = 2; for (let i = 0; i <= 8; i++) { const a = (-225 + i * 33.75) * Math.PI / 180; c.beginPath(); c.moveTo(32 + Math.cos(a) * 22, 32 + Math.sin(a) * 22); c.lineTo(32 + Math.cos(a) * 28, 32 + Math.sin(a) * 28); c.stroke(); } c.strokeStyle = "#B83A2E"; c.lineWidth = 3; c.beginPath(); c.moveTo(32, 32); c.lineTo(20, 18); c.stroke(); });
-      for (const x of [-0.04, 0, 0.04]) {
+      for (const x of [0.005, 0.045]) {
         add(cylZ(0.015, 0.012, 28), M.chrome, v3(x, 0.0, 0.054));
         add(new T.CircleGeometry(0.0128, 28), new T.MeshStandardMaterial({ map: face, roughness: 0.3 }), v3(x, 0.0, 0.0605));
         add(cylZ(0.004, 0.012, 8), M.brass, v3(x, -0.017, 0.045));
       }
-      // carcaça redonda de ligação elétrica (lado esquerdo)
-      add(cylZ(0.03, 0.05, 36), mat(0xECEFF2, 0.2, 0.35), v3(-0.1, 0.0, 0.035));
-      add(new T.TorusGeometry(0.026, 0.006, 12, 36), mat(0x1F2328, 0.3, 0.5), v3(-0.1, 0.0, 0.061));
-      add(new T.CircleGeometry(0.02, 32), mat(0x2B2F36, 0.3, 0.6), v3(-0.1, 0.0, 0.058));
-      for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; add(new T.BoxGeometry(0.004, 0.012, 0.004), mat(0xC9CED4), v3(-0.1 + Math.cos(a) * 0.022, Math.sin(a) * 0.022, 0.063)); }
+      // caixa do posicionador Hiter (eletrônica e ligação elétrica), com tampa, plaqueta e indicador de posição
+      const gray = mat(0xC3C8CE, 0.45, 0.4);
+      add(new T.BoxGeometry(0.078, 0.07, 0.056), gray, v3(-0.09, 0.0, 0.034));
+      add(new T.BoxGeometry(0.082, 0.008, 0.06), mat(0x8D959E, 0.5, 0.4), v3(-0.09, 0.034, 0.034));
+      add(new T.PlaneGeometry(0.044, 0.016), new T.MeshBasicMaterial({ map: canvasTex(160, 58, (cc) => { cc.fillStyle = "#1F2328"; cc.fillRect(0, 0, 160, 58); cc.strokeStyle = "#C9CED4"; cc.lineWidth = 4; cc.strokeRect(4, 4, 152, 50); cc.fillStyle = "#fff"; cc.font = "bold 34px Arial"; cc.textAlign = "center"; cc.fillText("HITER", 80, 42); }) }), v3(-0.09, 0.012, 0.0625));
+      add(new T.SphereGeometry(0.012, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2).rotateX(Math.PI / 2), new T.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: 0.35, roughness: 0.05, depthWrite: false }), v3(-0.09, -0.016, 0.062));
+      add(new T.BoxGeometry(0.014, 0.003, 0.002), mat(0xE87722, 0.2, 0.4), v3(-0.09, -0.016, 0.064));
       gland(g, v3(-0.1, -0.03, 0.035), v3(0, -1, 0), 0.007);
       // tomadas OUT 1 · IN · OUT 2 no topo do bloco
       const lbl = canvasTex(256, 40, c => { c.fillStyle = "#D3D8DE"; c.fillRect(0, 0, 256, 40); c.fillStyle = "#1F2A37"; c.font = "bold 22px Arial"; c.textAlign = "center"; c.fillText("OUT 1", 50, 30); c.fillText("IN", 128, 30); c.fillText("OUT 2", 206, 30); });
@@ -878,7 +917,7 @@
     S.labels[key] = { el: d, obj: o };
     return d;
   }
-  const LPOS = { "TE-104": v3(-0.15, 0.12, 0), "TT-104": v3(0, 0.12, 0), "PIT-103": v3(0, 0.28, 0), "PSH-103": v3(0, 0.24, 0), "TSH-104": v3(0, 0.12, 0.08), "PG": v3(0, 0.11, 0.08),
+  const LPOS = { "TE-104": v3(-0.15, 0.12, 0), "TT-104": v3(0, 0.17, 0), "PIT-103": v3(0, 0.28, 0), "PSH-103": v3(0, 0.24, 0), "TSH-104": v3(0, 0.12, 0.08), "PG": v3(0, 0.11, 0.08),
     "LIT-101": v3(0, 0.2, 0), "LSH-101": v3(0.1, 0.05, 0.06), "LSL-101": v3(0.1, 0.05, 0.06), "FIT-102": v3(0, 0.25, 0), "FV-102": v3(0, 0.44, 0), "FY-102": v3(0.12, 0.02, 0.06), "VY-01": v3(0, 0.22, 0) };
 
   /* ---------- UI ---------- */
@@ -1068,6 +1107,7 @@
       lab("TSH-104", P.trip === "tsh" ? "ATUOU" : "OK", P.trip === "tsh");
       lab("PSH-103", P.trip === "psh" ? "ATUOU" : "OK", P.trip === "psh");
       if (S.pitScreen) S.pitScreen.draw([fmt(P.P, 2), "bar"]);
+      if (S.ttScreen) S.ttScreen.draw([wired ? fmt(P.T) : "----", "°C"]);
       setNeedle(P.P);
       S.panelScreen.draw(wired ? ["TIC-104", `PV ${fmt(P.T)} · SP ${P.sp} °C`] : ["TIC-104", "FALHA TT-104"], "#1F2A37");
     }
