@@ -32,6 +32,8 @@ try {
   $node = Join-Path $dir 'node.exe'
   if (-not (Test-Path $node)) {
     $instalado = Get-Command node.exe -ErrorAction SilentlyContinue
+    $padrao = Join-Path $env:ProgramFiles 'nodejs\node.exe'
+    if (-not $instalado -and (Test-Path $padrao)) { $instalado = Get-Item $padrao | Select-Object @{n='Source';e={$_.FullName}} }
     if ($instalado) { Copy-Item $instalado.Source $node }
     else {
       Write-Host 'Baixando o Node.js do site oficial (nodejs.org)...'
@@ -93,6 +95,7 @@ try {
 } catch {
   Write-Host ''
   Write-Host ('ERRO: ' + $_.Exception.Message) -ForegroundColor Red
-  Write-Host 'Tire uma foto desta tela e chame o professor.'
+  Write-Host 'Se o erro foi no download do Node.js: use o botao Baixar Node.js no site, instale e abra este arquivo de novo.'
+  Write-Host 'Se continuar, tire uma foto desta tela e chame o professor.'
 }
 #PONTE-INICIO
