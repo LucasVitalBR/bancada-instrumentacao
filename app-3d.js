@@ -17,7 +17,7 @@
   const DX = -3.65;  // conjunto tanque, bomba e tubulação avançado 25 cm em direção ao painel
   let started = false;
   // qualidade gráfica: alta (padrão em placa dedicada), média e baixa (menos resolução, menos partículas e menos efeitos) — escolhida pelos botões ao lado do FPS
-  const QUAL = { alta: { h: 1080, pf: 1, wv: 1, pc: 0.066 }, media: { h: 720, pf: 0.3, wv: 2, pc: 0.12 }, baixa: { h: 480, pf: 0, wv: 0, pc: 1e9 } };   // baixa = água simplificada: superfície plana, jato e dreno simples, sem bolhas/espuma/gotas; monitor do fundo parado   // h = altura máxima da imagem 3D interna (a janela continua adaptável: a imagem é esticada para caber)
+  const QUAL = { alta: { h: 1080, pf: 1, wv: 1, pc: 0.35 }, media: { h: 720, pf: 0.3, wv: 2, pc: 0.7 }, baixa: { h: 480, pf: 0, wv: 0, pc: 1e9 } };   // baixa = água simplificada: superfície plana, jato e dreno simples, sem bolhas/espuma/gotas; monitor do fundo parado   // h = altura máxima da imagem 3D interna (a janela continua adaptável: a imagem é esticada para caber)
   function gpuName() { try { const c = document.createElement("canvas"), g = c.getContext("webgl"), e = g.getExtension("WEBGL_debug_renderer_info"), n = e ? g.getParameter(e.UNMASKED_RENDERER_WEBGL) : g.getParameter(g.RENDERER), l = g.getExtension("WEBGL_lose_context"); if (l) l.loseContext(); return String(n); } catch (e) { return ""; } }
   let qName = "alta";
   { let st = null; try { st = localStorage.getItem("nivel-q3d"); } catch (e) { }
@@ -1663,6 +1663,7 @@
     if (pumpCmd && !vyCmd) { if (!L.deadMsg) { L.deadMsg = true; tip("Bomba ligada (Y0) com a <b>VY-01 fechada</b> (Y1 = 0): não há vazão. Ligue o Y1 junto com o Y0.", "bad"); } } else L.deadMsg = false;
     if (S.thermalTrip || S.pumpBurnt) { pumpCmd = false; vyCmd = false; if (window.MD) MD.k1 = false; }
     if (S.ui.emerg) { pumpCmd = false; vyCmd = false; if (window.MD) MD.k1 = false; }
+    S.outs = { pump: !!pumpCmd, vy: !!vyCmd, res: !!(S.proc && S.proc.heat) && !S.ui.emerg };   // saídas do CLP representadas na gaveta CLP
     L.fv = 100;   // válvula manual do processo sempre aberta: a vazão varia só pela rotação da bomba
     L.vy = vyCmd;
     // seletora: DIRETA = contator K1 (60 Hz na hora) · INVERSOR = rotação vem do PowerFlex 525 (stepDrive)
@@ -1795,11 +1796,21 @@
     g.attributes.position.needsUpdate = true; g.computeVertexNormals(); g.computeBoundingSphere();
   }
   const _m4 = new T.Matrix4(), _q = new T.Quaternion(), _sc = new T.Vector3(), _p = new T.Vector3(), _v3 = new T.Vector3(), _yUp = new T.Vector3(0, 1, 0);
+  const _pumpHotColor = new T.Color(0xD2461C), _pumpCharColor = new T.Color(0x2B2623);
+  const _jetPts = []; for (let i = 0; i <= 10; i++) _jetPts.push(new T.Vector3());
+  const jetCurve = (q, ty) => {
+    const g = 3.2, te = Math.sqrt(2 * Math.max(1.4 - ty, 0.02) / g), vx = Math.min(0.3 + 0.9 * q / 30, 0.5 / te);
+    for (let i = 0; i <= 10; i++) {
+      const tt = te * i / 10;
+      _jetPts[i].set(0.31 - vx * tt, 1.4 - 0.5 * g * tt * tt, 0);
+    }
+    return _jetPts;
+  };
   function stepAnims(dt) {
     A.t += dt; const t = A.t;
     if (S.panelInterior && S.door) { const vis = S.door.open || S.door.ang > 0.03; if (S.panelIntVis !== vis) { S.panelIntVis = vis; for (const o of S.panelInterior) o.visible = vis; } }
     for (const vv of (S.valves || [])) vv.lv.rotation.y += ((vv.open ? 0 : Math.PI / 2) - vv.lv.rotation.y) * Math.min(1, dt * 8);
-    if (S.pumpMats) { const k = clamp(((S.pumpT || 25) - 35) / 55, 0, 1), hot = new T.Color(0xD2461C), char = new T.Color(0x2B2623); for (const [m, c0] of S.pumpMats) { m.color.copy(c0).lerp(hot, k); if (S.pumpBurnt) { m.color.copy(char); m.emissiveIntensity = 0; } else { m.emissive.setRGB(0.9 * k, 0.18 * k, 0.02 * k); m.emissiveIntensity = 0.6 * k; } } }
+    if (S.pumpMats) { const k = clamp(((S.pumpT || 25) - 35) / 55, 0, 1); for (const [m, c0] of S.pumpMats) { m.color.copy(c0).lerp(_pumpHotColor, k); if (S.pumpBurnt) { m.color.copy(_pumpCharColor); m.emissiveIntensity = 0; } else { m.emissive.setRGB(0.9 * k, 0.18 * k, 0.02 * k); m.emissiveIntensity = 0.6 * k; } } }
     { const kp = S.pumpBurnt ? clamp((S.pumpSmokeT || 0) / 20, 0, 1) : ((S.pumpT || 25) > 70 ? clamp(((S.pumpT || 25) - 70) / 20, 0, 1) * 0.6 : 0);
       if (S.pumpBurnt) S.pumpSmokeT = Math.max(0, (S.pumpSmokeT || 0) - dt);
       A.smokeAccP = (A.smokeAccP || 0) + dt * kp * 14;
@@ -1817,7 +1828,6 @@
     // ---- superfície com ondas e ondulação no ponto de impacto
     const submerged = topY >= 1.38, jetOn = Q > 0.2 && !submerged;
     // A trajetória é ancorada ao nível no início do fluxo; com vazão constante, não acompanha a subida da superfície.
-    const jetCurve = (q, ty) => { const g = 3.2, te = Math.sqrt(2 * Math.max(1.4 - ty, 0.02) / g), vx = Math.min(0.3 + 0.9 * q / 30, 0.5 / te), pts = []; for (let i = 0; i <= 10; i++) { const tt = te * i / 10; pts.push(v3(0.31 - vx * tt, 1.4 - 0.5 * g * tt * tt, 0)); } return pts; };
     if (jetOn && A.jetAnchorY == null) A.jetAnchorY = topY;
     if (!jetOn) A.jetAnchorY = null;
     const jpts = jetOn ? jetCurve(Q, topY) : null;
@@ -2039,17 +2049,24 @@
     const KMAP = { KeyW: "f", ArrowUp: "f", KeyS: "b", ArrowDown: "b", KeyA: "l", ArrowLeft: "l", KeyD: "r", ArrowRight: "r", KeyE: "u", PageUp: "u", KeyQ: "d", PageDown: "d" };
     const typing = () => { const a = document.activeElement; return a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.tagName === "SELECT" || a.isContentEditable); };
     window.addEventListener("keydown", e => {
-      const k = KMAP[e.code]; if (!k || typing() || !wrap.offsetParent || e.ctrlKey || e.altKey || e.metaKey) return;
+      if (typing()) return;
+      if (e.key === "Shift") { S.fast = true; return; }
+      const k = KMAP[e.code]; if (!k || !wrap.offsetParent || e.ctrlKey || e.altKey || e.metaKey) return;
       const ov = document.querySelector(".ovl3d.on"); if (ov) return;          // janela aberta (PT100, IHM ampliada): não anda
       KEYS.add(k); S.fast = e.shiftKey; S.tw = null; e.preventDefault();
     });
-    window.addEventListener("keyup", e => { const k = KMAP[e.code]; if (k) KEYS.delete(k); S.fast = e.shiftKey; });
-    window.addEventListener("blur", () => KEYS.clear());
+    window.addEventListener("keyup", e => {
+      if (e.key === "Shift") S.fast = false;
+      const k = KMAP[e.code]; if (k) KEYS.delete(k);
+      S.fast = e.shiftKey;
+    });
+    window.addEventListener("blur", () => { KEYS.clear(); S.fast = false; });
+    const _walkFwd = new T.Vector3(), _walkRight = new T.Vector3(), _walkMv = new T.Vector3();
     S.walk = (dt) => {
       if (!KEYS.size) return;
-      const fwd = new T.Vector3().subVectors(ctl.target, cam.position); fwd.y = 0;
+      const fwd = _walkFwd.subVectors(ctl.target, cam.position); fwd.y = 0;
       if (fwd.lengthSq() < 1e-6) fwd.set(0, 0, -1); fwd.normalize();
-      const right = new T.Vector3(-fwd.z, 0, fwd.x), mv = new T.Vector3();
+      const right = _walkRight.set(-fwd.z, 0, fwd.x), mv = _walkMv.set(0, 0, 0);
       if (KEYS.has("f")) mv.add(fwd); if (KEYS.has("b")) mv.sub(fwd);
       if (KEYS.has("r")) mv.add(right); if (KEYS.has("l")) mv.sub(right);
       if (KEYS.has("u")) mv.y += 1; if (KEYS.has("d")) mv.y -= 1;
@@ -2058,6 +2075,36 @@
       cam.position.add(mv); ctl.target.add(mv);
       if (ctl.target.y < 0.1) { const d = 0.1 - ctl.target.y; ctl.target.y += d; cam.position.y += d; }
     };
+    // modo câmera livre: clique do SCROLL (botão do meio) trava o mouse (olhar com o mouse + WASD); outro clique ou ESC solta
+    const lookUi = document.createElement("div");
+    lookUi.style.cssText = "position:absolute;inset:0;pointer-events:none;display:none;z-index:6";
+    lookUi.innerHTML = '<div style="position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;opacity:.7"><i style="position:absolute;left:6px;top:0;width:2px;height:14px;background:#fff;box-shadow:0 0 2px #000"></i><i style="position:absolute;left:0;top:6px;width:14px;height:2px;background:#fff;box-shadow:0 0 2px #000"></i></div>';
+    wrap.appendChild(lookUi);
+    S.look = null;
+    const lookDir = new T.Vector3();
+    const lookSync = () => { lookDir.set(Math.sin(S.look.yaw) * Math.cos(S.look.pitch), Math.sin(S.look.pitch), -Math.cos(S.look.yaw) * Math.cos(S.look.pitch)); ctl.target.copy(cam.position).add(lookDir); };
+    S.lookStep = () => { if (!S.look) return false; lookSync(); cam.lookAt(ctl.target); return true; };
+    const lookOn = () => {
+      if (S.look || !renderer.domElement.requestPointerLock) return;
+      try { const p = renderer.domElement.requestPointerLock(); if (p && p.catch) p.catch(() => { }); } catch (e) { }
+    };
+    const lookOff = () => { if (document.pointerLockElement === renderer.domElement) { try { document.exitPointerLock(); } catch (e) { } } };
+    S.lookExit = lookOff;
+    document.addEventListener("pointerlockchange", () => {
+      if (document.pointerLockElement === renderer.domElement) {
+        const d = new T.Vector3().subVectors(ctl.target, cam.position).normalize();
+        S.look = { yaw: Math.atan2(d.x, -d.z), pitch: Math.asin(clamp(d.y, -1, 1)) };
+        S.tw = null; ctl.enabled = false; ctl.maxPolarAngle = Math.PI * 0.9; lookUi.style.display = "block"; const lb = document.getElementById("lookBanner"); if (lb) lb.style.display = "block";
+      } else if (S.look) {
+        lookSync(); S.look = null; ctl.enabled = true; lookUi.style.display = "none"; const lb = document.getElementById("lookBanner"); if (lb) lb.style.display = "none"; KEYS.clear();
+      }
+    });
+    document.addEventListener("mousemove", e => {
+      if (!S.look) return;
+      S.look.yaw += e.movementX * 0.0022;
+      S.look.pitch = clamp(S.look.pitch - e.movementY * 0.0022, -1.5, 1.5);
+    });
+    S.lookOn = lookOn;
     Object.assign(S, { renderer, lr, scene, cam, ctl, wrap });
 
     scene.add(new T.HemisphereLight(0xffffff, 0x9A9690, 1.15));
@@ -2114,8 +2161,10 @@
       if (hitsP.length) return { part: hitsP[0].object.userData.tag };
       return null;
     };
-    renderer.domElement.addEventListener("pointerdown", e => { down = [e.clientX, e.clientY, performance.now()]; });
+    renderer.domElement.addEventListener("pointerdown", e => { if (e.button === 1) e.preventDefault(); down = [e.clientX, e.clientY, performance.now()]; });
     renderer.domElement.addEventListener("pointerup", e => {
+      if (e.button === 1 && e.pointerType === "mouse") { down = null; if (S.look) lookOff(); else lookOn(); return; }
+      if (S.look) { down = null; return; }
       if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) { down = null; return; }
       const holdMs = performance.now() - down[2]; down = null;
       const h = pick(e);
@@ -2128,13 +2177,24 @@
         tip(`<b>${h.part}</b>: ${r}.`);
       }
     });
-    renderer.domElement.addEventListener("pointermove", e => {
-      if (e.buttons) return;
+    let lastHoverT = 0, pendingHoverEvt = null;
+    function applyHoverPick(e) {
+      if (!e || e.buttons) return;
       const h = pick(e);
       renderer.domElement.style.cursor = h ? "pointer" : "grab";
       const hot = h && h.part ? h.part : h && h.click ? h.click.tag : null;
       if (hot !== S.hot) { if (S.hot && S.labels[S.hot]) S.labels[S.hot].el.classList.remove("hot"); S.hot = hot; if (hot && S.labels[hot]) S.labels[hot].el.classList.add("hot"); }
       Object.values(S.slots).forEach(s => { if (s.ghost) s.ghost.userData.hover = h && h.slot === s.ghost.userData.slot; });
+    }
+    renderer.domElement.addEventListener("pointermove", e => {
+      if (e.buttons) return;
+      const now = performance.now();
+      if (now - lastHoverT >= 33) {
+        lastHoverT = now;
+        applyHoverPick(e);
+      } else {
+        pendingHoverEvt = e;
+      }
     });
     document.querySelectorAll("#v3d-views [data-view]").forEach(b => b.onclick = () => goView(b.dataset.view));
     $("#b3reset").onclick = reset;
@@ -2156,13 +2216,16 @@
     resize();
     $("#load3d").style.display = "none";
     renderTray();
-    tip("Escolha uma peça na Bancada de Peças, leia a tag e toque na área azul onde ela deve ser instalada. Arraste para girar, use a roda ou dois dedos para aproximar. Teclado: <b>W A S D</b> ou <b>setas</b> para andar, <b>Q/E</b> para descer/subir (Shift = mais rápido).");
+    tip("Escolha uma peça na Bancada de Peças, leia a tag e toque na área azul onde ela deve ser instalada. Arraste para girar, use a roda ou dois dedos para aproximar. <b>Clique do scroll</b> liga/desliga a câmera livre (mouse olha). Teclado: <b>W A S D</b> ou <b>setas</b> para andar, <b>Q/E</b> para descer/subir (Shift = mais rápido).");
     const clock = new T.Clock();
     let acc = 0;
     // ---- barra de desempenho (sempre visível): FPS + botão ⓘ (detalhes: quadro, pior e melhor) + qualidade Alta / Média / Baixa
     const perf = { n: 0, t0: performance.now(), worst: 0, best: 1e9, low: 0, lastTip: -1e9, det: false };
     perf.el = document.createElement("div"); perf.el.id = "perf3d";
     perf.el.innerHTML = '<b id="pfFps">-- FPS</b><span class="pfq" title="Qualidade gráfica. Média: menos resolução e menos partículas. Baixa: água simplificada (sem ondas, bolhas e espuma), monitor do fundo parado e resolução mínima — mais FPS"><button data-q="alta">Alta</button><button data-q="media">Média</button><button data-q="baixa">Baixa</button></span>';
+    const lkb = document.createElement("div"); lkb.id = "lookBanner";
+    lkb.textContent = "Câmera livre · mova o mouse e use WASD · clique do scroll ou ESC para sair";
+    perf.el.appendChild(lkb);
     wrap.appendChild(perf.el);
     perf.apply = () => { perf.el.querySelectorAll("[data-q]").forEach(b => b.classList.toggle("on", b.dataset.q === qName)); };
     function setQuality(q) {
@@ -2197,7 +2260,15 @@
       }
       if (S.walk) S.walk(dt);
       if (S.tw) { S.tw.k = Math.min(1, S.tw.k + dt * 1.6); const k = 1 - Math.pow(1 - S.tw.k, 3); cam.position.lerpVectors(S.tw.p0, S.tw.p1, k); ctl.target.lerpVectors(S.tw.t0, S.tw.t1, k); if (S.tw.k >= 1) S.tw = null; }
-      ctl.update(); clampCam();
+      if (pendingHoverEvt) {
+        const hNow = performance.now();
+        if (hNow - lastHoverT >= 33) {
+          lastHoverT = hNow;
+          const ev = pendingHoverEvt; pendingHoverEvt = null;
+          applyHoverPick(ev);
+        }
+      }
+      if (S.look) { clampCam(); S.lookStep(); } else { ctl.update(); clampCam(); }
       const tt = performance.now() / 1000;
       Object.values(S.slots).forEach(s => {
         const g = s.ghost; if (!g || !g.visible) return;
@@ -2224,7 +2295,6 @@
       const items = [];
       for (const k in S.labels) {
         const l = S.labels[k], el = l.el;
-        el.style.visibility = "";
         if (el.style.display === "none" || el.offsetParent === null) continue;
         l.obj.getWorldPosition(wp);
         const pr = (el.classList.contains("alarm") ? 0 : el.classList.contains("hot") ? 1 : 2) * 1000 + wp.distanceTo(cam.position);
@@ -2234,8 +2304,10 @@
       const kept = [];
       for (const it of items) {
         const a = it.rc, pad = 2;
-        if (kept.some(b => a.left < b.right + pad && b.left < a.right + pad && a.top < b.bottom + pad && b.top < a.bottom + pad)) it.el.style.visibility = "hidden";
-        else kept.push(a);
+        const overlap = kept.some(b => a.left < b.right + pad && b.left < a.right + pad && a.top < b.bottom + pad && b.top < a.bottom + pad);
+        const vis = overlap ? "hidden" : "";
+        if (it.el.style.visibility !== vis) it.el.style.visibility = vis;
+        if (!overlap) kept.push(a);
       }
     }
     loop();
@@ -2269,7 +2341,7 @@
     setValveReq(v) { S.lvl.av = clamp(Math.round(+v || 0), 0, 100); updateReadings(); },
   };
   window.App3D = {
-    releaseForce, force: S.force, _S: S,
+    releaseForce, force: S.force, _S: S, get outs() { return S.outs; },
     setTtZero, ttZero: () => ttZero, setLtZero, ltZero: () => ltZero, _lt: () => ltInfo(S.lvl.L), replaceHeater, burnt: () => S.burnt, _bub: () => (A.bub ? A.bub.count : 0), _smoke: () => A.smoke.filter(p => p.life < 1).length, _setProc: (o) => Object.assign(S.proc, o),
     _click(tag) { const c = (S.clickables || []).find(x => x.tag === tag); if (c) c.fn({}, {}); return !!c; },
     setSp: (v) => api.setSp(v), ui: S.ui, setValveReq: (v) => api.setValveReq(v), showHud: (on) => setHud(on !== false),

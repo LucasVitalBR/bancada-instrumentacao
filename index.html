@@ -22,20 +22,35 @@
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",Calibri,Carlito,"Segoe UI",Arial,sans-serif;font-size:17px;line-height:1.45}
 button,input,select{font:inherit;color:inherit}
-header{background:var(--navy);color:#fff;position:sticky;top:0;z-index:20}
-.top{display:flex;align-items:center;gap:14px;padding:10px 20px 0}
-.brand{font-family:"Bricolage Grotesque","IBM Plex Sans",Calibri,sans-serif;font-weight:800;font-size:21px;white-space:nowrap;display:flex;align-items:center;gap:12px}
-.brand svg{width:46px;height:46px;flex:none}
-.brand small{font-family:"IBM Plex Sans",Calibri,sans-serif}
-.brand small em{font-style:normal;color:var(--orange);font-weight:700}
-h1,h2,h3{font-family:"Bricolage Grotesque","IBM Plex Sans",Calibri,sans-serif}
-.brand small{display:block;font-weight:400;font-size:13px;opacity:.75}
-nav{display:flex;gap:4px;overflow-x:auto;padding:8px 14px 0;scrollbar-width:none}
+header{background:linear-gradient(180deg,#13273e 0%,#0c1a29 100%);border-bottom:1px solid rgba(255,255,255,.1);box-shadow:0 4px 20px rgba(0,0,0,.35);position:static;flex:none;z-index:20}
+.top{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 20px 8px}
+.brand{font-family:"Bricolage Grotesque","IBM Plex Sans",Calibri,sans-serif;display:flex;align-items:center;gap:12px;white-space:nowrap;cursor:default}
+.brand svg{width:40px;height:40px;flex:none;filter:drop-shadow(0 2px 5px rgba(0,0,0,.35))}
+.brand-title{font-weight:800;font-size:18px;color:#fff;letter-spacing:-.015em;display:block;line-height:1.2}
+.brand-sub{font-family:"IBM Plex Sans",Calibri,sans-serif;font-size:12px;color:#9AB2CB;display:block;margin-top:1px;font-weight:400;opacity:.9}
+.brand-sub em{font-style:normal;color:var(--orange);font-weight:800}
+
+.hdr-actions{display:flex;align-items:center;gap:8px;flex:none}
+.help-pop-wrap{position:relative}
+.btn-hdr-guide{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);color:#DDE8F4;border-radius:8px;padding:5px 12px;font-size:12.5px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-hdr-guide:hover{background:rgba(255,255,255,.18);color:#fff;border-color:rgba(255,255,255,.3)}
+.hdr-popover{position:absolute;top:calc(100% + 8px);right:0;width:330px;background:rgba(11,23,38,.97);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.18);border-radius:12px;box-shadow:0 12px 36px rgba(0,0,0,.55);padding:12px 14px;z-index:1000;display:none;color:#DCE6F2;font-size:12.5px}
+.hdr-popover.show{display:block;animation:popFade .15s ease-out}
+@keyframes popFade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.pop-title{font-weight:700;font-size:13.5px;color:#fff;margin-bottom:9px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.12);display:flex;align-items:center;gap:6px}
+.pop-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:7px}
+.pop-k{white-space:nowrap}
+.pop-k kbd,.hdr-popover kbd{background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.22);border-bottom:2px solid rgba(255,255,255,.35);border-radius:4px;padding:1px 5px;font-size:10.5px;font-family:"IBM Plex Mono",monospace;font-weight:700;color:#fff;margin:0 1px}
+.pop-v{color:#A6BED8;text-align:right;font-size:12px}
+
+nav{display:flex;gap:8px;overflow-x:auto;padding:0 20px 10px;scrollbar-width:none}
 nav::-webkit-scrollbar{display:none}
-nav button{background:transparent;border:0;color:#C9D6E6;padding:9px 14px 11px;border-radius:10px 10px 0 0;cursor:pointer;white-space:nowrap;font-size:16px}
-nav button:hover{color:#fff;background:rgba(255,255,255,.08)}
-nav button.on{background:var(--bg);color:var(--navy);font-weight:700}
-nav button .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--orange);color:#fff;font-size:13px;font-weight:700;margin-right:6px}
+nav button{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#B2C5DA;padding:6px 14px;border-radius:999px;cursor:pointer;white-space:nowrap;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:7px;transition:all .2s cubic-bezier(.4,0,.2,1);line-height:1}
+nav button:hover{color:#fff;background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.22)}
+nav button.on[data-v="bancada3d"]{background:linear-gradient(135deg,#1C6556 0%,#2E8B7A 100%)!important;color:#fff!important;font-weight:700;border-color:rgba(255,255,255,.3);box-shadow:0 2px 10px rgba(46,139,122,.45)}
+nav button.on[data-v="clpcfg"]{background:linear-gradient(135deg,#EE7A10 0%,#BA4700 100%)!important;color:#fff!important;font-weight:700;border-color:rgba(255,255,255,.3);box-shadow:0 2px 10px rgba(238,122,16,.45)}
+nav button .n{display:inline-grid;place-items:center;padding:0 6px;height:19px;border-radius:6px;font-size:11px;font-weight:800;letter-spacing:.02em;background:rgba(255,255,255,.22)!important;color:#fff;margin-right:0}
+h1,h2,h3{font-family:"Bricolage Grotesque","IBM Plex Sans",Calibri,sans-serif}
 main{max-width:none;margin:0 auto;padding:16px 16px 40px}
 section.view{display:none}
 section.view.on{display:block}
@@ -126,6 +141,11 @@ table.t tr.hl td{background:#FFF4EA;font-weight:700}
 /* 3D */
 .w3d{position:relative;height:clamp(420px,min(calc(100vh - 150px),88vw),1300px);height:clamp(420px,min(calc(100dvh - 150px),88vw),1300px);border-radius:var(--r);overflow:hidden;background:#3A4552;user-select:none;-webkit-user-select:none}
 .w3d .c3d{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+.cam-mode-badge{position:absolute;top:16px;left:50%;transform:translateX(-50%);background:rgba(15,34,54,.92);border:1px solid rgba(46,224,122,.5);color:#E2E8F0;padding:7px 16px;border-radius:999px;font-size:12.5px;display:flex;align-items:center;gap:10px;z-index:20;pointer-events:none;backdrop-filter:blur(8px);box-shadow:0 6px 20px rgba(0,0,0,.45);user-select:none}
+.cam-mode-badge span{font-weight:700;color:#2EE07A;display:flex;align-items:center;gap:5px}
+.cam-mode-badge small{color:#A0B4C8;font-size:11.5px}
+.cam-mode-badge b{color:#FFF;background:rgba(255,255,255,.14);padding:2px 7px;border-radius:4px;font-weight:600}
+.cam-reticle{position:absolute;top:50%;left:50%;width:8px;height:8px;transform:translate(-50%,-50%);border:1.5px solid rgba(255,255,255,.8);border-radius:50%;pointer-events:none;z-index:19;box-shadow:0 0 5px rgba(0,0,0,.7)}
 .l3layer{position:absolute;inset:0;pointer-events:none}
 .load3d{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:20px;padding:20px;text-align:center}
 .v3d-views{position:absolute;top:12px;left:12px;display:flex;gap:6px;flex-wrap:wrap;z-index:3;max-width:calc(100% - 300px)}
@@ -312,12 +332,12 @@ main:has(#v-bancada3d.on){overflow:hidden}
 .navhelp{margin-left:auto;display:flex;flex-wrap:wrap;gap:6px 8px;justify-content:flex-end;align-self:center;max-width:70%;padding-bottom:4px}
 .navhelp span{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:#DCE6F2;border-radius:999px;padding:3px 11px;font-size:13px;white-space:nowrap}
 .navhelp b{color:#fff}
-@media (max-width:900px){.navhelp{display:none}}
-/* ---- tela estreita / vista dividida (metade da tela ao lado do ISPSoft) ---- */
+body:not([data-view="bancada3d"]) .help-pop-wrap{display:none!important}
 @media (max-width:760px){
-  header .top{padding:6px 10px 0;gap:8px}
-  .brand{font-size:16px;gap:8px}.brand svg{width:34px;height:34px}.brand small{display:none}
-  nav{padding:4px 8px 0}nav button{padding:6px 10px 8px;font-size:14px}nav button .n{display:none}
+  .top{padding:8px 12px 6px;gap:8px}
+  .brand{gap:8px}.brand svg{width:32px;height:32px}.brand-title{font-size:15px}.brand-sub{display:none}
+  nav{padding:0 12px 8px;gap:6px}nav button{padding:5px 11px;font-size:13px}
+  .btn-hdr-guide b{display:none}
   main{padding:4px 6px}
   .box3d.splitview{padding:4px}
   .box3d.splitview .v3d-views.col .vgrp:first-of-type{flex-wrap:wrap}
@@ -328,9 +348,9 @@ main:has(#v-bancada3d.on){overflow:hidden}
   h1{font-size:22px}.lead{font-size:14px;margin-bottom:8px}
 }
 @media (max-width:480px){
-  .brand{font-size:14px}.brand svg{width:30px;height:30px}
+  .brand-title{font-size:13.5px}.brand svg{width:28px;height:28px}
+  nav button{padding:4px 9px;font-size:12px}
 }
-body:not([data-view="bancada3d"]) .navhelp{display:none}
 /* ---- painéis laterais adaptáveis: acompanham a largura da janela (vista dividida) ---- */
 @media (max-width:1100px){
   .v3d-views{width:clamp(92px,17vw,184px);top:clamp(6px,1.2vw,12px);left:clamp(6px,1.2vw,12px);bottom:clamp(6px,1.2vw,12px);padding:clamp(4px,.8vw,8px);gap:clamp(3px,.5vw,6px)}
@@ -354,6 +374,7 @@ body:not([data-view="bancada3d"]) .navhelp{display:none}
 #perf3d b{font-size:13px;min-width:62px;text-align:center}
 #perf3d button{background:rgba(255,255,255,.1);color:#E8EEF5;border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:1px 7px;font:inherit;cursor:pointer}
 #perf3d button:hover{background:rgba(238,122,16,.35)}
+#lookBanner{display:none;position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);white-space:nowrap;background:var(--ink,#0F2236);color:#F5F6F8;border:1px solid var(--orange);border-left:4px solid var(--orange);border-radius:8px;padding:5px 12px;font:600 11.5px/1.3 "IBM Plex Sans",system-ui,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.25);pointer-events:none}
 #perf3d .pfq{display:inline-flex;gap:3px}
 #perf3d .pfq button.on{background:var(--orange);border-color:var(--orange);color:#fff}
 .clppage{display:grid;grid-template-columns:minmax(440px,1.7fr) minmax(300px,1fr);gap:14px;align-items:start;margin-top:8px}
@@ -374,12 +395,27 @@ body:not([data-view="bancada3d"]) .navhelp{display:none}
 </style>
 </head>
 <body>
-<header>
-  <div class="top"><div class="brand" title="Idealizado por Lucas Ferreira Vital e Ederson Ivan Cardoso · desenvolvido por Lucas Ferreira Vital"><svg viewBox="0 0 64 64" role="img" aria-label="Logo EducaWEB"><defs><mask id="mhx" maskUnits="userSpaceOnUse" x="0" y="0" width="48" height="48"><rect width="48" height="48" fill="#fff"/><g fill="#000"><rect x="13.5" y="0.5" width="12" height="37"/><rect x="13.5" y="0.5" width="31" height="12"/><rect x="13.5" y="13" width="25" height="12"/><rect x="13.5" y="25.5" width="31" height="12"/></g></mask></defs><polygon points="32,4 56,18 56,46 32,60 8,46 8,18" fill="#F5F6F8" stroke="#F5F6F8" stroke-width="5" stroke-linejoin="round"/><g transform="translate(14 14) scale(0.75)"><g mask="url(#mhx)" fill="#EE7A10"><rect x="6" y="9" width="7" height="37" rx="1.5"/><rect x="6" y="39" width="30" height="7" rx="1.5"/></g><g fill="#0F2236"><rect x="16" y="3" width="7" height="32" rx="1.5"/><rect x="16" y="3" width="26" height="7" rx="1.5"/><rect x="16" y="15.5" width="20" height="7" rx="1.5"/><rect x="16" y="28" width="26" height="7" rx="1.5"/></g></g></svg><div>Controle de Nível Simples<small>Educa<em>WEB</em> · Simulador didático · Eletromecânica</small></div></div>
-  <div class="navhelp" aria-label="Controles de navegação"><span><b>🖱 Arrastar</b> gira</span><span><b>Roda</b> aproxima</span><span><b>W A S D</b> / setas andam</span><span><b>Q / E</b> sobe / desce</span><span><b>Shift</b> mais rápido</span><span><b>Clique</b> aciona botões, porta e boias</span></div></div>
+<header id="mainHeader">
+  <div class="top"><div class="brand" title="Idealizado por Lucas Ferreira Vital e Ederson Ivan Cardoso · desenvolvido por Lucas Ferreira Vital"><svg viewBox="0 0 64 64" role="img" aria-label="Logo EducaWEB"><defs><mask id="mhx" maskUnits="userSpaceOnUse" x="0" y="0" width="48" height="48"><rect width="48" height="48" fill="#fff"/><g fill="#000"><rect x="13.5" y="0.5" width="12" height="37"/><rect x="13.5" y="0.5" width="31" height="12"/><rect x="13.5" y="13" width="25" height="12"/><rect x="13.5" y="25.5" width="31" height="12"/></g></mask></defs><polygon points="32,4 56,18 56,46 32,60 8,46 8,18" fill="#F5F6F8" stroke="#F5F6F8" stroke-width="5" stroke-linejoin="round"/><g transform="translate(14 14) scale(0.75)"><g mask="url(#mhx)" fill="#EE7A10"><rect x="6" y="9" width="7" height="37" rx="1.5"/><rect x="6" y="39" width="30" height="7" rx="1.5"/></g><g fill="#0F2236"><rect x="16" y="3" width="7" height="32" rx="1.5"/><rect x="16" y="3" width="26" height="7" rx="1.5"/><rect x="16" y="15.5" width="20" height="7" rx="1.5"/><rect x="16" y="28" width="26" height="7" rx="1.5"/></g></g></svg><div><span class="brand-title">Controle de Nível Simples</span><small class="brand-sub">Educa<em>WEB</em> · Simulador didático</small></div></div>
+  <div class="hdr-actions">
+    <div class="help-pop-wrap">
+      <button id="btnHdrGuide" class="btn-hdr-guide" type="button" title="Guia visual de atalhos e controles 3D"><b>Controles 3D</b></button>
+      <div id="popHdrGuide" class="hdr-popover">
+        <div class="pop-title"><b>Guia de Controles 3D</b></div>
+        <div class="pop-row"><span class="pop-k"><kbd>Clique do scroll</kbd></span><span class="pop-v">Liga/desliga a Câmera Livre (mouse olha)</span></div>
+        <div class="pop-row"><span class="pop-k"><kbd>Arrastar</kbd> (mouse)</span><span class="pop-v">Girar câmera / órbita</span></div>
+        <div class="pop-row"><span class="pop-k"><kbd>Roda do mouse</kbd></span><span class="pop-v">Zoom aproxima / afasta</span></div>
+        <div class="pop-row"><span class="pop-k"><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> / <kbd>Setas</kbd></span><span class="pop-v">Andar pelo laboratório</span></div>
+        <div class="pop-row"><span class="pop-k"><kbd>Q</kbd> / <kbd>E</kbd></span><span class="pop-v">Subir / descer visão</span></div>
+        <div class="pop-row"><span class="pop-k"><kbd>Shift</kbd></span><span class="pop-v">Velocidade rápida</span></div>
+        <div class="pop-row"><span class="pop-k"><kbd>Esc</kbd></span><span class="pop-v">Sai da Câmera Livre e solta o cursor</span></div>
+      </div>
+    </div>
+  </div>
+  </div>
   <nav id="nav">
-    <button data-v="bancada3d"><span class="n" style="background:var(--teal);width:auto;padding:0 6px;border-radius:8px">3D</span>Bancada 3D</button>
-    <button data-v="clpcfg"><span class="n" style="background:var(--orange);width:auto;padding:0 6px;border-radius:8px">PLC</span>CLP</button>
+    <button data-v="bancada3d"><span class="n" style="background:var(--teal)">3D</span>Bancada 3D</button>
+    <button data-v="clpcfg"><span class="n" style="background:var(--orange)">PLC</span>CLP</button>
   </nav>
 </header>
 
@@ -721,8 +757,8 @@ const pt = (() => {
   document.addEventListener("keydown", e => { if (e.key === "Escape" && box.classList.contains("max")) { box.classList.remove("max"); document.body.style.overflow = ""; label(); if (typeof closeWiring === "function") closeWiring(); } });
 })();
 let load3dP = null;
-const BUILD = "20261124-109"; // muda a cada versão para o navegador não usar arquivos antigos do cache
-function load3dAll() { if (!load3dP) load3dP = loadScript("vendor/three-bundle.js").then(() => loadScript("app-clp.js?v=" + BUILD)).then(() => loadScript("modo-direto.js?v=" + BUILD)).then(() => loadScript("modo-ispsoft.js?v=" + BUILD)).then(() => loadScript("vendor/pf525-img.js?v=" + BUILD)).then(() => loadScript("app-pf525.js?v=" + BUILD)).then(() => loadScript("vendor/cfw500-img.js?v=" + BUILD)).then(() => loadScript("vendor/atv12-img.js?v=" + BUILD)).then(() => loadScript("app-drives.js?v=" + BUILD)).then(() => loadScript("app-3d.js?v=" + BUILD)); return load3dP; }
+const BUILD = "20261125-111"; // muda a cada versão para o navegador não usar arquivos antigos do cache
+function load3dAll() { if (!load3dP) load3dP = loadScript("vendor/three-bundle.js").then(() => loadScript("app-clp.js?v=" + BUILD)).then(() => loadScript("modo-direto.js?v=" + BUILD)).then(() => loadScript("modo-ispsoft.js?v=" + BUILD)).then(() => loadScript("vendor/pf525-img.js?v=" + BUILD)).then(() => loadScript("app-pf525.js?v=" + BUILD)).then(() => loadScript("vendor/cfw500-img.js?v=" + BUILD)).then(() => loadScript("vendor/atv12-img.js?v=" + BUILD)).then(() => loadScript("app-drives.js?v=" + BUILD)).then(() => loadScript("app-3d.js?v=" + BUILD)).then(() => loadScript("painel-clp.js?v=" + BUILD)); return load3dP; }
 (() => {
   const box = document.getElementById("box3d");
   try { box.classList.toggle("tray-collapsed", localStorage.getItem("nivel-tray3d-collapsed") === "1"); } catch (e) { }
@@ -862,6 +898,24 @@ views.bancada3d = () => {
 };
 
 views.clpcfg = () => { if (window.App3D && App3D.renderClpTab) App3D.renderClpTab(); };
+
+function initHeaderGuide() {
+  const btnGuide = document.getElementById("btnHdrGuide");
+  const popGuide = document.getElementById("popHdrGuide");
+  if (btnGuide && popGuide) {
+    btnGuide.addEventListener("click", (e) => {
+      e.stopPropagation();
+      popGuide.classList.toggle("show");
+    });
+    document.addEventListener("click", (e) => {
+      if (!popGuide.contains(e.target) && e.target !== btnGuide) {
+        popGuide.classList.remove("show");
+      }
+    });
+  }
+}
+initHeaderGuide();
+
 show(location.hash.slice(1) || "bancada3d");
 if ((location.hash.slice(1) || "bancada3d") !== "bancada3d") views.bancada3d();   // o simulador carrega sempre, mesmo abrindo direto na aba CLP
 </script>

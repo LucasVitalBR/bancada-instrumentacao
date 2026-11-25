@@ -60,11 +60,17 @@
   };
 
   // chamado a cada passo da simulação (plcCycle): a troca de dados é assíncrona, ~8 por segundo
+  // estado (1/0) que cada endereço X recebe do mapa de E/S, conforme os dispositivos do 3D (NA/NF respeitado); sem efeito colateral
+  ISP.calcX = function (io) {
+    const c = ISP.cfg, x = {}; io = io || PLCo().io;
+    for (const k in c.x) { const m = c.x[k]; if (m.n == null) continue; let v = !!io.X[XIDX[k]]; if (k === "LSL") v = !io.X[0]; if (k === "LIGA") v = !!io.btn.X2; if (k === "DESL") v = !!io.btn.X3; if (k === "EMERG") v = !!(window.App3D && App3D.ui.emerg); if (k === "SELRES") v = !!(window.App3D && App3D.ui.selRes); if (k === "AUTO") v = !!io.btn.X4; /* v = dispositivo acionado */ x[m.n] = m.nf ? !v : v; }
+    return x;
+  };
   ISP.cycle = function (dt, io) {
     io.X[2] = io.btn.X2; io.X[3] = !io.btn.X3; io.X[4] = io.btn.X4;           // botões, igual ao CLP interno (DESLIGA é NF)
     ISP.t += dt; if (ISP.busy || ISP.t < 0.12) return; ISP.t = 0;
     const c = ISP.cfg, x = {}, d = {}; ISP.sentX = ISP.sentX || {};
-    for (const k in c.x) { const m = c.x[k]; if (m.n == null) continue; let v = !!io.X[XIDX[k]]; if (k === "LSL") v = !io.X[0]; if (k === "LIGA") v = !!io.btn.X2; if (k === "DESL") v = !!io.btn.X3; if (k === "EMERG") v = !!(window.App3D && App3D.ui.emerg); if (k === "SELRES") v = !!(window.App3D && App3D.ui.selRes); if (k === "AUTO") v = !!io.btn.X4; /* v = dispositivo acionado */ x[m.n] = m.nf ? !v : v; ISP.sentX[m.n] = x[m.n]; }
+    Object.assign(x, ISP.calcX(io)); Object.assign(ISP.sentX, x);
     for (const n in ISP.manualX) x[n] = ISP.manualX[n];                                // clique no endereço força o estado enviado ao CLP
     for (const n in ISP.sentX) if (!(n in x)) { x[n] = false; delete ISP.sentX[n]; }   // endereço que deixou de ser usado volta a 0 no CLP
     for (const n in x) ISP.sentX[n] = x[n];
@@ -101,7 +107,7 @@
     for (const k in c.x) { const n = c.x[k].n; if (n != null) (dupX[n] = dupX[n] || []).push(k); }
     for (const k in c.y) { const n = c.y[k]; if (n != null) (dupY[n] = dupY[n] || []).push(k); }
     const bad = (g, n, k) => { const l = (g === "x" ? dupX : dupY)[n] || []; const o = l.filter(z => z !== k && !(g === "y" && ((z === "BOMBA" && k === "VY") || (z === "VY" && k === "BOMBA")))); return o.length ? ' <span style="color:#E0503C" title="mesmo endereço de ' + o.join(", ") + '">⚠ também em ' + o.join(", ") + '</span>' : ""; };
-    const sym = nf => '<svg viewBox="0 0 36 22" width="34" height="21" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 16h9M25 16h9"/><circle cx="11" cy="16" r="1.8" fill="currentColor"/><circle cx="25" cy="16" r="1.8" fill="currentColor"/>' + (nf ? '<path d="M11 16 25 16M21 16l3-8"/>' : '<path d="M11 16 24 6"/>') + '</g></svg>';
+    const sym = nf => '<svg viewBox="0 0 36 22" width="34" height="21" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 16h9M25 16h9"/><circle cx="11" cy="16" r="1.8" fill="currentColor"/><circle cx="25" cy="16" r="1.8" fill="currentColor"/>' + (nf ? '<path d="M25 16V7h-4M11 16 21 7"/>' : '<path d="M11 16 24 6"/>') + '</g></svg>';
     const rowX = k => '<tr><td>' + LBL[k] + '</td><td>' + sel("x", k, c.x[k].n) + ' <span class="ctsel" role="group" aria-label="Tipo de contato">' +
       '<button type="button" class="' + (c.x[k].nf ? "" : "on") + '" data-ct="NA" data-k="' + k + '" title="Contato aberto (NA): X = 1 quando o dispositivo é acionado">' + sym(false) + '<b>NA</b></button>' +
       '<button type="button" class="' + (c.x[k].nf ? "on" : "") + '" data-ct="NF" data-k="' + k + '" title="Contato fechado (NF): X = 1 em repouso, vai a 0 quando acionado">' + sym(true) + '<b>NF</b></button></span>' + (c.x[k].n == null ? "" : bad("x", c.x[k].n, k)) + '</td></tr>';
