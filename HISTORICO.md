@@ -246,3 +246,6 @@ Fundo do tanque de acrílico: corrigido o cintilar ao mexer a câmera. Causas: c
 Motor WEG azul (W22) simplificado em wegMotor(): carcaça aletada, tampas, caixa de ligação, pés, eixo com chaveta e placa. Usado na vitrine da bancada de fundo e nos dois motores da prateleira da bancada SOMA (sobre chapa de base). Detalhes da parte de baixo da bancada de fundo (laterais cinza, puxador, chave amarela, servomotor com calota).
 ## 25/11/2026 build 20261125-123
 Gaveta do CLP adaptável ao celular (painel-clp.js): detecta tela pequena (janela <= 760 px, ou toque + largura <= 900) e então fica no canto esquerdo, encolhe para caber na largura e ocupa no máximo metade da altura (zoom mínimo 0,35). No computador continua no tamanho cheio ao lado do menu. Reajusta ao girar a tela.
+
+## 25/11/2026 build 20261125-124 (branch ponte-instalador)
+Instalador da ponte por usuário (downloads/INSTALAR-PONTE-EDUCAWEB.cmd, gerado por node instalador/gerar.js) e botão de download na aba CLP quando a ponte não responde. Ponte aceita só os sites do projeto (extras em origens.txt), recusa outro Host e não cai com endereço mal formado. Sem início com o Windows. Falta testar o instalador no Windows (sintaxe PowerShell não validada).

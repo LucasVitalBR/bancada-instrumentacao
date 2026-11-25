@@ -47,9 +47,18 @@ async function xchg(b) {
   return out;
 }
 
+// ---- quem pode usar a ponte: os sites do projeto, a propria ponte e os enderecos listados em origens.txt (um por linha)
+const ORIGENS = new Set(["https://bancada-instrumentacao.vercel.app", "https://educaweb.online", "https://www.educaweb.online", "http://localhost:" + PORT, "http://127.0.0.1:" + PORT]);
+try { for (const l of fs.readFileSync(path.join(ROOT, "origens.txt"), "utf8").split(/\r?\n/)) { const o = l.trim().replace(/\/+$/, ""); if (/^https:\/\/[a-z0-9.-]+$/i.test(o)) ORIGENS.add(o.toLowerCase()); } } catch (e) { }
+const HOSTS = new Set(["localhost:" + PORT, "127.0.0.1:" + PORT]);
+
 const srv = http.createServer((req, res) => {
-  const send = (code, obj) => { res.writeHead(code, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }); res.end(JSON.stringify(obj)); };
-  if (req.method === "OPTIONS") { res.writeHead(204, { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type", "Access-Control-Allow-Private-Network": "true" }); return res.end(); }
+  const origem = req.headers.origin;
+  // recusa antes de executar qualquer comando (o CORS sozinho nao impede a execucao); o Host barra DNS rebinding
+  if (!HOSTS.has(String(req.headers.host || "").toLowerCase()) || (origem !== undefined && !ORIGENS.has(origem))) { res.writeHead(403); return res.end("origem não autorizada"); }
+  const cors = origem ? { "Access-Control-Allow-Origin": origem, "Vary": "Origin" } : {};
+  const send = (code, obj) => { res.writeHead(code, { "Content-Type": "application/json", ...cors }); res.end(JSON.stringify(obj)); };
+  if (req.method === "OPTIONS") { res.writeHead(204, { ...cors, "Access-Control-Allow-Headers": "Content-Type", "Access-Control-Allow-Private-Network": "true" }); return res.end(); }
   if (req.url.startsWith("/api/")) {
     let body = ""; req.on("data", d => body += d); req.on("end", () => {
       let b = {}; try { b = body ? JSON.parse(body) : {}; } catch (e) { }
@@ -62,9 +71,11 @@ const srv = http.createServer((req, res) => {
     });
     return;
   }
-  let p = decodeURIComponent(req.url.split("?")[0]); if (p === "/") p = "/index.html";
+  let p; try { p = decodeURIComponent(req.url.split("?")[0]); } catch (e) { res.writeHead(400); return res.end("endereço inválido"); }
+  if (p.includes("\0")) { res.writeHead(400); return res.end("endereço inválido"); }
+  if (p === "/") p = "/index.html";
   const f = path.join(ROOT, path.normalize(p).replace(/^(\.\.[\/])+/, ""));
-  if (!f.startsWith(ROOT)) { res.writeHead(403); return res.end(); }
+  if (!f.startsWith(ROOT + path.sep)) { res.writeHead(403); return res.end(); }
   fs.readFile(f, (e, d) => { if (e) { res.writeHead(404); return res.end("não encontrado"); } res.writeHead(200, { "Content-Type": MIME[path.extname(f)] || "application/octet-stream", "Cache-Control": "no-store" }); res.end(d); });
 });
 srv.on("error", e => { if (e.code === "EADDRINUSE") console.error("\nERRO: a porta " + PORT + " já está em uso por outra ponte (de outra pasta?). Feche a janela da ponte antiga ou use o INICIAR-PONTE.bat, que a fecha sozinho."); else console.error("\nERRO:", e.message); process.exit(1); });

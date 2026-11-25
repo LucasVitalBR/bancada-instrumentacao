@@ -27,6 +27,7 @@
   try { const j = JSON.parse(sessionStorage.getItem(KEY) || "null"); if (j) ISP.cfg = sanitize(j); } catch (e) {}
   const save = () => { try { sessionStorage.setItem(KEY, JSON.stringify(ISP.cfg)); } catch (e) {} };
   const BASE = location.protocol === "file:" || !/^(localhost|127.0.0.1)$/.test(location.hostname) ? "http://localhost:8765" : "";   // página hospedada (Vercel) ou arquivo: a ponte roda no computador do aluno
+  const INSTALADOR = "downloads/INSTALAR-PONTE-EDUCAWEB.cmd";
   const post = (u, b) => fetch(BASE + "/api/" + u, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b || {}) }).then(r => r.json());
   const PLCo = () => window.PLC;
   ISP.applyDefaults = () => { const p = ISP.cfg.port; ISP.cfg = JSON.parse(JSON.stringify(DEF)); ISP.cfg.port = p; ISP.manualX = {}; save(); ISP.render(); };   // programa da aula
@@ -43,9 +44,11 @@
       try { const a = document.createElement("a"); a.href = "nivelponte://iniciar"; document.body.appendChild(a); a.click(); a.remove(); } catch (e2) {}
       let up = false; for (let i = 0; i < 16 && !up; i++) { await new Promise(z => setTimeout(z, 750)); try { up = (await post("ping")).ok; } catch (e3) {} }
       if (up) { try { r = await post("connect", { port: ISP.cfg.port }); } catch (e4) { r = { ok: false, error: "a ponte iniciou, mas não respondeu; tente de novo" }; } }
-      else r = { ok: false, error: "a ponte não iniciou. Execute REGISTRAR-INICIO-AUTOMATICO.bat (uma vez) ou INICIAR-PONTE.bat" };
+      ISP.semPonte = !up;
+      if (!up) r = { ok: false, error: "a ponte não respondeu. Veja abaixo o que fazer" };
     }
     if (!r.ok) { ISP.msg = r.error; ISP.active = false; ISP.render(); return; }
+    ISP.semPonte = false;
     const P = PLCo(); ISP._aoUsed = P.aoUsed; P.aoUsed = () => true;           // a referência de velocidade vem do programa do ISPSoft
     P.run = true; P.firstScan = false; P.io.Y.fill(false);
     ISP.active = true; ISP.ok = true; ISP.msg = "Conectado (porta " + ISP.cfg.port + "). O CLP precisa estar em RUN no ISPSoft."; ISP.render();
@@ -115,6 +118,7 @@
     box.innerHTML = `<div class="small">Programa no <b>ISPSoft</b> · <span style="color:${on ? (ISP.ok ? "#2EE07A" : "#E0503C") : "inherit"}">${ISP.msg}</span></div>
       <div class="row3"><label class="small">Porta <input type="number" id="ispPort" value="${c.port}" style="${ST};width:70px" ${dis}></label>
       <button class="b3 ${on ? "on" : "pri"}" id="ispBtn">${on ? "Desconectar" : "Conectar ao ISPSoft"}</button></div>
+      ${ISP.semPonte && !on ? `<div class="small" style="margin:6px 0;padding:8px 10px;border:2px solid #EE7A10;border-radius:8px"><b>Primeira vez neste computador?</b><br>1. <a href="${INSTALADOR}" download style="display:inline-block;margin:4px 0;padding:6px 12px;border-radius:6px;background:#EE7A10;color:#fff;font-weight:700;text-decoration:none">Baixar instalador da ponte</a><br>2. Abra o arquivo baixado e espere aparecer "Ponte instalada".<br>3. Volte aqui e clique em <b>Conectar ao ISPSoft</b>.<br>Já instalou? Permita o acesso à rede local deste site e a abertura do Windows Script Host, se o navegador pedir.</div>` : `<div class="small" style="margin:4px 0"><a href="${INSTALADOR}" download style="color:#EE7A10">Instalar ou reparar a ponte</a> (Windows)</div>`}
       <details open style="margin-top:4px"><summary class="small" style="cursor:pointer"><b>Mapa de E/S</b>: escolha o endereço de cada sinal (— = a página não usa). Endereços em octal, como no Delta: X0–X7, X10–X17. Em cada entrada escolha o contato ligado ao CLP: <b>NA</b> (X = 1 quando acionado) ou <b>NF</b> (X = 1 em repouso). Boias: acionada = boia levantada. Pode mudar com o CLP conectado.</summary>
       <table class="t3">${Object.keys(DEF.x).map(rowX).join("")}${Object.keys(DEF.y).map(rowY).join("")}
       <tr><td>Setpoint de temperatura (do painel, 10 = 1 °C)</td><td>D<input type="number" id="ispDs" value="${c.dSp == null ? '' : c.dSp}" placeholder="—" style="${ST};width:62px" ${dis}></td></tr>
