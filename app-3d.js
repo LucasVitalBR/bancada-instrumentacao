@@ -1518,7 +1518,7 @@
     if (k === "atv12") return D.param("Fr1") === 0 && D.param("tCC") === 0 ? "" : "o ATV12 " + (D.param("Fr1") === 3 ? "está com <b>Fr1 = AIU1</b> (comando pela IHM: RUN/STOP)" : "não está em 2 fios") + ". Para partir pela LI1, use <b>Fr1 = AI1</b> e <b>tCC = 2C</b>.";
     return "";
   }
-  function setHud(on) { if (on && window.innerWidth <= 760) { const mv = document.getElementById("v3d-views"), tb = document.getElementById("v3dToggle"); if (mv && tb && !mv.classList.contains("col")) tb.click(); }   /* tela estreita: abrir o painel recolhe o menu */
+  function setHud(on) {
     S.hudOn = on; S.wrap.classList.toggle("hud-off", !on); try { localStorage.setItem("nivel-hud3d", on ? "1" : "0"); } catch (e) { } }
   function renderClp() { if (window.PLC && PLCo().refresh) PLCo().refresh(); }
 

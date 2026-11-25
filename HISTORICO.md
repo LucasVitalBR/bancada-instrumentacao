@@ -212,3 +212,5 @@ Qualidade Baixa = física/visual da água simplificada: superfície plana (sem o
 Qualidade Baixa: removido o segundo feixe de água (cilindro simples) que aparecia embaixo do cano; fica só o jato original. Removida a resolução da barra do FPS.
 ## 24/11/2026 build 20261124-105
 Bolhas sumiam com o zoom perto: a malha instanciada A.bub tinha frustumCulled ligado e a esfera de culling era calculada com poucas bolhas, escondendo as demais fora dela. Agora frustumCulled = false.
+## 24/11/2026 build 20261124-106
+Painéis laterais fluidos: menu (esquerda) e painel do processo (direita) continuam nas laterais e encolhem com a janela (largura, letras, botões e tabelas em clamp/vw, até 1100 px); removida a folha inferior em tela estreita e a regra de abrir um fechar o outro.
