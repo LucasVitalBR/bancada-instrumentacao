@@ -1,5 +1,5 @@
 @echo off
-title Instalador da ponte EducaWEB
+title Comunicacao - CLP - EducaWEB
 set "EDUCAWEB_INSTALADOR=%~f0"
 powershell -NoProfile -Command "$t=[IO.File]::ReadAllText($env:EDUCAWEB_INSTALADOR,[Text.Encoding]::UTF8); $a=$t.IndexOf(([char]35)+'PS-INICIO'); $b=$t.IndexOf(([char]35)+'PONTE-INICIO'); Invoke-Expression $t.Substring($a,$b-$a)"
 echo.
@@ -89,7 +89,7 @@ try {
   if (-not $ok) { throw 'Os arquivos foram copiados, mas a ponte nao respondeu no teste.' }
 
   Write-Host ''
-  Write-Host 'Ponte instalada. Volte ao simulador e clique em Conectar ao ISPSoft.' -ForegroundColor Green
+  Write-Host 'Comunicacao - CLP instalada. Volte ao simulador e clique em Conectar ao ISPSoft.' -ForegroundColor Green
 } catch {
   Write-Host ''
   Write-Host ('ERRO: ' + $_.Exception.Message) -ForegroundColor Red
