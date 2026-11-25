@@ -288,6 +288,29 @@
     const gx = bx0 + bw * Math.max(0, ph - 0.2), ge = bx0 + bw * Math.min(1, ph + 0.2); if (ge > gx) { c.fillStyle = "#EE7A10"; c.fillRect(gx, h * 0.93, ge - gx, 3); }
     p.t.needsUpdate = true;
   }
+  /* ---------- motor elétrico azul estilo WEG (W22) simplificado: carcaça aletada, tampas, caixa de ligação, pés, eixo com chaveta e placa ---------- */
+  function wegMotor(parent, pos, scale = 1, rotY = 0) {
+    const g = new T.Group(); g.position.copy(pos); g.rotation.y = rotY; g.scale.setScalar(scale); parent.add(g);
+    const blue = new T.MeshStandardMaterial({ color: 0x1F5FAE, roughness: 0.42, metalness: 0.25 }), blueD = new T.MeshStandardMaterial({ color: 0x174C8C, roughness: 0.45, metalness: 0.25 });
+    const blk = mat(0x15171A, 0.2, 0.6), chrome = mat(0xB9C0C7, 0.8, 0.3);
+    const add = (geo, m, x, y, z) => { const o = mesh(geo, m); o.position.set(x, y, z); g.add(o); return o; };
+    add(cylX(0.072, 0.2, 32), blue, 0, 0, 0);                                                    // carcaça
+    { const fins = new T.InstancedMesh(new T.BoxGeometry(0.19, 0.012, 0.006), blueD, 28), d = new T.Object3D();   // aletas de refrigeração
+      for (let i = 0; i < 28; i++) { const an = i / 28 * Math.PI * 2; d.position.set(0, Math.sin(an) * 0.075, Math.cos(an) * 0.075); d.rotation.set(Math.PI / 2 - an, 0, 0); d.updateMatrix(); fins.setMatrixAt(i, d.matrix); } g.add(fins); }
+    add(cylX(0.077, 0.03, 32), blueD, 0.113, 0, 0);                                              // tampa dianteira (lado do eixo)
+    add(cylX(0.036, 0.03, 20), blueD, 0.14, 0, 0);                                               // mancal
+    add(cylX(0.013, 0.075, 14), chrome, 0.19, 0, 0); add(new T.BoxGeometry(0.035, 0.0045, 0.006), chrome, 0.2, 0.0125, 0);   // eixo e chaveta
+    add(cylX(0.079, 0.075, 32), blueD, -0.13, 0, 0);                                             // tampa traseira com defletor do ventilador
+    for (let i = 0; i < 3; i++) { const r = mesh(new T.TorusGeometry(0.0795, 0.0025, 6, 32).rotateY(Math.PI / 2), blue); r.position.set(-0.108 - i * 0.02, 0, 0); g.add(r); }
+    add(new T.BoxGeometry(0.075, 0.05, 0.075), blue, -0.02, 0.097, 0); add(new T.BoxGeometry(0.078, 0.008, 0.078), blueD, -0.02, 0.124, 0);   // caixa de ligação e tampa
+    for (const sx of [-0.03, -0.01]) add(new T.CylinderGeometry(0.0035, 0.0035, 0.004, 8), chrome, sx, 0.129, 0.025);   // parafusos da tampa
+    add(cylZ(0.009, 0.025, 12), blk, -0.02, 0.097, 0.052);                                       // prensa-cabo
+    { const te = mesh(new T.TorusGeometry(0.014, 0.004, 8, 14), chrome); te.position.set(0.06, 0.078, 0); g.add(te); }   // olhal de içamento
+    for (const fx of [0.07, -0.07]) { add(new T.BoxGeometry(0.06, 0.02, 0.11), blueD, fx, -0.083, 0); for (const fz of [-0.045, 0.045]) add(cylZ(0.006, 0.006, 8), blk, fx, -0.0925, fz); }   // pés com furos
+    const pt = canvasTex(160, 80, (c) => { c.fillStyle = '#DCE0E4'; c.fillRect(0, 0, 160, 80); c.fillStyle = '#0B57A4'; c.fillRect(0, 0, 160, 22); c.fillStyle = '#fff'; c.font = 'bold 16px Arial'; c.textAlign = 'left'; c.fillText('WEG  W22', 8, 17); c.fillStyle = '#1F2933'; c.font = '12px Arial'; c.fillText('1 CV · 4 polos · 1720 rpm', 8, 42); c.fillText('220/380 V · 60 Hz · IP55', 8, 60); });
+    const np = mesh(new T.PlaneGeometry(0.06, 0.03), new T.MeshStandardMaterial({ map: pt, roughness: 0.4, metalness: 0.3, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }), false); np.position.set(0.03, 0.0, 0.0735); g.add(np);   // placa de identificação
+    return g;
+  }
   /* ---------- bancada didática real (fundo do cenário): perfil de alumínio, painéis, medidores, inversor, soft-starter, monitor ---------- */
   function buildRealBench(scene, cx, cz) {
     const g = new T.Group(); g.position.set(cx, 0, cz); scene.add(g);
@@ -315,9 +338,17 @@
     for (const [w, h, x, y] of [[0.78, 0.025, -0.115, 0.785], [0.78, 0.025, -0.115, 0.155], [0.025, 0.65, -0.505, 0.47], [0.025, 0.65, 0.275, 0.47]]) box(w, h, 0.03, alu, x, y, 0.31);
     box(0.25, 0.02, 0.04, blk, -0.115, 0.2, 0.33);
     box(0.42, 0.035, 0.34, wht, -0.12, 0.17, -0.02);
-    { const m = mesh(cylX(0.075, 0.26, 24), mat(0x2F5FA0, 0.4, 0.4)); m.position.set(-0.24, 0.265, -0.02); g.add(m); box(0.05, 0.05, 0.1, blk, -0.24, 0.35, -0.02); }
+    wegMotor(g, v3(-0.24, 0.285, -0.02), 1, 0);   // motor WEG azul na vitrine
     box(0.2, 0.28, 0.2, wht, 0.04, 0.33, -0.05); box(0.12, 0.06, 0.12, mat(0xC4A64A, 0.4, 0.5), 0.04, 0.5, -0.05);
     cyz(0.11, 0.22, blk, 0.55, 0.43, -0.12, g, 28); cyz(0.065, 0.02, mat(0x8A9097, 0.6, 0.4), 0.55, 0.43, 0.0, g, 24); cyz(0.014, 0.05, alu, 0.55, 0.43, 0.02, g, 12);
+    // ---- mais detalhe na parte de baixo: laterais cinza, faixas pretas nos perfis da vitrine, puxador, chave amarela, acoplamento e calota amarela do servomotor, parafusos da base
+    for (const sx of [-1, 1]) { box(0.015, 0.74, 0.66, mat(0x9AA0A6, 0.2, 0.6), sx * 0.795, 0.5, 0); box(0.006, 0.7, 0.62, mat(0x7E858C, 0.2, 0.6), sx * 0.788, 0.5, 0); }
+    for (const [w, h, x, y] of [[0.78, 0.012, -0.115, 0.785], [0.78, 0.012, -0.115, 0.155]]) stripe(w, h, 0.004, x, y, 0.327);
+    for (const x of [-0.505, 0.275]) stripe(0.012, 0.65, 0.004, x, 0.47, 0.327);
+    box(0.2, 0.025, 0.03, blk, -0.115, 0.13, 0.345); for (const x of [-0.19, -0.04]) box(0.02, 0.03, 0.03, blk, x, 0.145, 0.335);   // puxador da vitrine
+    box(0.05, 0.07, 0.035, mat(0xE8C21C, 0.3, 0.5), -0.34, 0.2, 0.24); box(0.04, 0.012, 0.02, blk, -0.34, 0.2, 0.26);              // chave de segurança amarela
+    for (const [x, z] of [[-0.3, -0.14], [0.06, -0.14], [-0.3, 0.1], [0.06, 0.1]]) cyz(0.01, 0.014, mat(0xB4BCC4, 0.7, 0.4), x, 0.2, z, g, 10);   // parafusos da base
+    cyz(0.04, 0.06, blk, 0.55, 0.43, 0.04, g, 16); box(0.12, 0.05, 0.12, mat(0xE8A400, 0.3, 0.5), 0.55, 0.55, -0.2); box(0.1, 0.05, 0.1, blk, 0.55, 0.3, -0.2);
     const A0 = g.children.length;
     // ---- faixa de comando (liga/desliga, disjuntores, emergência, lâmpadas, tomadas, bornes)
     const px = x => (x + 0.78) * 1024 / 1.56;
@@ -423,13 +454,13 @@
   }
 
   function buildRoom(scene) {
-    const RX = 5, RZ0 = -4, RZ1 = 5, RH = 3.2;
+    const RX = 5, RZ0 = -4, RZ1 = 5, RH = 3.2, steelRoom = mat(0xB4BCC4, 0.7, 0.4);
     // Piso granitina leve: mantém a referência visual de chão com textura procedural de baixa resolução.
     const floorTex = canvasTex(512, 512, (g, w, h) => {
-      g.fillStyle = "#CFCAC2"; g.fillRect(0, 0, w, h);
-      const cols = ["#8E8A84", "#6F6B66", "#A9A39A", "#E8E4DC", "#B8B0A3", "#5E5A55", "#D9D3C8"];
+      g.fillStyle = "#8A8C90"; g.fillRect(0, 0, w, h);
+      const cols = ["#5A5C60", "#46484C", "#9EA1A5", "#B9BCC0", "#6C6F73", "#3A3C40", "#A9ACB0"];
       for (let k = 0; k < 5200; k++) { g.fillStyle = cols[(Math.random() * cols.length) | 0]; const sz = Math.random() < 0.85 ? 1 + Math.random() * 2 : 2 + Math.random() * 4; g.globalAlpha = 0.3 + Math.random() * 0.5; g.fillRect(Math.random() * w, Math.random() * h, sz, sz * (0.6 + Math.random() * 0.8)); }
-      g.globalAlpha = 1; g.strokeStyle = "#9C968D"; g.lineWidth = 3; g.strokeRect(2, 2, w - 4, h - 4);
+      g.globalAlpha = 1; g.strokeStyle = "#4C4E52"; g.lineWidth = 3; g.strokeRect(2, 2, w - 4, h - 4);
     }, [10, 9]);
     const floor = mesh(new T.PlaneGeometry(RX * 2, RZ1 - RZ0), mat(0xffffff, 0, 0.8, { map: floorTex }), false, false);
     floor.rotation.x = -Math.PI / 2; floor.position.set(0, 0, (RZ0 + RZ1) / 2); scene.add(floor);
@@ -439,12 +470,21 @@
     const left = mesh(new T.PlaneGeometry(RZ1 - RZ0, RH), wall, false, true); left.rotation.y = Math.PI / 2; left.position.set(-RX, RH / 2, (RZ0 + RZ1) / 2); scene.add(left);
     const right = mesh(new T.PlaneGeometry(RZ1 - RZ0, RH), wall, false, true); right.rotation.y = -Math.PI / 2; right.position.set(RX, RH / 2, (RZ0 + RZ1) / 2); scene.add(right);
     // forro com luminárias de LED
-    const ceil = mesh(new T.PlaneGeometry(RX * 2, RZ1 - RZ0), mat(0xF7F7F6, 0, 0.9), false, true);
+    const ceilTex = canvasTex(128, 128, (g, w, h) => { g.fillStyle = '#F5F6F6'; g.fillRect(0, 0, w, h); g.fillStyle = '#C9CDD1'; g.fillRect(0, 0, 3, h); g.fillStyle = '#FFFFFF'; g.fillRect(3, 0, 2, h); }, [RX * 2 / 0.2, 1]);   // forro de lambri com frisos a cada 20 cm
+    const ceil = mesh(new T.PlaneGeometry(RX * 2, RZ1 - RZ0), mat(0xffffff, 0, 0.9, { map: ceilTex, emissive: 0xE4E4E0, emissiveMap: ceilTex, emissiveIntensity: 0.5 }), false, true);   // forro iluminado pelas lâmpadas (falso, sem luz real)
     ceil.rotation.x = Math.PI / 2; ceil.position.set(0, RH, (RZ0 + RZ1) / 2); scene.add(ceil);
     const ledM = new T.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1.6 });
-    for (const x of [-2.6, 0, 2.6]) for (const z of [-2.4, 0.4, 3.2]) {
-      scene.add(at(mesh(new T.BoxGeometry(0.62, 0.02, 0.62), mat(0xDADDE0, 0.3, 0.5), false), v3(x, RH - 0.01, z)));
-      scene.add(at(mesh(new T.PlaneGeometry(0.56, 0.56).rotateX(Math.PI / 2), ledM, false, false), v3(x, RH - 0.022, z)));
+    const glowTex = canvasTex(32, 128, (g, w, h) => {   // brilho em forma de tubo: forte no centro, some nas bordas e nas pontas
+      const gr = g.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.5, 'rgba(255,255,255,1)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = gr; g.fillRect(0, 0, w, h); g.globalCompositeOperation = 'destination-in';
+      const ge = g.createLinearGradient(0, 0, 0, h); ge.addColorStop(0, 'rgba(0,0,0,0)'); ge.addColorStop(0.08, 'rgba(0,0,0,1)'); ge.addColorStop(0.92, 'rgba(0,0,0,1)'); ge.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = ge; g.fillRect(0, 0, w, h); });
+    const glowTube = new T.MeshBasicMaterial({ map: glowTex, color: 0xFFF6E0, transparent: true, opacity: 0.55, blending: T.AdditiveBlending, depthWrite: false, toneMapped: false });
+    const fixM = mat(0xE9ECEF, 0.3, 0.5), tubeG = new T.CylinderGeometry(0.0125, 0.0125, 1.14, 12).rotateX(Math.PI / 2);
+    for (const x of [-2.6, 0, 2.6]) for (const z of [-2.4, 0.4, 3.2]) {   // calhas fluorescentes de duas lâmpadas
+      scene.add(at(mesh(new T.BoxGeometry(0.24, 0.045, 1.24), fixM, false), v3(x, RH - 0.0225, z)));
+      scene.add(at(mesh(new T.BoxGeometry(0.05, 0.006, 1.2), mat(0xC4C9CE, 0.5, 0.4), false), v3(x, RH - 0.048, z)));   // refletor central
+      for (const dx of [-0.06, 0.06]) { scene.add(at(mesh(tubeG, ledM, false, false), v3(x + dx, RH - 0.05, z))); const gt = mesh(new T.PlaneGeometry(0.1, 1.2).rotateX(Math.PI / 2), glowTube, false, false); gt.position.set(x + dx, RH - 0.056, z); gt.renderOrder = 3; scene.add(gt); }   // brilho só em volta do tubo
+      for (const sz of [-1, 1]) scene.add(at(mesh(new T.BoxGeometry(0.2, 0.03, 0.02), mat(0xB9BEC4, 0.4, 0.5), false), v3(x, RH - 0.045, z + sz * 0.6)));
     }
     // rodapé de granito
     const skirt = mat(0x8F8C86, 0.05, 0.4);
@@ -452,46 +492,99 @@
     scene.add(at(mesh(new T.BoxGeometry(0.02, 0.08, RZ1 - RZ0), skirt, false), v3(-RX + 0.01, 0.04, (RZ0 + RZ1) / 2)));
     scene.add(at(mesh(new T.BoxGeometry(0.02, 0.08, RZ1 - RZ0), skirt, false), v3(RX - 0.01, 0.04, (RZ0 + RZ1) / 2)));
     // janelas com caixilho azul
-    const blue = mat(0x1E4FB4, 0.35, 0.45), glass = new T.MeshBasicMaterial({ color: 0xDDE7F1 }); // céu claro sem emissão: não estoura o brilho (bloom)
+    const blue = mat(0x1E4FB4, 0.35, 0.45), glass = new T.MeshBasicMaterial({ color: 0x48515A });   // vidro escuro e empoeirado, como nas fotos (dá para ver a oficina do outro lado)
+    const louverM = new T.MeshStandardMaterial({ color: 0x69737D, roughness: 0.3, metalness: 0.15, transparent: true, opacity: 0.9 });
     const windowAt = (cx) => {
       const W = 2.0, H = 1.95, y0 = 0.95, z = RZ0 + 0.02;
       scene.add(at(mesh(new T.PlaneGeometry(W, H), glass, false, false), v3(cx, y0 + H / 2, z)));
       const bar = (w, h, x, y) => scene.add(at(mesh(new T.BoxGeometry(w, h, 0.05), blue, false), v3(x, y, z + 0.02)));
       bar(W + 0.08, 0.07, cx, y0); bar(W + 0.08, 0.07, cx, y0 + H); bar(0.07, H, cx - W / 2, y0 + H / 2); bar(0.07, H, cx + W / 2, y0 + H / 2); bar(0.05, H, cx, y0 + H / 2);
-      for (let i = 1; i < 10; i++) bar(W, 0.025, cx, y0 + i * H / 10);
+      for (let i = 1; i < 12; i++) bar(W, 0.022, cx, y0 + i * H / 12);
+      for (let i = 0; i < 12; i++) for (const sx of [-1, 1]) { const sl = mesh(new T.BoxGeometry(W / 2 - 0.06, H / 12 * 1.1, 0.005), louverM, false); sl.rotation.x = -0.32; sl.position.set(cx + sx * W / 4, y0 + (i + 0.5) * H / 12, z + 0.035); scene.add(sl); }   // lâminas de vidro inclinadas
+      scene.add(at(mesh(new T.BoxGeometry(W + 0.14, 0.05, 0.1), mat(0xF1F2F3, 0.05, 0.6), false), v3(cx, y0 - 0.06, z + 0.04)));
       scene.add(at(mesh(new T.BoxGeometry(W + 0.2, 0.03, 0.12), mat(0xE6E7E8, 0.05, 0.5), false), v3(cx, y0 - 0.03, z + 0.06)));
     };
     windowAt(-1.55); windowAt(1.75);
-    // ar-condicionado
-    const ac = new T.Group(); ac.position.set(0.1, 3.0, RZ0 + 0.13); scene.add(ac);
-    ac.add(mesh(new T.BoxGeometry(1.0, 0.26, 0.22), mat(0xFAFAFA, 0.05, 0.4)));
-    ac.add(at(mesh(new T.BoxGeometry(0.92, 0.04, 0.02), mat(0xD8DADC, 0.1, 0.5)), v3(0, -0.09, 0.11)));
-    // placa ELETROMECÂNICA
-    scene.add(at(mesh(new T.PlaneGeometry(0.42, 0.1), new T.MeshStandardMaterial({ map: canvasTex(420, 100, c => { c.fillStyle = "#2E9A4E"; c.fillRect(0, 0, 420, 100); c.fillStyle = "#fff"; c.font = "bold 36px Arial"; c.textAlign = "center"; c.fillText("ELETROMECÂNICA", 210, 64); }), roughness: 0.5 }), false), v3(0.1, 2.22, RZ0 + 0.012)));
+    // ar-condicionado piso-teto (bege), suspenso no forro, com grade preta, aleta e tubulação de cobre isolada
+    const ac = new T.Group(); ac.position.set(0.1, RH - 0.2, RZ0 + 0.55); scene.add(ac);
+    {   // Fujitsu piso-teto ABBG45LRTA (linha ABBG/ABBH; unidade interna típica ~166-170 x 24 x 70 cm): corpo baixo e largo (1,66 x 0,24 x 0,70 m), cantos arredondados, frente inclinada com a saída de ar escura e aleta motorizada, grade de retorno embaixo
+      const AW = 1.66, AH = 0.24, AD = 0.70, cream = new T.MeshStandardMaterial({ color: 0xEFEADC, roughness: 0.42, metalness: 0.05 });
+      const sh = new T.Shape(), hx = AD / 2, hy = AH / 2;   // perfil lateral em cunha: x = profundidade (frente +), y = altura; a frente é fina
+      sh.moveTo(-hx + 0.03, -hy); sh.lineTo(hx - 0.24, -hy); sh.lineTo(hx - 0.04, -hy + 0.055);             // fundo plano e rampa fina até a saída de ar
+      sh.quadraticCurveTo(hx, -hy + 0.07, hx, -hy + 0.095); sh.lineTo(hx, hy - 0.1);                           // lábio frontal fino
+      sh.quadraticCurveTo(hx, hy - 0.05, hx - 0.14, hy - 0.025); sh.lineTo(-hx + 0.05, hy);                    // o topo desce suavemente para a frente
+      sh.quadraticCurveTo(-hx, hy, -hx, hy - 0.04); sh.lineTo(-hx, -hy + 0.04); sh.quadraticCurveTo(-hx, -hy, -hx + 0.03, -hy);
+      const eg = new T.ExtrudeGeometry(sh, { depth: AW - 0.2, bevelEnabled: true, bevelThickness: 0.1, bevelSize: 0.03, bevelSegments: 10, curveSegments: 12 });   // pontas bem arredondadas
+      eg.translate(0, 0, -(AW - 0.2) / 2); eg.rotateY(-Math.PI / 2);
+      ac.add(mesh(eg, cream));
+      // saída de ar: rasgo escuro na rampa frontal, com aleta (flap) bege inclinada e lâminas verticais
+      const ramp = Math.atan2(0.07, 0.18);
+      const slot = mesh(new T.BoxGeometry(AW - 0.2, 0.012, 0.15), new T.MeshStandardMaterial({ color: 0x15171A, roughness: 0.6 }), false); slot.position.set(0, -hy + 0.008, hx - 0.104); slot.rotation.x = -ramp; ac.add(slot);
+      const flap = mesh(new T.BoxGeometry(AW - 0.24, 0.006, 0.09), cream, false); flap.position.set(0, -hy - 0.016, hx - 0.05); flap.rotation.x = -0.5; ac.add(flap);
+      { const vn = new T.InstancedMesh(new T.BoxGeometry(0.003, 0.03, 0.12), new T.MeshStandardMaterial({ color: 0x2B2F34, roughness: 0.6 }), 32), m4 = new T.Matrix4(); for (let i = 0; i < 32; i++) { m4.setPosition(-(AW - 0.3) / 2 + i * (AW - 0.3) / 31, -hy + 0.014, hx - 0.108); vn.setMatrixAt(i, m4); } ac.add(vn); }
+      // grade de retorno embaixo (atrás), com lâminas
+      const gr = mesh(new T.BoxGeometry(AW - 0.3, 0.008, 0.3), new T.MeshStandardMaterial({ color: 0x1B1D21, roughness: 0.7 }), false); gr.position.set(0, -hy - 0.004, -0.12); ac.add(gr);
+      { const sl = new T.InstancedMesh(new T.BoxGeometry(AW - 0.32, 0.004, 0.008), new T.MeshStandardMaterial({ color: 0xD9D4C6, roughness: 0.5 }), 16), m4 = new T.Matrix4(); for (let i = 0; i < 16; i++) { m4.setPosition(0, -hy - 0.0085, -0.26 + i * 0.019); sl.setMatrixAt(i, m4); } ac.add(sl); }
+      // logotipo vermelho FUJITSU e janela do display à direita
+      const logo = canvasTex(256, 48, (c) => { c.clearRect(0, 0, 256, 48); c.fillStyle = '#D6202A'; c.font = 'italic bold 34px Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('FUJITSU', 128, 26); });
+      const lg = mesh(new T.PlaneGeometry(0.2, 0.0375), new T.MeshBasicMaterial({ map: logo, transparent: true, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -6, polygonOffsetUnits: -6 }), false); lg.position.set(-0.5, 0.0, hx + 0.036); lg.renderOrder = 4; ac.add(lg);
+      const dsp = mesh(new T.PlaneGeometry(0.14, 0.04), new T.MeshStandardMaterial({ color: 0x2A2F36, roughness: 0.2, metalness: 0.2, polygonOffset: true, polygonOffsetFactor: -6, polygonOffsetUnits: -6 }), false); dsp.position.set(0.55, 0.0, hx + 0.036); dsp.renderOrder = 4; ac.add(dsp);
+      for (const [dx, col] of [[0.5, 0x2EE07A], [0.53, 0xE0A21F], [0.56, 0x3A8DE0]]) { const led = mesh(new T.CircleGeometry(0.004, 10), new T.MeshBasicMaterial({ color: col, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -8, polygonOffsetUnits: -8 }), false); led.position.set(dx, 0.0, hx + 0.0375); led.renderOrder = 5; ac.add(led); }
+      for (const dx of [-0.25, 0.25]) { const sm = mesh(new T.BoxGeometry(0.003, AH * 0.8, 0.002), new T.MeshStandardMaterial({ color: 0xCFC9B8, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }), false); sm.position.set(dx, 0.005, hx + 0.034); ac.add(sm); }   // emendas dos painéis
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) { ac.add(at(mesh(new T.CylinderGeometry(0.008, 0.008, 0.07, 8), steelRoom), v3(sx * 0.7, 0.155, sz * 0.2))); ac.add(at(mesh(new T.BoxGeometry(0.05, 0.012, 0.03), steelRoom, false), v3(sx * 0.7, 0.122, sz * 0.2))); }   // tirantes e suportes
+    }
+    { const cu = mat(0xB87333, 0.5, 0.4), foam = mat(0x1B1D20, 0.05, 0.9);
+      pipe(v3(0.62, RH - 0.2, RZ0 + 0.25), v3(0.62, RH - 0.2, RZ0 + 0.04), 0.012, foam, scene); pipe(v3(0.62, RH - 0.2, RZ0 + 0.04), v3(0.62, 2.2, RZ0 + 0.04), 0.012, foam, scene);
+      pipe(v3(0.66, RH - 0.2, RZ0 + 0.25), v3(0.66, RH - 0.2, RZ0 + 0.04), 0.007, cu, scene); pipe(v3(0.66, RH - 0.2, RZ0 + 0.04), v3(0.66, 2.2, RZ0 + 0.04), 0.007, cu, scene);
+      pipe(v3(0.7, RH - 0.22, RZ0 + 0.25), v3(0.7, RH - 0.22, RZ0 + 0.04), 0.008, mat(0xE8EAEC, 0.1, 0.5), scene); pipe(v3(0.7, RH - 0.22, RZ0 + 0.04), v3(0.7, 2.2, RZ0 + 0.04), 0.008, mat(0xE8EAEC, 0.1, 0.5), scene);
+      scene.add(at(mesh(new T.BoxGeometry(0.16, 0.05, 0.03), mat(0xDDE0E3, 0.1, 0.5), false), v3(0.66, 2.17, RZ0 + 0.04))); }   // abraçadeira/canaleta de descida
     // caixas elétricas e eletroduto azul
-    const box = (x, y, w, h) => { scene.add(at(mesh(new T.BoxGeometry(w, h, 0.14), mat(0xD9D9D6, 0.15, 0.55)), v3(x, y, RZ0 + 0.07))); scene.add(at(mesh(new T.BoxGeometry(0.06, 0.03, 0.02), mat(0x555A60)), v3(x + w * 0.3, y, RZ0 + 0.15))); };
-    box(-0.25, 1.25, 0.36, 0.42); box(0.75, 1.25, 0.26, 0.32);
-    const cond = mat(0x6FA9E0, 0.1, 0.45);
-    pipe(v3(0.3, 1.0, RZ0 + 0.04), v3(0.3, 2.75, RZ0 + 0.04), 0.018, cond, scene);
-    pipe(v3(-0.6, 0.95, RZ0 + 0.04), v3(1.1, 0.95, RZ0 + 0.04), 0.016, cond, scene);
-    pipe(v3(-0.25, 0.95, RZ0 + 0.04), v3(-0.25, 1.04, RZ0 + 0.04), 0.014, cond, scene);
-    scene.add(at(mesh(new T.BoxGeometry(0.12, 0.07, 0.05), mat(0x2F6DB5, 0.2, 0.5)), v3(-0.55, 0.92, RZ0 + 0.04)));
+    const box = (x, y, w, h) => { scene.add(at(mesh(new T.BoxGeometry(w, h, 0.14), mat(0xD2D3D0, 0.15, 0.55)), v3(x, y, RZ0 + 0.07))); scene.add(at(mesh(new T.BoxGeometry(0.06, 0.03, 0.02), mat(0x555A60)), v3(x + w * 0.3, y, RZ0 + 0.15)));
+      for (const [dx, col] of [[-0.07, 0x2EA84F], [0.0, 0xCC1F1A]]) scene.add(at(mesh(cylZ(0.016, 0.02, 18), new T.MeshStandardMaterial({ color: col, roughness: 0.3 }), false), v3(x + dx * (w / 0.36), y + h * 0.16, RZ0 + 0.15)));   // botoeiras
+      scene.add(at(mesh(cylZ(0.024, 0.026, 20), new T.MeshStandardMaterial({ color: 0xC62018, roughness: 0.25 }), false), v3(x + 0.07 * (w / 0.36), y + h * 0.04, RZ0 + 0.153)));   // emergência
+      for (const sy of [-1, 1]) for (const sx of [-1, 1]) scene.add(at(mesh(cylZ(0.006, 0.006, 8), steelRoom, false), v3(x + sx * (w / 2 - 0.02), y + sy * (h / 2 - 0.02), RZ0 + 0.143))); };
+    box(0.1, 1.25, 0.36, 0.42);   // um só quadro na parede: liga o compressor que fica do lado de fora
+    const cond = mat(0x6FA9E0, 0.1, 0.45), hose = mat(0x2F6DB5, 0.15, 0.5), wz = RZ0 + 0.04;
+    pipe(v3(0.1, 1.46, wz), v3(0.1, 2.55, wz), 0.016, cond, scene);                                              // eletroduto do quadro até o furo na parede (compressor lá fora)
+    scene.add(at(mesh(new T.BoxGeometry(0.08, 0.08, 0.02), mat(0x3A3E44, 0.2, 0.6), false), v3(0.1, 2.6, RZ0 + 0.012)));   // furo/caixa de passagem na parede
+    // linha de ar comprimido (tubo azul) vinda do compressor: entra pela parede, desce, passa por filtro-regulador (botão vermelho) e registro amarelo
+    scene.add(at(mesh(new T.BoxGeometry(0.08, 0.08, 0.02), mat(0x3A3E44, 0.2, 0.6), false), v3(0.45, 2.6, RZ0 + 0.012)));
+    pipe(v3(0.45, 2.6, wz), v3(0.45, 1.24, wz), 0.014, hose, scene); pipe(v3(0.45, 1.04, wz), v3(0.45, 0.62, wz), 0.014, hose, scene);
+    { const f = new T.Group(); f.position.set(0.45, 1.14, RZ0 + 0.045); scene.add(f);
+      f.add(at(mesh(new T.BoxGeometry(0.075, 0.1, 0.06), mat(0xE4E6E8, 0.1, 0.5), false), v3(0, 0, 0)));
+      f.add(at(mesh(new T.CylinderGeometry(0.022, 0.022, 0.07, 18), new T.MeshStandardMaterial({ color: 0xC7D3DC, transparent: true, opacity: 0.55, roughness: 0.1 }), false), v3(0, -0.085, 0)));
+      f.add(at(mesh(new T.CylinderGeometry(0.02, 0.026, 0.035, 16), mat(0xD62718, 0.2, 0.5), false), v3(-0.012, 0.067, 0)));
+      f.add(at(mesh(cylZ(0.022, 0.016, 20), mat(0x15171A, 0.2, 0.6), false), v3(0.026, 0.02, 0.036)));
+      f.add(at(mesh(cylZ(0.019, 0.004, 20), mat(0xF4F5F6, 0.1, 0.5), false), v3(0.026, 0.02, 0.045))); }
+    { const vv = new T.Group(); vv.position.set(0.45, 0.78, RZ0 + 0.045); scene.add(vv);
+      vv.add(at(mesh(new T.BoxGeometry(0.045, 0.07, 0.045), mat(0xB4BCC4, 0.7, 0.35), false), v3(0, 0, 0)));
+      vv.add(at(mesh(new T.BoxGeometry(0.09, 0.012, 0.012), mat(0xE8C21C, 0.2, 0.5), false), v3(-0.045, 0.02, 0.03))); }
+    pipe(v3(0.45, 0.62, wz), v3(0.45, 0.4, wz), 0.014, hose, scene); pipe(v3(0.45, 0.4, wz), v3(0.78, 0.4, wz), 0.014, hose, scene);   // desce e sai pelo rodapé em direção à bancada de pneumática
+    scene.add(at(mesh(cylZ(0.02, 0.03, 14), mat(0xB4BCC4, 0.7, 0.35), false), v3(0.8, 0.4, wz)));   // engate rápido
     // armários brancos (fundo, à direita)
     const white = mat(0xCDD2D8, 0.05, 0.42), handle = mat(0x2B2F36, 0.5, 0.4);
-    const cabinet = (x, z, w, h, d, doors, rotY = 0) => {
+    const cabinet = (x, z, w, h, d, doors, rotY = 0, tone = null) => {
       const g = new T.Group(); g.position.set(x, 0, z); g.rotation.y = rotY; scene.add(g);
-      g.add(at(mesh(new T.BoxGeometry(w, h, d), white), v3(0, h / 2 + 0.03, 0)));
+      const body = tone ? mat(tone, 0.05, 0.5) : white;
+      g.add(at(mesh(new T.BoxGeometry(w, h, d), body), v3(0, h / 2 + 0.03, 0)));
+      g.add(at(mesh(new T.BoxGeometry(w + 0.02, 0.025, d + 0.02), mat(0xC9CCD0, 0.05, 0.5)), v3(0, h + 0.04, 0)));   // tampo
+      g.add(at(mesh(new T.BoxGeometry(w * 0.96, 0.05, d * 0.92), mat(0x4A4D52, 0.1, 0.7)), v3(0, 0.045, -0.01)));      // rodapé recuado
+      for (const sy of [0.1, h - 0.02]) g.add(at(mesh(new T.BoxGeometry(w * 0.99, 0.004, 0.004), mat(0xA5AAAF)), v3(0, sy, d / 2 + 0.003)));   // frestas das portas
+      g.add(at(mesh(new T.CylinderGeometry(0.01, 0.01, 0.012, 14).rotateX(Math.PI / 2), steelRoom), v3(0, h * 0.62, d / 2 + 0.008)));   // fechadura
       g.add(at(mesh(new T.BoxGeometry(w * 0.96, 0.03, d * 0.9), mat(0x9AA0A6)), v3(0, 0.015, 0)));
       for (let i = 1; i < doors; i++) g.add(at(mesh(new T.BoxGeometry(0.004, h * 0.98, 0.004), mat(0xC9CCCF)), v3(-w / 2 + i * w / doors, h / 2 + 0.03, d / 2 + 0.002)));
-      if (doors === 2) for (const sx of [-1, 1]) g.add(at(mesh(new T.BoxGeometry(0.012, 0.14, 0.02), handle), v3(sx * 0.04, h * 0.62, d / 2 + 0.01)));
+      if (doors === 2) for (const sx of [-1, 1]) { g.add(at(mesh(new T.BoxGeometry(0.012, 0.16, 0.012), handle), v3(sx * 0.05, h * 0.55, d / 2 + 0.02))); for (const sy of [-1, 1]) g.add(at(mesh(new T.BoxGeometry(0.012, 0.012, 0.02), handle), v3(sx * 0.05, h * 0.55 + sy * 0.07, d / 2 + 0.012))); }   // puxador em C
+      if (tone) { g.add(at(mesh(new T.CylinderGeometry(0.035, 0.035, 0.006, 24).rotateX(Math.PI / 2), mat(0x7B8087, 0.2, 0.6)), v3(-w * 0.3, h * 0.55, d / 2 + 0.004))); }   // grade de ventilação redonda
       return g;
     };
     cabinet(2.55, RZ0 + 0.32, 1.05, 1.65, 0.55, 2);
-    cabinet(3.75, RZ0 + 0.32, 0.8, 1.55, 0.55, 2);
+    cabinet(3.75, RZ0 + 0.32, 0.8, 1.55, 0.55, 2, 0, 0xB7BCC2);   // o da direita é cinza, como nas fotos
     // paredes de armários embutidos nas laterais
     const wardrobe = (x, z0, z1, rot) => { const len = z1 - z0, n = Math.round(len / 0.9); const g = new T.Group(); g.position.set(x, 0, (z0 + z1) / 2); g.rotation.y = rot; scene.add(g);
       g.add(at(mesh(new T.BoxGeometry(len, 2.9, 0.6), white), v3(0, 1.48, 0)));
       g.add(at(mesh(new T.BoxGeometry(len, 0.08, 0.58), mat(0x8F8C86, 0.05, 0.4)), v3(0, 0.04, 0)));
+      g.add(at(mesh(new T.BoxGeometry(len, 0.03, 0.62), mat(0xBFC4C9, 0.6, 0.4)), v3(0, 2.94, 0)));   // perfil de alumínio no topo
+      for (let i = 0; i < n; i++) g.add(at(mesh(new T.BoxGeometry(0.008, 0.5, 0.012), mat(0x8E9399, 0.5, 0.4)), v3(-len / 2 + (i + 0.5) * len / n + 0.08, 1.2, 0.306)));   // puxador embutido
       for (let i = 1; i < n; i++) g.add(at(mesh(new T.BoxGeometry(0.006, 2.85, 0.006), mat(0xC5C9CD)), v3(-len / 2 + i * len / n, 1.5, 0.302)));
       for (let i = 0; i < n; i++) g.add(at(mesh(new T.BoxGeometry(len / n * 0.96, 0.006, 0.006), mat(0xD5D8DB)), v3(-len / 2 + (i + 0.5) * len / n, 2.25, 0.302)));
     };
@@ -505,14 +598,32 @@
     cone.add(at(mesh(new T.BoxGeometry(0.34, 0.03, 0.34), mat(0x1F2328, 0.1, 0.8)), v3(0, 0.015, 0)));
     cone.add(at(mesh(new T.ConeGeometry(0.12, 0.6, 28, 1, true), mat(0xF26A21, 0.1, 0.5)), v3(0, 0.33, 0)));
     for (const y of [0.25, 0.4]) cone.add(at(mesh(new T.CylinderGeometry(0.12 - y * 0.17, 0.12 - (y - 0.05) * 0.17, 0.06, 28, 1, true), mat(0xF4F4F4, 0.1, 0.4)), v3(0, y + 0.03, 0)));
-    // carrinho com motores (fundo, à direita)
-    const cart = new T.Group(); cart.position.set(4.25, 0, -2.3); cart.rotation.y = -Math.PI / 2; scene.add(cart);
-    for (const x of [-0.5, 0.5]) for (const z of [-0.3, 0.3]) cart.add(at(mesh(new T.BoxGeometry(0.035, 0.82, 0.035), alu), v3(x, 0.47, z)));
-    cart.add(at(mesh(new T.BoxGeometry(1.06, 0.03, 0.66), white), v3(0, 0.88, 0)));
-    cart.add(at(mesh(new T.BoxGeometry(1.04, 0.02, 0.64), white), v3(0, 0.2, 0)));
-    for (const x of [-0.25, 0.1]) { cart.add(at(mesh(new T.CylinderGeometry(0.075, 0.075, 0.18, 24).rotateZ(Math.PI / 2), mat(0x2F6DB5, 0.4, 0.4)), v3(x, 0.3, 0.05))); }
-    cart.add(at(mesh(new T.BoxGeometry(0.03, 0.8, 0.6), white), v3(0.5, 1.3, 0)));
-    for (let i = 0; i < 10; i++) cart.add(at(mesh(new T.CylinderGeometry(0.018, 0.018, 0.01, 12).rotateZ(Math.PI / 2), mat([0xB83A2E, 0x2E8B4A, 0xE8C21C, 0x1F2328][i % 4])), v3(0.48, 1.15 + Math.floor(i / 5) * 0.2, -0.2 + (i % 5) * 0.1)));
+    // bancada SOMA (fundo, à direita): mesa de tampo branco com perfil de alumínio, quadros de comando em pé ao fundo (virados para a sala) e motores na prateleira de baixo
+    { const bench = new T.Group(); bench.position.set(4.59, 0, -2.2); bench.rotation.y = 0; scene.add(bench);   // costas do quadro encostadas na parede direita; local: +x = fundo (parede), -x = frente (lado do aluno), z = largura
+      const BW = 1.5, BD = 0.76, topM = mat(0xF2F3F4, 0.02, 0.5), stripeM = mat(0x15181C, 0.2, 0.6), alu2 = mat(0xC9CED4, 0.7, 0.35);
+      const b = (w, h, d, m, x, y, z) => { bench.add(at(mesh(new T.BoxGeometry(w, h, d), m), v3(x, y, z))); };
+      b(BD, 0.035, BW, topM, 0, 0.9, 0);                                                         // tampo branco
+      b(0.025, 0.06, BW, alu2, -BD / 2, 0.875, 0); b(0.004, 0.012, BW, stripeM, -BD / 2 - 0.0135, 0.875, 0);   // cantoneira frontal com faixa preta
+      for (const z of [-BW / 2, BW / 2]) b(BD, 0.06, 0.025, alu2, 0, 0.875, z);
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) { b(0.04, 0.86, 0.04, alu2, sx * (BD / 2 - 0.03), 0.45, sz * (BW / 2 - 0.03)); b(0.008, 0.8, 0.004, stripeM, sx * (BD / 2 - 0.03) - 0.021, 0.45, sz * (BW / 2 - 0.03)); const w = mesh(new T.CylinderGeometry(0.04, 0.04, 0.03, 16).rotateX(Math.PI / 2), mat(0x2A2D32, 0.2, 0.7)); w.position.set(sx * (BD / 2 - 0.03), 0.04, sz * (BW / 2 - 0.03) + sz * 0.03); bench.add(w); }
+      for (const y of [0.25]) { b(BD - 0.06, 0.02, BW - 0.06, topM, 0, y, 0); for (const sz of [-1, 1]) b(BD, 0.04, 0.025, alu2, 0, y - 0.02, sz * (BW / 2 - 0.03)); }   // prateleira inferior
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) b(0.025, 0.04, 0.025, alu2, sx * (BD / 2 - 0.03), 0.25, sz * (BW / 2 - 0.03));
+      for (const z of [-0.36, 0.2]) { wegMotor(bench, v3(0.0, 0.378, z), 0.95, -Math.PI / 2); b(0.2, 0.015, 0.4, mat(0x8A9097, 0.6, 0.4), 0.0, 0.2775, z); }   // dois motores WEG sobre chapa de base
+      // dois quadros de comando em pé, no fundo da mesa, com moldura cinza e frente branca serigrafada
+      const bTex = canvasTex(512, 720, (c, w, h) => {
+        c.fillStyle = '#F6F7F8'; c.fillRect(0, 0, w, h); c.fillStyle = '#15181C'; c.font = 'bold 13px Arial'; c.textAlign = 'center';
+        [['#C9302C', 'H1'], ['#2B67C7', 'H2'], ['#E8C21C', 'H3'], ['#E8EDF2', 'H4'], ['#2EA84F', 'H5']].forEach(([col, t], i) => { const x = 60 + i * 96; c.fillStyle = col; c.beginPath(); c.arc(x, 60, 24, 0, 7); c.fill(); c.strokeStyle = '#9AA0A6'; c.lineWidth = 4; c.stroke(); c.fillStyle = '#15181C'; c.fillText(t, x, 112); });
+        for (let r = 0; r < 3; r++) for (let i = 0; i < 5; i++) { const x = 60 + i * 96, y = 190 + r * 120; c.fillStyle = r === 0 ? (i < 3 ? '#C9302C' : '#2EA84F') : '#15181C'; c.beginPath(); c.arc(x, y, 20, 0, 7); c.fill(); c.strokeStyle = '#B8BDC2'; c.lineWidth = 4; c.stroke();
+          c.fillStyle = '#B8232A'; for (const dx of [-26, 26]) { c.beginPath(); c.arc(x + dx, y + 36, 5, 0, 7); c.fill(); } c.fillStyle = '#15181C'; c.fillText('S' + (r * 5 + i + 1), x, y + 56); }
+        c.fillStyle = '#E8C21C'; c.fillRect(70, 560, 90, 90); c.fillStyle = '#C9302C'; c.beginPath(); c.arc(115, 605, 34, 0, 7); c.fill();
+        c.fillStyle = '#15181C'; c.fillRect(260, 580, 200, 50); for (let i = 0; i < 12; i++) { c.fillStyle = i % 2 ? '#B8232A' : '#2B67C7'; c.beginPath(); c.arc(278 + i * 16, 605, 5, 0, 7); c.fill(); }
+      });
+      for (const z of [-0.37, 0.37]) {
+        b(0.04, 0.8, 0.7, mat(0xBFC3AE, 0.2, 0.6), BD / 2 - 0.02, 1.32, z);                          // caixa/moldura
+        const pl = mesh(new T.PlaneGeometry(0.64, 0.74), new T.MeshStandardMaterial({ map: bTex, roughness: 0.5, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }), false); pl.rotation.y = -Math.PI / 2; pl.position.set(BD / 2 - 0.041, 1.32, z); bench.add(pl);
+        for (const sy of [-1, 1]) b(0.02, 0.05, 0.05, steelRoom, BD / 2 - 0.02, 1.32 + sy * 0.3, z + 0.35);   // dobradiças
+      }
+    }
   }
 
   /* ---------- TQ-01 ---------- */
@@ -542,14 +653,14 @@
     for (const z of [-0.14, 0.14]) P(new T.BoxGeometry(0.74, 0.05, 0.02), skid, v3(0.09, 0.025, z));
     P(new T.BoxGeometry(0.72, 0.004, 0.28), mat(0x8A939C, 0.6, 0.4), v3(0.09, 0.047, 0));
     // motor elétrico (verde), aletas, tampas, caixa de ligação, pés e olhal
-    const green = mat(0x1E7D3A, 0.35, 0.42), greenD = mat(0x186A30, 0.35, 0.45);
-    S.pumpMats = [[green, new T.Color(0x1E7D3A)], [greenD, new T.Color(0x186A30)]]; S.pumpT = 25; S.pumpBurnt = false; S.pumpSmokeT = 0;
+    const green = mat(0x1A1C20, 0.35, 0.42), greenD = mat(0x101215, 0.35, 0.45);   // motor preto (WEG), como na bancada real
+    S.pumpMats = [[green, new T.Color(0x1A1C20)], [greenD, new T.Color(0x101215)]]; S.pumpT = 25; S.pumpBurnt = false; S.pumpSmokeT = 0;
     S.clickables = S.clickables || []; S.clickables.push({ obj: pump, tag: 'BOMBA-MOTOR', fn: () => { if (S.pumpBurnt) replacePump(); else tip('<b>Motor da bomba</b> a ' + fmt(S.pumpT || 25, 0) + ' °C. Com o registro fechado ele gira sem vazão e sobreaquece.', ''); } });
     P(cylX(0.092, 0.25, 36), green, v3(0.27, 0.17, 0));
     for (let i = 0; i < 16; i++) { const an = i / 16 * Math.PI * 2; if (Math.abs(Math.sin(an)) < 0.3 && Math.cos(an) < 0) continue; P(new T.BoxGeometry(0.22, 0.012, 0.01), green, v3(0.27, 0.17 + Math.sin(an) * 0.096, Math.cos(an) * 0.096)).rotation.x = -an; }
     P(cylX(0.088, 0.03, 32), greenD, v3(0.135, 0.17, 0));
     P(cylX(0.088, 0.03, 32), greenD, v3(0.405, 0.17, 0));
-    P(cylX(0.092, 0.06, 32), mat(0x2A6F3E, 0.4, 0.45), v3(0.45, 0.17, 0));
+    P(cylX(0.092, 0.06, 32), mat(0x24272C, 0.4, 0.45), v3(0.45, 0.17, 0));
     P(new T.BoxGeometry(0.085, 0.06, 0.085), green, v3(0.27, 0.285, 0));
     P(new T.BoxGeometry(0.09, 0.008, 0.09), greenD, v3(0.27, 0.318, 0));
     gland(pump, v3(0.27, 0.285, -0.0425), v3(0, 0, -1), 0.008); // saída de cabos para trás, rumo à eletrocalha
@@ -557,9 +668,9 @@
     P(new T.TorusGeometry(0.014, 0.004, 8, 16).rotateY(Math.PI / 2), M.steel, v3(0.33, 0.275, 0));
     // ventilador (gira) visível na grade da tampa
     const fan = new T.Group(); fan.position.set(0.482, 0.17, 0); pump.add(fan); S.pumpFan = fan;
-    for (let i = 0; i < 6; i++) { const sp = mesh(new T.BoxGeometry(0.004, 0.16, 0.016), mat(0x2B2F36, 0.4, 0.5), false); sp.rotation.x = i * Math.PI / 6; fan.add(sp); }
-    fan.add(mesh(cylX(0.02, 0.008, 16), mat(0xB83A2E, 0.3, 0.5), false));
-    for (let i = 1; i <= 3; i++) P(new T.TorusGeometry(i * 0.028, 0.003, 6, 32).rotateY(Math.PI / 2), mat(0x2A6F3E, 0.4, 0.45), v3(0.481, 0.17, 0));
+    for (let i = 0; i < 6; i++) { const sp = mesh(new T.BoxGeometry(0.004, 0.16, 0.018), mat(i % 2 ? 0xE6EAEE : 0xD62718, 0.3, 0.5), false); sp.rotation.x = i * Math.PI / 6; fan.add(sp); }   // pás alternadas branca/vermelha: dá para ver que giram
+    fan.add(mesh(cylX(0.022, 0.01, 16), mat(0xF2C318, 0.3, 0.5), false));
+    for (let i = 1; i <= 3; i++) P(new T.TorusGeometry(i * 0.028, 0.003, 6, 32).rotateY(Math.PI / 2), mat(0x3A3E45, 0.4, 0.45), v3(0.481, 0.17, 0));
     // eixo, protetor de acoplamento (cinza com borda amarela) e mancal
     P(cylX(0.013, 0.08, 16), M.chrome, v3(0.08, 0.17, 0));
     const guard = mat(0xB9C0C7, 0.5, 0.45), yellow = mat(0xE8C21C, 0.3, 0.45);
@@ -598,21 +709,21 @@
     // tanque de acrílico com tampa
     const ac = new T.Group(); ac.position.set(1.9, 0, -1.0); root.add(ac);
     for (const [x, z] of [[-0.35, -0.3], [0.35, -0.3], [-0.35, 0.3], [0.35, 0.3]]) { ac.add(at(mesh(new T.BoxGeometry(0.04, 0.62, 0.04), M.support), v3(x, 0.31, z))); ac.add(at(mesh(new T.BoxGeometry(0.1, 0.01, 0.1), M.support), v3(x, 0.005, z))); }
-    ac.add(at(mesh(new T.BoxGeometry(0.8, 0.03, 0.7), M.support), v3(0, 0.625, 0)));
+    ac.add(at(mesh(new T.BoxGeometry(0.8, 0.03, 0.7), M.support), v3(0, 0.6235, 0)));   // 1,5 mm abaixo do fundo do acrílico (antes as faces coincidiam e cintilavam)
     // acrílico: paredes com espessura (10 mm), verniz brilhante e bordas aparentes (o acrílico fica mais escuro/esverdeado na quina)
     const acr = new T.MeshPhysicalMaterial({ color: 0xE8F3FF, metalness: 0, roughness: 0.03, transparent: true, opacity: 0.13, clearcoat: 1, clearcoatRoughness: 0.03, envMapIntensity: 1.6, depthWrite: false, side: T.DoubleSide });
     const acrEdge = new T.MeshPhysicalMaterial({ color: 0xBFE0DA, metalness: 0, roughness: 0.05, transparent: true, opacity: 0.5, clearcoat: 1, depthWrite: false });
     const AW = 0.66, AH = 0.9, AD = 0.56, AT = 0.01, AY = 1.09;
     for (const [w, h, d, x, y, z] of [[AW, AH, AT, 0, AY, AD / 2 - AT / 2], [AW, AH, AT, 0, AY, -AD / 2 + AT / 2], [AT, AH, AD - 2 * AT, AW / 2 - AT / 2, AY, 0], [AT, AH, AD - 2 * AT, -AW / 2 + AT / 2, AY, 0], [AW, AT, AD, 0, AY - AH / 2 + AT / 2, 0]])
-      ac.add(at(mesh(new T.BoxGeometry(w, h, d), acr, false, false), v3(x, y, z)));
-    const eb = (w, h, d, x, y, z) => ac.add(at(mesh(new T.BoxGeometry(w, h, d), acrEdge, false, false), v3(x, y, z)));
+      { const pm = at(mesh(new T.BoxGeometry(w, h, d), acr, false, false), v3(x, y, z)); pm.renderOrder = 1; ac.add(pm); }
+    const eb = (w, h, d, x, y, z) => { const em = at(mesh(new T.BoxGeometry(w, h, d), acrEdge, false, false), v3(x, y, z)); em.renderOrder = 1; ac.add(em); };
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) eb(AT * 1.2, AH, AT * 1.2, sx * (AW / 2 - AT / 2), AY, sz * (AD / 2 - AT / 2));
     for (const sy of [-1, 1]) { for (const sz of [-1, 1]) eb(AW, AT * 1.2, AT * 1.2, 0, AY + sy * (AH / 2 - AT / 2), sz * (AD / 2 - AT / 2)); for (const sx of [-1, 1]) eb(AT * 1.2, AT * 1.2, AD, sx * (AW / 2 - AT / 2), AY + sy * (AH / 2 - AT / 2), 0); }
     ac.add(at(mesh(new T.BoxGeometry(0.7, 0.02, 0.6), new T.MeshPhysicalMaterial({ color: 0xDDEEFF, transparent: true, opacity: 0.35, roughness: 0.1, depthWrite: false }), false, false), v3(0, 1.55, 0)));
     // bocais passa-parede dentro do tanque: entrada de água (parede direita, y 1,4) e saída da sucção (fundo, x -0,2), ambos ocos
     pipe(v3(0.33, 1.4, 0), v3(0.26, 1.4, 0), 0.024, M.water, ac); openEnd(v3(0.26, 1.4, 0), v3(-1, 0, 0), 0.024, ac);
     pipe(v3(-0.2, 0.64, 0), v3(-0.2, 0.7, 0), 0.026, M.water, ac); openEnd(v3(-0.2, 0.7, 0), v3(0, 1, 0), 0.026, ac);
-    S.water = mesh(new T.BoxGeometry(0.64, 1, 0.54), new T.MeshStandardMaterial({ color: 0xDE6FA3, transparent: true, opacity: 0.2, roughness: 0.05, depthWrite: false }), false, false);
+    S.water = mesh(new T.BoxGeometry(0.636, 1, 0.536), new T.MeshStandardMaterial({ color: 0xDE6FA3, transparent: true, opacity: 0.2, roughness: 0.05, depthWrite: false }), false, false); S.water.renderOrder = 2;
     ac.add(S.water);
     // Régua de nível em %: 0 % no fundo (y 0,65) e 100 % no nível máximo (y 1,53).
     const RY0 = 0.63, RY1 = 1.55, RH = 1024, ppm = RH / (RY1 - RY0), ry = (pct) => RH - (0.65 + 0.88 * pct / 100 - RY0) * ppm;
@@ -678,7 +789,7 @@
       S.clickables.push({ obj: vm.g, tag: "DRENO", fn: () => { S.lvl.drain = !S.lvl.drain; renderHud(); tip(S.lvl.drain ? "Registro do dreno <b>aberto</b>: a água sai do tanque." : "Registro do dreno <b>fechado</b>.", ""); } }); }
     S.ac = ac;
   }
-  function setWater(L) { const h = Math.max(0.002, 0.88 * L / 100); S.water.scale.y = h; S.water.position.set(0, 0.65 + h / 2, 0); }
+  function setWater(L) { const h = Math.max(0.002, 0.88 * L / 100 - 0.001); S.water.scale.y = h; S.water.position.set(0, 0.651 + h / 2, 0); }
 
   /* ---------- painel com CLP Delta DVP-SX2 ---------- */
   function buildPanel(root) {
@@ -711,21 +822,24 @@
     // canaleta de PVC cinza-escuro, funda (quase a profundidade dos componentes): tampa lisa na frente e rasgos (dedos) só nas faixas de cima e de baixo, por onde os fios entram
     const ductM = mat(0x666A70, 0.1, 0.72), ductLid = mat(0x7B8087, 0.1, 0.62), slitM = mat(0x2A2D31, 0.1, 0.8), DD = 0.075;
     const slits = (p, n, w, h, x0, y0, dx, dy, z, hor) => { const im = new T.InstancedMesh(new T.BoxGeometry(w, h, 0.002), slitM, n), m4 = new T.Matrix4(); for (let i = 0; i < n; i++) { m4.setPosition(x0 + dx * i, y0 + dy * i, z); im.setMatrixAt(i, m4); } p.add(im); };
+    // Canaleta ranhurada: a FRENTE é uma tampa removível totalmente lisa (sem furo). Os rasgos (dedos) ficam só nas paredes laterais
+    // (as de cima e de baixo, voltadas para o equipamento), por onde o fio entra na canaleta.
+    const notches = (p, n, w, h, d, x0, y0, dx, dy, z) => { const im = new T.InstancedMesh(new T.BoxGeometry(w, h, d), slitM, n), m4 = new T.Matrix4(); for (let i = 0; i < n; i++) { m4.setPosition(x0 + dx * i, y0 + dy * i, z); im.setMatrixAt(i, m4); } p.add(im); };
     const duct3d = (p, cx, y, len) => {
-      const H = 0.06, zf = 0.03 + DD;
-      bx(p, len, H, DD, ductM, cx, y, 0.03 + DD / 2);
-      bx(p, len - 0.004, H - 0.032, 0.004, ductLid, cx, y, zf + 0.002);              // tampa lisa de frente (voltada para a porta)
+      const H = 0.06, zf = 0.03 + DD, zc = 0.03 + DD / 2;
+      bx(p, len, H, DD, ductM, cx, y, zc);
+      bx(p, len - 0.004, H - 0.004, 0.004, ductLid, cx, y, zf + 0.002);              // tampa lisa de frente, face inteira, sem furo
       const n = Math.floor((len - 0.02) / 0.016);
-      for (const sy of [-1, 1]) slits(p, n, 0.007, 0.0135, cx - (n - 1) * 0.008, y + sy * (H / 2 - 0.0085), 0.016, 0, zf + 0.0011);   // rasgos nas bordas de cima e de baixo
-      for (const sx of [-1, 1]) bx(p, 0.004, H + 0.002, DD + 0.002, ductLid, cx + sx * (len / 2 + 0.002), y, 0.03 + DD / 2);          // tampas das pontas
+      for (const sy of [-1, 1]) notches(p, n, 0.007, 0.0024, DD - 0.012, cx - (n - 1) * 0.008, y + sy * (H / 2), 0.016, 0, zc - 0.001);   // rasgos nas paredes de cima e de baixo
+      for (const sx of [-1, 1]) bx(p, 0.004, H + 0.002, DD + 0.002, ductLid, cx + sx * (len / 2 + 0.002), y, zc);          // tampas das pontas
     };
-    const vduct3d = (p, cx, y0, y1) => {      // canaleta vertical lateral (moldura do quadro), mesma construção
-      const W = 0.05, L = y1 - y0, cy = (y0 + y1) / 2, zf = 0.03 + DD;
-      bx(p, W, L, DD, ductM, cx, cy, 0.03 + DD / 2);
-      bx(p, W - 0.032, L - 0.004, 0.004, ductLid, cx, cy, zf + 0.002);
+    const vduct3d = (p, cx, y0, y1) => {      // canaleta vertical lateral (moldura do quadro), mesma construção: frente lisa, rasgos nas paredes laterais
+      const W = 0.05, L = y1 - y0, cy = (y0 + y1) / 2, zf = 0.03 + DD, zc = 0.03 + DD / 2;
+      bx(p, W, L, DD, ductM, cx, cy, zc);
+      bx(p, W - 0.004, L - 0.004, 0.004, ductLid, cx, cy, zf + 0.002);
       const n = Math.floor((L - 0.02) / 0.016);
-      for (const sx of [-1, 1]) slits(p, n, 0.0135, 0.007, cx + sx * (W / 2 - 0.0085), cy - (n - 1) * 0.008, 0, 0.016, zf + 0.0011);
-      for (const sy of [-1, 1]) bx(p, W + 0.002, 0.004, DD + 0.002, ductLid, cx, cy + sy * (L / 2 + 0.002), 0.03 + DD / 2);
+      for (const sx of [-1, 1]) notches(p, n, 0.0024, 0.007, DD - 0.012, cx + sx * (W / 2), cy - (n - 1) * 0.008, 0, 0.016, zc - 0.001);
+      for (const sy of [-1, 1]) bx(p, W + 0.002, 0.004, DD + 0.002, ductLid, cx, cy + sy * (L / 2 + 0.002), zc);
     };
     // régua de bornes modulares (cinza/bege, PE amarelo-verde, azul do neutro) com parafuso frontal, entradas de fio, marcador e fim de linha
     const termCols = [0xB1B6BB, 0xE3C93C, 0x4A7FC4, 0x8F959B];
@@ -748,13 +862,27 @@
     // fonte chaveada 24 V para trilho DIN
     const psu = (p, x, y) => {
       const g = new T.Group(); g.position.set(x, y, 0.04); p.add(g);
-      bx(g, 0.14, 0.1, 0.085, mat(0x5E656D, 0.25, 0.55), 0, 0, 0.0425);
-      for (const s of [-1, 1]) bx(g, 0.12, 0.014, 0.02, mat(0x2DBE4E, 0.05, 0.55), 0, s * 0.057, 0.058);
-      for (let i = 0; i < 6; i++) for (const s of [-1, 1]) bx(g, 0.012, 0.0045, 0.002, entryM, -0.05 + i * 0.02, s * 0.057, 0.0685);
-      const lbl = canvasTex(256, 100, c => { c.fillStyle = "#DFE3E7"; c.fillRect(0, 0, 256, 100); c.fillStyle = "#1F2933"; c.font = "bold 26px Arial"; c.textAlign = "center"; c.fillText("FONTE 24 Vcc", 128, 38); c.font = "20px Arial"; c.fillText("IN 100-240 Vca · OUT 5 A", 128, 70); });
-      const pl = mesh(new T.PlaneGeometry(0.1, 0.039), decalM(lbl)); pl.position.set(-0.012, 0.004, 0.0856); g.add(pl);
-      cyl(g, 0.0075, 0.006, mat(0xE87722, 0.2, 0.5), 0.05, -0.02, 0.0875, 16);                 // trimpot
-      cyl(g, 0.0042, 0.004, mat(0x2EE07A, 0.1, 0.4, { emissive: 0x1BAA55, emissiveIntensity: 0.9 }), 0.05, 0.016, 0.087, 12);   // LED DC OK
+      const body = mat(0xE6E9EC, 0.05, 0.6), front = mat(0xF6F7F8, 0.05, 0.5), dk = mat(0x2B3036, 0.15, 0.65);
+      bx(g, 0.14, 0.1, 0.07, body, 0, 0, 0.035);                                              // carcaça branca
+      bx(g, 0.124, 0.074, 0.02, front, 0, 0, 0.078);                                          // painel frontal em degrau
+      bx(g, 0.124, 0.004, 0.0205, mat(0xB4BAC0, 0.1, 0.6), 0, 0.037, 0.078);                  // frisos do degrau
+      bx(g, 0.124, 0.004, 0.0205, mat(0xB4BAC0, 0.1, 0.6), 0, -0.037, 0.078);
+      for (const s of [-1, 1]) {                                                              // blocos de bornes push-in em cima e embaixo
+        bx(g, 0.134, 0.016, 0.026, dk, 0, s * 0.0545, 0.06);
+        for (let i = 0; i < 6; i++) { const px = -0.05 + i * 0.02; bx(g, 0.011, 0.0065, 0.004, blkM, px, s * 0.0545, 0.0745); bx(g, 0.004, 0.004, 0.003, mat(0xE87722, 0.2, 0.5), px + 0.0065, s * 0.0545, 0.0745); }
+      }
+      const vents = new T.InstancedMesh(new T.BoxGeometry(0.0025, 0.012, 0.002), mat(0x9AA1A8, 0.1, 0.7), 9), m4 = new T.Matrix4();   // fendas de ventilação
+      for (let i = 0; i < 9; i++) { m4.setPosition(0.044 + (i % 3) * 0.006 - 0.02, 0.022 - Math.floor(i / 3) * 0.0, 0.0885); vents.setMatrixAt(i, m4); } g.add(vents);
+      const lbl = canvasTex(320, 150, c => {
+        c.fillStyle = '#F4F6F8'; c.fillRect(0, 0, 320, 150); c.fillStyle = '#0B57A4'; c.fillRect(0, 0, 320, 34);
+        c.fillStyle = '#fff'; c.font = 'bold 22px Arial'; c.textAlign = 'left'; c.fillText('FONTE 24 Vcc', 10, 25);
+        c.fillStyle = '#1F2933'; c.font = 'bold 20px Arial'; c.fillText('IN  100-240 Vca  50/60 Hz', 10, 66); c.fillText('OUT 24 Vcc · 5 A · 120 W', 10, 94);
+        c.font = '16px Arial'; c.fillStyle = '#4A5560'; c.fillText('L   N   PE            +   +   -   -', 10, 130);
+        c.fillStyle = '#1F2933'; for (let i = 0; i < 26; i++) c.fillRect(190 + i * 4, 104, (i % 3) + 1, 22);   // código de barras
+      });
+      const pl = mesh(new T.PlaneGeometry(0.092, 0.043), decalM(lbl)); pl.position.set(-0.014, 0.004, 0.0886); g.add(pl);
+      cyl(g, 0.0075, 0.005, mat(0x2B3036, 0.2, 0.5), 0.046, -0.014, 0.0905, 18); bx(g, 0.0012, 0.01, 0.002, mat(0xF2F3F4, 0.05, 0.5), 0.046, -0.011, 0.0935);   // trimpot de ajuste
+      cyl(g, 0.0042, 0.004, mat(0x2EE07A, 0.1, 0.4, { emissive: 0x1BAA55, emissiveIntensity: 0.9 }), 0.046, 0.017, 0.09, 12);   // LED DC OK
       return g;
     };
     // disjuntor modular DIN (estilo Acti9): corpo branco, alavanca escura, parafusos nos bornes e etiqueta amarela
@@ -802,8 +930,40 @@
     const doorM = at(mesh(doorGeo, cab), v3(-0.45, 0, 0)); hinge.add(doorM);
     const DZ = 0.011, DXc = -0.45, dp = (x, y, z = DZ) => v3(DXc + x, y, z);
     S.clickables.push({ obj: doorM, tag: "PORTA", fn: () => { S.door.open = !S.door.open; tip(S.door.open ? "Porta do painel <b>aberta</b>: o CLP e os inversores aparecem. Clique na porta de novo para fechar." : "Porta <b>fechada</b>: use a seletora, LIGA, DESLIGA e EMERGÊNCIA. Clique na porta (fora dos botões) para abrir.", ""); } });
-    S.panelScreen = screen(256, 128);
-    hinge.add(at(mesh(new T.PlaneGeometry(0.3, 0.15), new T.MeshBasicMaterial({ map: S.panelScreen.tex }), false), dp(0, 0.5)));
+    // IHM (tela sensível ao toque simulada): moldura preta + tela 480x288 redesenhada por drawHmi() com o estado do processo; clique alterna Processo × Tendência
+    { const hc = document.createElement("canvas"); hc.width = 480; hc.height = 288;
+      const ht = new T.CanvasTexture(hc); ht.colorSpace = T.SRGBColorSpace; ht.anisotropy = 4;
+      S.hmi = { c: hc, tex: ht, page: 0, t: [], l: [], last: 0, ts: 0 };
+      S.panelScreen = { tex: ht, canvas: hc, draw() { drawHmi(); } };
+      const hg = new T.Group(); hg.position.copy(dp(0, 0.5)); hinge.add(hg);
+      hg.add(at(mesh(new T.BoxGeometry(0.35, 0.23, 0.012), mat(0x1B1F24, 0.3, 0.5)), v3(0, 0, 0.006)));
+      hg.add(at(mesh(new T.BoxGeometry(0.316, 0.196, 0.002), mat(0x0A0C0F, 0.2, 0.5)), v3(0, 0, 0.0125)));
+      hg.add(at(mesh(new T.PlaneGeometry(0.30, 0.18), new T.MeshBasicMaterial({ map: ht, toneMapped: false }), false), v3(0, 0, 0.0136)));
+      hg.add(at(mesh(cylZ(0.003, 0.002, 12), new T.MeshBasicMaterial({ color: 0x2EE07A, toneMapped: false })), v3(0.158, -0.108, 0.0125)));   // LED de energia
+      S.clickables.push({ obj: hg, tag: "HMI", fn: () => { S.hmi.page = (S.hmi.page + 1) % 2; drawHmi(true); tip("IHM: toque na tela para alternar entre <b>Processo</b> (tanque, temperatura, estado das saídas) e <b>Tendência</b> (gráfico dos últimos 2 min).", ""); } });
+      // parte de trás da IHM (dentro do quadro, presa na porta): carcaça com aletas, grampos de fixação e conector na face de baixo
+      const rh = mat(0x2D3238, 0.3, 0.6), rd = mat(0x1A1D21, 0.3, 0.6);
+      hg.add(at(mesh(new T.BoxGeometry(0.31, 0.19, 0.05), rh), v3(0, 0, -0.032)));
+      for (let i = -3; i <= 3; i++) hg.add(at(mesh(new T.BoxGeometry(0.004, 0.17, 0.012), rd), v3(i * 0.04, 0, -0.062)));
+      for (const sx of [-1, 1]) for (const sy of [-1, 1]) { hg.add(at(mesh(new T.BoxGeometry(0.03, 0.012, 0.012), mat(0xB4BCC4, 0.7, 0.4)), v3(sx * 0.1, sy * 0.1, -0.003))); hg.add(at(mesh(cylZ(0.0035, 0.01, 10), mat(0x8A9097, 0.7, 0.4)), v3(sx * 0.1, sy * 0.1, -0.012))); }   // grampos de fixação
+      hg.add(at(mesh(new T.BoxGeometry(0.034, 0.014, 0.026), rd), v3(0.08, -0.1, -0.04)));                   // conector de comunicação
+      const port = new T.Object3D(); port.position.set(0.08, -0.11, -0.04); hg.add(port);
+      // cabo de comunicação IHM → CLP (RS-485): refeito a cada quadro enquanto a porta se move, para acompanhar a articulação
+      const cabM = new T.MeshStandardMaterial({ color: 0x1B2025, roughness: 0.6 });
+      const cable = new T.Mesh(new T.BufferGeometry(), cabM); cable.userData.ext = false; pn.add(cable);
+      const plug = at(mesh(new T.BoxGeometry(0.014, 0.016, 0.022), rd), v3(-0.299, 1.83, 0.085)); pn.add(plug);
+      const pv = new T.Vector3();
+      S.updateHmiCable = () => {
+        pn.updateWorldMatrix(true, false); port.getWorldPosition(pv); const s = pn.worldToLocal(pv.clone()), e = v3(-0.298, 1.83, 0.085);
+        // o cabo desce da IHM com uma barriga (caimento pela gravidade, maior quanto mais longe a porta estiver) e entra no rasgo de cima da canaleta do meio, perto da IHM
+        const inX = -0.368 + 32 * 0.016, entry = v3(inX, 1.6125, 0.07), appr = v3(inX, 1.69, 0.115), a2 = s.clone().add(v3(0, -0.045, 0));
+        const mid = a2.clone().lerp(appr, 0.5), dist = a2.distanceTo(appr); mid.y -= 0.22 * dist; mid.z = Math.max(mid.z, 0.16);
+        const pts = [s.clone(), a2, mid, appr, entry, v3(inX, 1.598, 0.062)];
+        cable.geometry.dispose(); cable.geometry = new T.TubeGeometry(new T.CatmullRomCurve3(pts, false, "centripetal"), 48, 0.0035, 8, false);
+      };
+      { const cab2 = new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3([v3(-0.304, 1.598, 0.062), v3(-0.304, 1.6125, 0.07), v3(-0.304, 1.66, 0.088), v3(-0.304, 1.76, 0.092), v3(-0.3, 1.82, 0.09), v3(-0.298, 1.83, 0.085)], false, 'centripetal'), 24, 0.0035, 8, false), cabM); pn.add(cab2); }   // trecho que sai da canaleta e sobe até o CLP
+      S.updateHmiCable();
+      drawHmi(true); }
     const plate = (txt, x, y, w, col = "#1F2328", fg = "#fff", fs = 34) => hinge.add(at(mesh(new T.PlaneGeometry(w, w * 0.3), new T.MeshBasicMaterial({ polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, map: canvasTex(200, 60, (c) => { c.fillStyle = col; c.fillRect(0, 0, 200, 60); c.fillStyle = fg; c.font = "bold " + fs + "px Arial"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(txt, 100, 32); }) }), false), dp(x, y)));
     const bezel = mat(0x2A2F36, 0.4, 0.5);
     // acabamento simples (gabinete metálico de parede): porta lisa com dobra de retorno e gaxeta preta em anel, fechadura de came de 1/4 de volta, dobradiças pequenas e plaqueta
@@ -825,23 +985,46 @@
       hinge.add(at(mesh(new T.PlaneGeometry(0.12, 0.06), decalM(np, 0.35)), dp(0.3, -0.55, DZ + 0.0008)));
     }
     // sinaleiros
+    // luz piloto: lente em domo translúcida sem aro preto (só um anel fino cromado) + halo aditivo que se vê de longe quando acesa
+    const haloTex = canvasTex(64, 64, (c) => { const gr = c.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(0.25, "rgba(255,255,255,0.55)"); gr.addColorStop(0.6, "rgba(255,255,255,0.14)"); gr.addColorStop(1, "rgba(255,255,255,0)"); c.clearRect(0, 0, 64, 64); c.fillStyle = gr; c.fillRect(0, 0, 64, 64); });
     S.doorLamps = [["LIGADO", 0x2EE07A], ["NÍV. ALTO", 0xE0503C], ["NÍV. BAIXO", 0xFFD21F], ["RESISTÊNCIA", 0xFF8A1F], ["EMERGÊNCIA", 0xF2F3F4]].map(([t, c], i) => {
-      const x = -0.34 + i * 0.17, m = mat(c, 0.1, 0.35, { emissive: c, emissiveIntensity: 0.05 });
-      hinge.add(at(mesh(cylZ(0.034, 0.012, 24), bezel), dp(x, 0.3, DZ + 0.006)));
-      hinge.add(at(mesh(cylZ(0.026, 0.02, 24), m), dp(x, 0.3, DZ + 0.016)));
+      const x = -0.34 + i * 0.17, cOn = new T.Color(c), cOff = cOn.clone().multiplyScalar(0.3);
+      const m = new T.MeshStandardMaterial({ color: cOff.clone(), emissive: c, emissiveIntensity: 0.05, roughness: 0.22, metalness: 0, transparent: true, opacity: 0.96 });
+      hinge.add(at(mesh(cylZ(0.0285, 0.008, 32), new T.MeshStandardMaterial({ color: 0xD3D8DD, metalness: 0.85, roughness: 0.25 })), dp(x, 0.3, DZ + 0.004)));   // anel cromado fino
+      hinge.add(at(mesh(cylZ(0.0245, 0.013, 32), m), dp(x, 0.3, DZ + 0.0125)));                                                                         // corpo da lente (reto, como o botão)
+      const dome = mesh(new T.SphereGeometry(0.0245, 32, 12, 0, Math.PI * 2, 0, Math.PI / 2).rotateX(Math.PI / 2), m); dome.scale.set(1, 1, 0.2); hinge.add(at(dome, dp(x, 0.3, DZ + 0.019)));   // tampo quase plano, só levemente abaulado
+      const hm = new T.MeshBasicMaterial({ map: haloTex, color: c, transparent: true, opacity: 0, blending: T.AdditiveBlending, depthWrite: false, toneMapped: false });
+      const halo = mesh(new T.PlaneGeometry(0.2, 0.2), hm, false); halo.renderOrder = 6; hinge.add(at(halo, dp(x, 0.3, DZ + 0.04)));
+      m.userData = { cOn, cOff, hm };
       plate(t, x, 0.235, 0.15, "#E8E8E8", "#1F2328", 28); return m;
     });
     // botões: S.btn[nome] = { cap, z0 }
     S.btn = {};
     const pushbtn = (name, txt, x, y, col, big) => {
       const g = new T.Group(); g.position.copy(dp(x, y)); hinge.add(g);
-      g.add(at(mesh(cylZ(big ? 0.068 : 0.04, 0.012, 28), big ? mat(0xE8C21C, 0.3, 0.5) : bezel), v3(0, 0, 0.006)));
-      const cap = at(mesh(cylZ(big ? 0.05 : 0.027, big ? 0.036 : 0.022, 28), mat(col, 0.2, 0.4)), v3(0, 0, big ? 0.03 : 0.022)); g.add(cap);
+      const chromeB = new T.MeshStandardMaterial({ color: 0xD3D8DD, metalness: 0.85, roughness: 0.25 }), blkB = new T.MeshStandardMaterial({ color: 0x15181C, roughness: 0.5, metalness: 0.2 });
+      const cap = new T.Group(); g.add(cap);
+      if (big) {   // botão de emergência: cogumelo vermelho sobre plaqueta amarela, base preta
+        g.add(at(mesh(cylZ(0.066, 0.004, 40), new T.MeshStandardMaterial({ color: 0xF2C318, roughness: 0.5 })), v3(0, 0, 0.002)));
+        g.add(at(mesh(cylZ(0.026, 0.018, 32), blkB), v3(0, 0, 0.013)));      // haste preta de 22 mm (cabeça de 40 mm), mais estreita que a cabeça: ao apertar, o cogumelo não afunda nela
+        cap.position.set(0, 0, 0.024);
+        const prof = [[0, 0.034], [0.018, 0.0335], [0.031, 0.0305], [0.0405, 0.0235], [0.0435, 0.0155], [0.0415, 0.007], [0.034, 0.002], [0.022, 0.0005], [0, 0.0005]].map(p => new T.Vector2(p[0], p[1]));
+        cap.add(mesh(new T.LatheGeometry(prof, 48).rotateX(Math.PI / 2), new T.MeshStandardMaterial({ color: col, roughness: 0.22, metalness: 0.05, side: T.DoubleSide })));
+        cap.add(at(mesh(new T.TorusGeometry(0.036, 0.0012, 6, 48), new T.MeshBasicMaterial({ color: 0xFF8A7A, transparent: true, opacity: 0.35 }), false), v3(0, 0, 0.032)));   // reflexo no topo
+      } else {     // botão de comando: anel cromado, colar preto e tampa plana alta com o símbolo I / O
+        g.add(at(mesh(cylZ(0.043, 0.008, 36), chromeB), v3(0, 0, 0.004)));
+        g.add(at(mesh(cylZ(0.034, 0.014, 32), blkB), v3(0, 0, 0.009)));
+        cap.position.set(0, 0, 0.014);
+        cap.add(at(mesh(cylZ(0.029, 0.024, 32), new T.MeshStandardMaterial({ color: col, roughness: 0.3, metalness: 0.05 })), v3(0, 0, 0.012)));
+        const isI = name === "liga";
+        const sy = canvasTex(64, 64, (c) => { c.clearRect(0, 0, 64, 64); c.strokeStyle = "#fff"; c.lineWidth = 9; c.lineCap = "round"; c.beginPath(); if (isI) { c.moveTo(32, 12); c.lineTo(32, 52); } else c.arc(32, 32, 18, 0, 7); c.stroke(); });
+        cap.add(at(mesh(new T.PlaneGeometry(0.036, 0.036), new T.MeshBasicMaterial({ map: sy, transparent: true, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }), false), v3(0, 0, 0.0245)));
+      }
       S.btn[name] = { cap, z0: cap.position.z, g };
       plate(txt, x, y - (big ? 0.1 : 0.068), big ? 0.17 : 0.13, "#E8E8E8", "#1F2328", 30);
       return g;
     };
-    const press = (name, on) => { const b = S.btn[name]; if (b) b.cap.position.z = b.z0 - (on ? 0.012 : 0); };
+    const press = (name, on) => { const b = S.btn[name]; if (b) b.cap.position.z = b.z0 - (on ? (name === "emerg" ? 0.006 : 0.012) : 0); };
     const pulse = (name, set) => { press(name, true); set(true); setTimeout(() => { press(name, false); set(false); }, 380); };
     const gl = pushbtn("liga", "LIGA", -0.12, -0.04, 0x1FA64A), gd = pushbtn("desl", "DESLIGA", 0.07, -0.04, 0xC0392B), ge = pushbtn("emerg", "EMERGÊNCIA", 0.31, -0.04, 0xD62718, true);
     S.clickables.push({ obj: gl, tag: "LIGA", fn: () => { const io = window.PLC && PLC.io; pulse("liga", v => { if (io) io.btn.X2 = v; if (window.MD) MD.liga = v; }); } });
@@ -905,9 +1088,7 @@
     BL.forEach(([x0, x1, y0, y1], bi) => {
       const w = (x1 - x0) / 512 * PW, h = (y1 - y0) / 640 * PH, c = P2((x0 + x1) / 2, (y0 + y1) / 2);
       plc.add(at(mesh(new T.BoxGeometry(w, h, 0.018), [green, green, green, green, frontB, green]), v3(c.x, c.y, PD + 0.009)));
-      // fios saindo dos bornes para a canaleta
-      const up = bi % 2 === 0, yEdge = up ? c.y + h / 2 : c.y - h / 2, yTo = up ? 0.165 : -0.175;
-      for (let k = 0; k < 3; k++) { const x = c.x - w * 0.3 + k * w * 0.3; pipe(v3(x, yEdge, PD + 0.012), v3(x, yTo, PD + 0.012), 0.0022, mat(wireCols[(bi + k) % wireCols.length], 0.1, 0.6), plc); }
+      // os fios que saem destes bornes são desenhados na seção "Fiação" (mais abaixo), entrando pelos rasgos das canaletas
     });
     S.plc3d = plc;
     drawPlc();
@@ -916,14 +1097,21 @@
     const switchgear = (tag, x, y, kind) => {
       const contactor = kind === "contator", w = contactor ? 0.118 : 0.078, h = contactor ? 0.136 : 0.117, d = contactor ? 0.11 : 0.062;
       const g = new T.Group(); g.position.set(x, y, 0.04); pn.add(g);
-      const shell = mat(contactor ? 0xDDE1E5 : 0xD6DCE1, 0.05, 0.72), dark = mat(0x252B31, 0.05, 0.72), metal = mat(0xAEB6BE, 0.35, 0.42), copper = mat(0xB96F32, 0.25, 0.48);
+      const shell = mat(contactor ? 0xC4CAD0 : 0xD6DCE1, 0.05, 0.72), dark = mat(0x252B31, 0.05, 0.72), metal = mat(0xAEB6BE, 0.35, 0.42), copper = mat(0xB96F32, 0.25, 0.48);
       g.add(at(mesh(new T.BoxGeometry(w, h, d), shell), v3(0, 0, d / 2)));
       // Terminais embutidos com parafusos 3D; as coordenadas coincidem com as pontas dos fios.
       const screw = (sx, sy, sw = 0.024) => {
         g.add(at(mesh(new T.BoxGeometry(sw, 0.022, 0.006), dark), v3(sx, sy, d + 0.002)));
         g.add(at(mesh(cylZ(0.006, 0.004, 12), metal), v3(sx, sy, d + 0.007)));
-        const slot = at(mesh(new T.BoxGeometry(0.007, 0.0015, 0.001), dark), v3(sx, sy, d + 0.0095)); slot.rotation.z = Math.PI / 4; g.add(slot);
+        const slot = at(mesh(new T.BoxGeometry(0.007, 0.0015, 0.001), dark), v3(sx, sy, d + 0.0095)); slot.rotation.z = Math.PI / 4; g.add(slot); const slot2 = at(mesh(new T.BoxGeometry(0.007, 0.0015, 0.001), dark), v3(sx, sy, d + 0.0095)); slot2.rotation.z = -Math.PI / 4; g.add(slot2);
       };
+      if (contactor) {   // blocos de bornes escuros com entradas de fio e numeração dos polos (1/L1 3/L2 5/L3 e 2/T1 4/T2 6/T3)
+        const capM = mat(0x2A2F35, 0.1, 0.7);
+        for (const sy of [0.022, -0.05]) { g.add(at(mesh(new T.BoxGeometry(w * 0.86, 0.034, 0.016), capM), v3(0, sy, d - 0.004))); for (const sx of [-0.024, 0, 0.024]) g.add(at(mesh(new T.BoxGeometry(0.014, 0.004, 0.002), mat(0x0D0F11, 0.1, 0.8)), v3(sx, sy + (sy > 0 ? 0.0135 : -0.0135), d + 0.004))); }
+        g.add(at(mesh(new T.BoxGeometry(0.056, 0.026, 0.014), capM), v3(0, 0.055, d - 0.003)));
+        const nm = (txt, y) => { const t = canvasTex(256, 24, c => { c.clearRect(0, 0, 256, 24); c.fillStyle = '#F2F3F4'; c.font = 'bold 17px Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; txt.forEach((q, i) => c.fillText(q, 52 + i * 76, 12)); }); g.add(at(mesh(new T.PlaneGeometry(0.098, 0.0092), new T.MeshBasicMaterial({ map: t, transparent: true, toneMapped: false })), v3(0, y, d + 0.0052))); };
+        nm(['1/L1', '3/L2', '5/L3'], 0.0405); nm(['2/T1', '4/T2', '6/T3'], -0.0685);
+      }
       const rows = contactor ? [[0.022, [-0.024, 0, 0.024]], [-0.050, [-0.024, 0, 0.024]]] : [[0.047, [-0.012, 0.012]], [-0.047, [-0.012, 0.012]]];
       rows.forEach(([sy, xs]) => xs.forEach(sx => screw(sx, sy, contactor ? 0.022 : 0.018)));
       let lamp;
@@ -961,50 +1149,74 @@
     switchgear("KA2 · RES", -0.18, 1.38, "rele");
     switchgear("K2 · RES", 0.08, 1.38, "contator");
     S.k1Lamp = S.coilLamps["K1 · BOMBA"];
-    // Fiação guiada pelas canaletas: os trechos internos ficam ocultos; só aparecem entradas, derivações e terminais.
+    // Fiação guiada pelas canaletas: cada fio sai do terminal, desce/sobe reto, entra por um rasgo da canaleta (alinhado aos rasgos),
+    // corre escondido dentro dela e sai por outro rasgo até o terminal de destino. Nada atravessa a frente dos equipamentos sem necessidade.
     const wireM = [0x24282D, 0x6B4226, 0x2F8FD6, 0x2F8FD6, 0x6B4226].map(c => mat(c, 0, 0.72));   // preto, marrom e azul como nos quadros reais
     const yelM = mat(0xF4F4F4, 0.05, 0.6), ferM = mat(0xC9CED3, 0.7, 0.3), tieB = mat(0x15181C, 0.1, 0.7);
-    const wireEnds = (pts, radius) => {       // ponteira metálica na ponta e marcador amarelo de identificação perto do terminal
+    const wireEnds = (parent, pts, radius) => {       // ponteira metálica na ponta e marcador amarelo de identificação perto do terminal
       for (const [i, j] of [[0, 1], [pts.length - 1, pts.length - 2]]) {
         const a = v3(pts[i][0], pts[i][1], pts[i][2]), dir = v3(pts[j][0], pts[j][1], pts[j][2]).sub(a).normalize();
-        const mk = mesh(new T.CylinderGeometry(radius * 1.55, radius * 1.55, 0.008, 8), yelM); mk.position.copy(a).addScaledVector(dir, 0.022); orientY(mk, dir); pn.add(mk);
-        const fe = mesh(new T.CylinderGeometry(radius * 1.25, radius * 1.25, 0.008, 8), ferM); fe.position.copy(a).addScaledVector(dir, 0.004); orientY(fe, dir); pn.add(fe);
-        const fl = mesh(new T.BoxGeometry(0.0016, 0.012, 0.007), yelM); fl.position.copy(a).addScaledVector(dir, 0.026); fl.position.x += radius * 2.4; pn.add(fl);   // bandeirola de identificação
-        const tb = mesh(new T.CylinderGeometry(radius * 1.45, radius * 1.45, 0.0025, 8), tieB); tb.position.copy(a).addScaledVector(dir, 0.062); orientY(tb, dir); pn.add(tb);   // abraçadeira
+        const mk = mesh(new T.CylinderGeometry(radius * 1.55, radius * 1.55, 0.008, 8), yelM); mk.position.copy(a).addScaledVector(dir, 0.022); orientY(mk, dir); parent.add(mk);
+        const fe = mesh(new T.CylinderGeometry(radius * 1.25, radius * 1.25, 0.008, 8), ferM); fe.position.copy(a).addScaledVector(dir, 0.004); orientY(fe, dir); parent.add(fe);
+        const fl = mesh(new T.BoxGeometry(0.0016, 0.012, 0.007), yelM); fl.position.copy(a).addScaledVector(dir, 0.026); fl.position.x += radius * 2.4; parent.add(fl);   // bandeirola de identificação
+        const tb = mesh(new T.CylinderGeometry(radius * 1.45, radius * 1.45, 0.0025, 8), tieB); tb.position.copy(a).addScaledVector(dir, 0.062); orientY(tb, dir); parent.add(tb);   // abraçadeira
       }
     };
-    const wire = (pts, color, radius = 0.0022) => {
+    const wireOn = (parent, pts, color, radius = 0.0022) => {
       const curve = new T.CatmullRomCurve3(pts.map(p => v3(p[0], p[1], p[2])), false, "centripetal");
-      pn.add(mesh(new T.TubeGeometry(curve, Math.max(16, pts.length * 8), radius, 6, false), color, false, false));
-      wireEnds(pts, radius);
+      parent.add(mesh(new T.TubeGeometry(curve, Math.max(24, pts.length * 10), radius, 8, false), color, false, false));
+      wireEnds(parent, pts, radius);
     };
-    const phases = [-0.024, 0, 0.024], phaseMat = [wireM[0], wireM[1], wireM[2]], faceZ = 0.160, relayFaceZ = 0.113, ductZ = 0.055, ductFaceZ = 0.088;
-    phases.forEach((dx, i) => {
-      const x = 0.22 + dx, top = 1.78 + 0.022, bottom = 1.78 - 0.050;
-      wire([[0.34 + i * 0.012, 2.10, 0.12], [0.34 + i * 0.012, 2.00, ductFaceZ], [0.34 + i * 0.012, 1.97, ductZ], [x, 1.97, ductZ], [x, 1.94, ductFaceZ], [x, top, faceZ]], phaseMat[i], 0.0032);
-      const outX = 0.15 + i * 0.02;
-      wire([[x, bottom, faceZ], [x, 1.61, ductFaceZ], [x, 1.58, ductZ], [outX, 1.58, ductZ], [outX, 1.55, ductFaceZ], [outX, 1.19, ductFaceZ], [outX, 1.16, ductZ], [outX, 1.13, ductFaceZ], [outX, 0.84, 0.14]], phaseMat[i], 0.0032);
-      const k2x = 0.08 + dx;
-      wire([[x, top, faceZ], [x, 1.61, ductFaceZ], [x, 1.58, ductZ], [k2x, 1.58, ductZ], [k2x, 1.61, ductFaceZ], [k2x, 1.46, ductFaceZ], [k2x, 1.38 + 0.022, faceZ]], phaseMat[i], 0.0028);
-      const k2out = 0.145 + i * 0.02;
-      wire([[k2x, 1.38 - 0.050, faceZ], [k2x, 1.19, ductFaceZ], [k2x, 1.16, ductZ], [k2out, 1.16, ductZ], [k2out, 1.13, ductFaceZ], [k2out, 0.84, 0.14]], phaseMat[i], 0.0028);
+    const wire = (pts, color, radius) => wireOn(pn, pts, color, radius);
+    // geometria dos rasgos das canaletas: passo de 16 mm, rasgos a 21,5 mm do centro (faixas de cima e de baixo)
+    // Rasgos nas paredes de cima/baixo da canaleta (passo de 16 mm): o fio chega na vertical, na profundidade do meio da canaleta (z = 0,07), e entra pela parede lateral.
+    const SLX0 = -0.368, SLP = 0.016, SLE = 0.03, ZS = 0.07, ZD = 0.062;
+    const slx = x => SLX0 + Math.round((x - SLX0) / SLP) * SLP;
+    // from/to: +1 = lado de cima da canaleta, -1 = lado de baixo. O fio chega reto ao rasgo, entra, anda escondido e sai por outro rasgo.
+    const hop = (xi, xo, yc, from, to) => { const a = slx(xi), b = slx(xo), A = SLE + 0.035; return [[a, yc + from * A, ZS + 0.012], [a, yc + from * SLE, ZS], [a, yc + from * 0.014, ZD], [b, yc + to * 0.014, ZD], [b, yc + to * SLE, ZS], [b, yc + to * A, ZS + 0.012]]; };
+    const dip = (xi, yc, from) => { const a = slx(xi), A = SLE + 0.035; return [[a, yc + from * A, ZS + 0.012], [a, yc + from * SLE, ZS], [a, yc + from * 0.014, ZD]]; };   // só entra na canaleta (o fio segue para fora do quadro)
+    const land = (x, y, z, dir) => [[x, y + dir * 0.035, z + 0.01], [x, y, z]];        // chegada perpendicular ao terminal (dir +1 = vindo de cima)
+    const D1 = 1.97, D2 = 1.58, D3 = 1.16, faceZ = 0.160, relayFaceZ = 0.113, controlZ = relayFaceZ;
+    const phaseMat = [wireM[0], wireM[1], wireM[2]];
+    // --- potência: alimentação -> K1 -> motor; derivação -> K2 -> resistência
+    [-0.024, 0, 0.024].forEach((dx, i) => {
+      const x = 0.22 + dx, k2x = 0.08 + dx, rT = 0.0032;
+      const fx = 0.29 + i * 0.016;                       // entrada de K1 vem do alto, pela canaleta de cima
+      wire([[fx, 2.10, 0.12], ...hop(fx, x, D1, 1, -1), ...land(x, 1.78 + 0.022, faceZ, 1)], phaseMat[i], rT);
+      const xa = 0.32 + i * 0.016, outX = 0.15 + i * 0.02;   // saída de K1: canaleta do meio, desce ao lado da fonte, canaleta de baixo, motor
+      wire([...land(x, 1.78 - 0.050, faceZ, -1).reverse(), ...hop(x, xa, D2, 1, -1), ...hop(xa, outX, D3, 1, -1), [outX, 0.89, 0.14], [outX, 0.84, 0.14]], phaseMat[i], rT);
+      const fy = 0.20 + i * 0.016, xf = 0.096 + i * 0.016;   // entrada de K2: sai da canaleta de cima, passa pela do meio
+      wire([[fy, 2.10, 0.12], ...hop(fy, xf, D1, 1, -1), ...hop(xf, k2x, D2, 1, -1), ...land(k2x, 1.38 + 0.022, faceZ, 1)], phaseMat[i], 0.0028);
+      const k2out = 0.21 + i * 0.02;                     // saída de K2: canaleta de baixo, resistência
+      wire([...land(k2x, 1.38 - 0.050, faceZ, -1).reverse(), ...hop(k2x, k2out, D3, 1, -1), [k2out, 0.89, 0.14], [k2out, 0.84, 0.14]], phaseMat[i], 0.0028);
     });
-    // Y0/Y4 acionam KA1/KA2; os contatos dos relés alimentam as bobinas de K1/K2.
-    const controlZ = relayFaceZ;
-    [[-0.30, wireM[3], wireM[4]], [-0.18, wireM[3], wireM[4]]].forEach(([rx, pos, neg], n) => {
-      const topY = 1.38 + 0.047, botY = 1.38 - 0.047;
-      const x1 = rx - 0.012, x2 = rx + 0.012, plcX = -0.145 + n * 0.025;
-      wire([[plcX, 1.73, 0.16], [plcX, 1.61, ductFaceZ], [plcX, 1.58, ductZ], [x1, 1.58, ductZ], [x1, 1.61, ductFaceZ], [x1, topY, controlZ]], pos, 0.0018);
-      wire([[plcX + 0.018, 1.73, 0.16], [plcX + 0.018, 1.61, ductFaceZ], [plcX + 0.018, 1.58, ductZ], [x2, 1.58, ductZ], [x2, 1.61, ductFaceZ], [x2, topY, controlZ]], neg, 0.0018);
-      const targetX = n ? 0.08 : 0.22, targetY = n ? 1.38 + 0.055 : 1.78 + 0.055;
-      const tx1 = targetX - 0.014, tx2 = targetX + 0.014;
-      if (!n) {
-        wire([[x1, botY, controlZ], [x1, 1.61, ductFaceZ], [x1, 1.58, ductZ], [tx1, 1.58, ductZ], [tx1, 1.61, ductFaceZ], [tx1, targetY, faceZ]], pos, 0.0018);
-        wire([[x2, botY, controlZ], [x2, 1.61, ductFaceZ], [x2, 1.58, ductZ], [tx2, 1.58, ductZ], [tx2, 1.61, ductFaceZ], [tx2, targetY, faceZ]], neg, 0.0018);
-      } else {
-        wire([[x1, botY, controlZ], [x1, 1.19, ductFaceZ], [x1, 1.16, ductZ], [tx1, 1.16, ductZ], [tx1, 1.19, ductFaceZ], [tx1, targetY, faceZ]], pos, 0.0018);
-        wire([[x2, botY, controlZ], [x2, 1.19, ductFaceZ], [x2, 1.16, ductZ], [tx2, 1.16, ductZ], [tx2, 1.19, ductFaceZ], [tx2, targetY, faceZ]], neg, 0.0018);
-      }
+    const wc = (bi, k) => mat(wireCols[(bi + k) % wireCols.length], 0.1, 0.6);
+    // --- fios do CLP: entram de LADO no parafuso de cada borne verde (como no equipamento real), saem para a direita do CLP, sobem/descem em colunas e entram nos rasgos das canaletas
+    //     coluna da direita do CLP: bloco 2 (em cima: S/S, X0..X7) e bloco 3 (embaixo: C0, Y0..Y2, *, C1, Y3..Y5)
+    const plcTerm = (bi, row) => {       // posição do parafuso (x, y) de um borne e a borda direita do bloco; o parafuso fica a 88/128 da largura e a linha i a 21 + 42,6·i de 384 px
+      const [x0, x1, y0, y1] = BL[bi], cl = ((x0 + x1) / 2 / 512 - 0.5) * PW, ch = (0.5 - (y0 + y1) / 2 / 640) * PH, w = (x1 - x0) / 512 * PW, h = (y1 - y0) / 640 * PH;
+      return { sx: plc.position.x + cl - w / 2 + w * 88 / 128, sy: plc.position.y + ch + h / 2 - h * (21 + row * 42.6) / 384, ex: plc.position.x + cl + w / 2 };
+    };
+    const sideWire = (bi, row, lane, up, tail, color, radius) => {
+      const t = plcTerm(bi, row), xl = SLX0 + 16 * SLP + lane * SLP;   // coluna (alinhada ao rasgo da canaleta), começando logo à direita do CLP
+      const yMid = up ? D1 - SLE - 0.05 : D2 + SLE + 0.05;
+      wire([[t.sx, t.sy, 0.171], [t.ex + 0.003, t.sy, 0.172], [xl - 0.008, t.sy, 0.172], [xl, t.sy + (up ? 0.008 : -0.008), 0.172], [xl, yMid, 0.172], ...tail(xl)], color, radius);
+    };
+    // entradas (X) vão para a canaleta de cima: S/S, X0, X1, X2, X3, X4 (linhas 0 a 5); a coluna mais próxima fica com a linha mais alta, para os fios não se cruzarem
+    for (let r = 0; r <= 5; r++) sideWire(2, r, r, true, xl => dip(xl, D1, -1), wc(2, r), 0.0011);
+    // saídas (Y) vão para a canaleta do meio e daí às bobinas de KA1 e KA2: Y0 + C0 → KA1, Y4 + C1 → KA2 (a linha mais baixa fica na coluna mais próxima)
+    [[7, 0, -0.18, 1], [5, 1, -0.18, 0], [1, 2, -0.30, 1], [0, 3, -0.30, 0]].forEach(([row, lane, rx, pos]) => {
+      const rxx = rx + (pos ? -0.012 : 0.012);
+      sideWire(3, row, lane, false, xl => [...hop(xl, rxx, D2, 1, -1), ...land(rxx, 1.38 + 0.047, controlZ, 1)], pos ? wireM[3] : wireM[4], 0.0011);
+    });
+    // --- contatos de KA1/KA2 -> bobinas de K1/K2 (sobem pelas canaletas do meio e de cima, sem cruzar a frente dos contatores)
+    [[-0.30, 0, [0.208, 0.256]], [-0.18, 1, [0.066, 0.094]]].forEach(([rx, n, coils]) => {
+      [-0.012, 0.012].forEach((d, j) => {
+        const xr = rx + d, xrun = -0.096 + n * 0.032 + j * 0.016, col = j ? wireM[4] : wireM[3];
+        const start = land(xr, 1.38 - 0.047, controlZ, -1).reverse();
+        if (!n) wire([...start, ...hop(xr, xrun, D3, 1, 1), ...hop(xrun, 0.064 + j * 0.016, D2, -1, 1), ...hop(0.064 + j * 0.016, coils[j], D1, -1, -1), ...land(0.22 + (j ? 0.014 : -0.014), 1.78 + 0.055, faceZ, 1)], col, 0.0012);
+        else wire([...start, ...hop(xr, xrun, D3, 1, 1), ...hop(xrun, coils[j], D2, -1, -1), ...land(0.08 + (j ? 0.014 : -0.014), 1.38 + 0.055, faceZ, 1)], col, 0.0012);
+      });
     });
     // painel do inversor de frequência, ao lado do painel do CLP
     const dg = new T.Group(); dg.position.set(-1.0, 0, 0); pn.add(dg); S.drvPanel = dg;
@@ -1035,7 +1247,7 @@
       const scr = (() => { const c = document.createElement("canvas"); c.width = FW; c.height = FH; const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.anisotropy = 4; return { c, t }; })();
       const front = at(mesh(new T.PlaneGeometry(w * 0.98, h * 0.98), new T.MeshStandardMaterial({ map: scr.t, roughness: 0.5 }), false), v3(0, 0, d + (pf ? 0.0115 : 0.002))); g.add(front);
       // cabos de saída do inversor descendo para a canaleta
-      for (let k = 0; k < 3; k++) pipe(v3(-0.03 + k * 0.03, -h / 2, d * 0.6), v3(-0.03 + k * 0.03, 1.23 - 1.6, d * 0.6), 0.0035, mat([0x1F2328, 0x6E4A2C, 0x6E7782][k], 0.1, 0.6), g);
+      for (let k = 0; k < 3; k++) { const wx = x - 0.03 + k * 0.03, z0 = 0.04 + d * 0.6; wireOn(dg, [[wx, 1.6 - h / 2, z0], [wx, 1.6 - h / 2 - 0.03, z0 + 0.012], ...dip(wx, 1.2, 1)], [wireM[0], wireM[1], wireM[2]][k], 0.003); }   // entram por rasgos da canaleta de baixo
       S.drv3d[key] = { g, front, scr, h };
       if (D) D.paint3D(scr.c);
       S.clickables.push({ obj: g, tag: key, fn: (hit, ev) => {
@@ -1628,11 +1840,77 @@
       if (S.tzLight) S.tzLight.intensity = 3.6 * g; }
     if (S.tshLamp) { S.tshLamp.emissive.setHex(P.trip === "tsh" ? 0xE0503C : 0x1a6b3a); S.tshLamp.emissiveIntensity = P.trip === "tsh" ? 5 : 0.6; }
   }
+  // IHM da porta do quadro (480x288): mostra o estado do processo como numa IHM de CLP. Página 0 = processo, página 1 = tendência (2 min).
+  function drawHmi(force) {
+    const h = S.hmi; if (!h) return; const now = performance.now(); if (!force && now - h.ts < 200) return; h.ts = now;
+    const g = h.c.getContext("2d"), W = 480, H = 288, L = S.lvl, P = S.proc, o = S.outs || {}, emerg = !!(S.ui && S.ui.emerg);
+    const lvl = L ? clamp(L.L, 0, 100) : 0, T0 = P ? P.T : 25, sp = P ? P.sp : 60, wired = !!window.__ttWired, pv = P ? (wired ? Tm(P) : null) : null, blink = Math.floor(now / 500) % 2 === 0;
+    if (now - h.last > 1000) { h.last = now; h.t.push(T0); h.l.push(lvl); if (h.t.length > 120) { h.t.shift(); h.l.shift(); } }
+    const alarms = [];
+    if (emerg) alarms.push("EMERGÊNCIA ACIONADA"); if (P && P.trip === "tsh") alarms.push("TSH-104 ATUOU (" + P.lim + " °C)"); if (S.burnt) alarms.push("RESISTÊNCIA QUEIMADA"); if (S.pumpBurnt) alarms.push("BOMBA QUEIMADA"); if (S.thermalTrip) alarms.push("RELÉ TÉRMICO ATUOU"); if (L && L.trip) alarms.push("LSH-101 ATUOU"); if (P && !wired) alarms.push("FALHA TT-104");
+    const rr = (x, y, w, hh, r, fill, stroke) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + hh, r); g.arcTo(x + w, y + hh, x, y + hh, r); g.arcTo(x, y + hh, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); if (fill) { g.fillStyle = fill; g.fill(); } if (stroke) { g.strokeStyle = stroke; g.lineWidth = 1.5; g.stroke(); } };
+    const txt = (s, x, y, size, col, al = "left", bold = true) => { g.font = (bold ? "bold " : "") + size + "px Arial"; g.fillStyle = col; g.textAlign = al; g.textBaseline = "middle"; g.fillText(s, x, y); };
+    const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, "#14202C"); bg.addColorStop(1, "#0B121A"); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    // cabeçalho
+    g.fillStyle = "#1E3A5F"; g.fillRect(0, 0, W, 30); g.fillStyle = "#E87722"; g.fillRect(0, 30, W, 2);
+    txt("BANCADA · NÍVEL E TEMPERATURA", 10, 15, 14, "#FFFFFF");
+    txt(new Date().toLocaleTimeString("pt-BR"), W - 10, 15, 14, "#CFE3F5", "right");
+    if (alarms.length) { rr(W - 150, 5, 62, 20, 4, blink ? "#D62718" : "#7A1A12"); txt("ALARME", W - 119, 15, 12, "#fff", "center"); }
+    // rodapé com as duas "teclas de função"
+    for (let i = 0; i < 2; i++) { const act = h.page === i; rr(10 + i * 120, 258, 112, 22, 4, act ? "#E87722" : "#26384A", act ? "#FFB070" : "#3D5670"); txt(i ? "TENDÊNCIA" : "PROCESSO", 66 + i * 120, 269, 13, act ? "#fff" : "#9FB4C8", "center"); }
+    txt(emerg ? "EMERGÊNCIA" : (window.PLC && PLC.run ? "CLP EM RUN" : "SEM PROGRAMA"), W - 10, 269, 13, emerg ? "#FF6A5A" : "#7FE3A0", "right");
+    if (h.page === 0) {
+      // tanque
+      const tx = 22, ty = 50, tw = 120, th = 168;
+      const k = clamp((T0 - 25) / 75, 0, 1), wc = `rgb(${Math.round(46 + 170 * k)},${Math.round(134 - 40 * k)},${Math.round(214 - 150 * k)})`;
+      rr(tx, ty, tw, th, 6, "#0A0F15", null);
+      g.save(); rr(tx, ty, tw, th, 6); g.clip(); g.fillStyle = wc; const wh = th * lvl / 100; g.fillRect(tx, ty + th - wh, tw, wh); g.fillStyle = "rgba(255,255,255,0.25)"; g.fillRect(tx, ty + th - wh, tw, 2);
+      g.strokeStyle = o.res ? "#FF9A3C" : "#6A7682"; g.lineWidth = 3; g.beginPath(); for (let i = 0; i <= 8; i++) { const x = tx + 18 + i * 10.5, y = ty + th - 14 - (i % 2 ? 10 : 0); i ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); g.restore();
+      rr(tx, ty, tw, th, 6, null, "#9FB4C8");
+      for (const [pc, nm, on] of [[83, "LSH", lvl >= 83], [17, "LSL", lvl >= 17]]) { const y = ty + th * (1 - pc / 100); g.strokeStyle = "rgba(255,255,255,0.35)"; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(tx, y); g.lineTo(tx + tw, y); g.stroke(); g.setLineDash([]);
+        g.beginPath(); g.arc(tx + tw + 12, y, 6, 0, 7); g.fillStyle = nm === "LSH" ? (on ? "#FF5A4A" : "#46515C") : (on ? "#4CD27A" : "#E0A21F"); g.fill(); txt(nm, tx + tw + 22, y, 11, "#9FB4C8"); }
+      txt(Math.round(lvl) + " %", tx + tw / 2, ty + th / 2 - 8, 26, "#fff", "center");
+      txt("NÍVEL", tx + tw / 2, ty + th / 2 + 14, 11, "#CFE3F5", "center");
+      // bomba e válvula de entrada, dreno
+      const flow = !!(o.pump && o.vy);
+      g.strokeStyle = flow ? "#3FA0F0" : "#46515C"; g.lineWidth = 6; g.beginPath(); g.moveTo(tx + tw + 70, ty + 50); g.lineTo(tx + tw, ty + 50); g.stroke();
+      g.beginPath(); g.arc(tx + tw + 88, ty + 50, 17, 0, 7); g.fillStyle = o.pump ? "#2EBE62" : "#3A4652"; g.fill(); g.strokeStyle = "#CFE3F5"; g.lineWidth = 2; g.stroke(); txt("B", tx + tw + 88, ty + 50, 17, "#fff", "center");
+      rr(tx + tw + 36, ty + 43, 14, 14, 3, o.vy ? "#2EBE62" : "#7A3A33");
+      g.strokeStyle = L && L.drain ? "#3FA0F0" : "#46515C"; g.lineWidth = 6; g.beginPath(); g.moveTo(tx + tw, ty + th - 12); g.lineTo(tx + tw + 70, ty + th - 12); g.stroke();
+      txt("DRENO " + (L && L.drain ? "ABERTO" : "FECHADO"), tx + tw + 12, ty + th + 2, 10, "#9FB4C8");
+      // temperatura
+      const cx = 268, cw = 202;
+      rr(cx, 40, cw, 82, 8, "#101A25", "#2D4358"); txt("TT-104  TEMPERATURA", cx + 10, 54, 11, "#9FB4C8");
+      txt(pv == null ? "---" : fmt(pv) + " °C", cx + 12, 90, 38, pv != null && pv > sp + 2 ? "#FF8A5A" : "#7FF0A8");
+      txt("SP " + fmt(sp, 0) + " °C", cx + cw - 12, 104, 14, "#FFC070", "right");
+      rr(cx + 10, 108, cw - 20, 6, 3, "#26384A"); const bw = (cw - 20); rr(cx + 10, 108, Math.max(4, bw * clamp((pv == null ? 0 : pv) / 200, 0, 1)), 6, 3, "#E87722"); g.fillStyle = "#FFFFFF"; g.fillRect(cx + 10 + bw * clamp(sp / 200, 0, 1) - 1, 104, 2, 14);
+      // nível
+      const q = ltInfo(L ? L.L : 0);
+      rr(cx, 130, cw, 52, 8, "#101A25", "#2D4358"); txt("LT-101  NÍVEL", cx + 10, 144, 11, "#9FB4C8");
+      txt(fmt(q.cm) + " cm", cx + 12, 166, 22, "#8FD0FF"); txt(fmt(q.mA, 1) + " mA", cx + cw - 12, 166, 14, "#CFE3F5", "right");
+      // estado das saídas
+      [["BOMBA", o.pump], ["VY-01", o.vy], ["RESIST.", o.res]].forEach(([nm, on], i) => { const x = cx + i * 68; rr(x, 190, 64, 22, 11, "#101A25", "#2D4358"); g.beginPath(); g.arc(x + 12, 201, 5, 0, 7); g.fillStyle = on ? "#4CF08A" : "#46515C"; g.fill(); txt(nm, x + 21, 201, 11, on ? "#fff" : "#7F8E9C"); });
+      // alarme
+      const a0 = alarms[0]; rr(cx, 220, cw, 28, 6, a0 ? (blink ? "#B3281A" : "#6E1A12") : "#10301E", a0 ? "#FF6A5A" : "#2D7A4A"); txt(a0 || "SEM ALARMES", cx + cw / 2, 234, 13, "#fff", "center");
+    } else {
+      // tendência
+      const px = 44, py = 56, pw = 394, ph = 176, n = h.t.length; let tmax = 100; for (const v of h.t) tmax = Math.max(tmax, Math.ceil((v + 5) / 20) * 20);
+      rr(px, py, pw, ph, 4, "#0A0F15", "#2D4358");
+      g.strokeStyle = "#1E2C3A"; g.lineWidth = 1; for (let i = 1; i < 4; i++) { const y = py + ph * i / 4; g.beginPath(); g.moveTo(px, y); g.lineTo(px + pw, y); g.stroke(); }
+      for (let i = 0; i <= 4; i++) { const y = py + ph * (1 - i / 4); txt(String(i * 25), px - 6, y, 10, "#6FB4F0", "right"); txt(String(Math.round(tmax * i / 4)), px + pw + 6, y, 10, "#FFA860", "left"); }
+      const plot = (arr, mx, col) => { if (arr.length < 2) return; g.strokeStyle = col; g.lineWidth = 2; g.beginPath(); arr.forEach((v, i) => { const x = px + pw * (120 - arr.length + i) / 119, y = py + ph * (1 - clamp(v / mx, 0, 1)); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke(); };
+      plot(h.l, 100, "#4FB0FF"); plot(h.t, tmax, "#FF9A3C");
+      const ys = py + ph * (1 - clamp(sp / tmax, 0, 1)); g.strokeStyle = "#FFD27A"; g.setLineDash([6, 4]); g.beginPath(); g.moveTo(px, ys); g.lineTo(px + pw, ys); g.stroke(); g.setLineDash([]);
+      txt("— NÍVEL (%)", px, 44, 12, "#4FB0FF"); txt("— TEMPERATURA (°C)", px + 110, 44, 12, "#FF9A3C"); txt("- - SP", px + 270, 44, 12, "#FFD27A"); txt("últimos 2 min", px + pw, 44, 11, "#9FB4C8", "right");
+    }
+    h.tex.needsUpdate = true;
+  }
   // sinaleiros e animação da porta/botões
   function updateDoor(PL) {
     const L = S.lvl, P = S.proc, blink = Math.floor(performance.now() / 350) % 2 === 0;
     const on = [L.pumpOn && !S.ui.emerg, L.trip || PL.io.X[1], PL.io.X[0], !!(P && P.heat), S.ui.emerg ? blink : !!(P && P.trip)];
-    if (S.doorLamps) S.doorLamps.forEach((m, i) => { m.emissiveIntensity = on[i] ? 3.2 : 0.05; });
+    if (S.doorLamps) S.doorLamps.forEach((m, i) => { const u = m.userData, a = on[i]; m.emissiveIntensity = a ? 3.2 : 0.05; m.color.copy(a ? u.cOn : u.cOff); u.hm.opacity += ((a ? 0.85 : 0) - u.hm.opacity) * 0.35; });
+    drawHmi();
     if (S.selRes) S.selRes.rotation.z = S.ui.selRes ? -0.6 : 0.6;
     if (S.drainLever) S.drainLever.rotation.y += ((L.drain ? 0 : Math.PI / 2) - S.drainLever.rotation.y) * 0.25;
   }
@@ -1820,7 +2098,7 @@
       if (qName === "baixa") { if (A.surf) { const pa = A.surf.geometry.attributes.position.array; for (let i = 1; i < pa.length; i += 3) pa[i] = 0; A.surf.geometry.attributes.position.needsUpdate = true; A.surf.geometry.computeVertexNormals(); } drawPcScreen(0); }
     }
     A.pcT = (A.pcT || 0) + dt; if (A.pcT > QUAL[qName].pc) { A.pcT = 0; drawPcScreen(t); }
-    if (S.door) { const tg = S.door.open ? 1.75 : 0; S.door.ang += (tg - S.door.ang) * Math.min(1, dt * 3.5); S.door.hinge.rotation.y = S.door.ang; }
+    if (S.door) { const tg = S.door.open ? 1.75 : 0; S.door.ang += (tg - S.door.ang) * Math.min(1, dt * 3.5); S.door.hinge.rotation.y = S.door.ang; if (S.updateHmiCable && Math.abs(S.door.ang - (S.hmiAng == null ? -9 : S.hmiAng)) > 0.002) { S.hmiAng = S.door.ang; S.updateHmiCable(); } }
     if (S.conduits) for (const c of S.conduits) c.g.visible = S.showCond !== false && (c.always || !!S.installed[c.tag]);
     const L = S.lvl, P = S.proc;
     const Q = ready("ln") ? L.Q : 0, pumpOn = ready("ln") && L.pumpOn;
@@ -2107,10 +2385,10 @@
     S.lookOn = lookOn;
     Object.assign(S, { renderer, lr, scene, cam, ctl, wrap });
 
-    scene.add(new T.HemisphereLight(0xffffff, 0x9A9690, 1.15));
+    scene.add(new T.HemisphereLight(0xffffff, 0x9A9690, 1.35));
     const sun = new T.DirectionalLight(0xfff8f0, 1.45); sun.position.set(2.5, 7.5, 3.5); sun.castShadow = false;
     scene.add(sun);
-    const fill = new T.PointLight(0xfff6ec, 5.5, 9, 2); fill.position.set(-2, 3.0, 1.5); scene.add(fill);
+    // (o ponto de luz de preenchimento ficava a 20 cm do forro e fazia um círculo claro; a luz ambiente subiu um pouco no lugar)
     const win = new T.DirectionalLight(0xEAF2FF, 0.8); win.position.set(0, 2.2, -6); win.target.position.set(0, 0.8, 2); scene.add(win); scene.add(win.target);
 
     Object.assign(M, {
