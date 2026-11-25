@@ -6,7 +6,7 @@
    Expõe window.PF525. */
 (() => {
   "use strict";
-  const KEY = "pf525-params-v1", KMODE = "partida-bomba";
+  const KEY = "nivel-pf525-params-v1", KMODE = "nivel-partida-bomba";
   const RATED = { V: 230, A: 5.0, kW: 0.75 };
 
   /* ---------- parâmetros (subconjunto do manual) ---------- */
@@ -640,7 +640,7 @@
     step, press: k => { key(k); paint(); }, mount, paint, pressAt, hitKey, potSlider, lcd: () => { const L = lcd(); return { ...L, blink: blinkCell(L) }; }, paint3D,
     key: "pf525", name: "PowerFlex 525", model: "25B-B5P0N104 · 200–240 V · 5,0 A", FW, FH,
     get mode() { return curMode(); }, setMode, onChange: f => listeners.push(f),
-    get state() { return st; }, param: c => val(c), setParam: (c, v) => { if (c in st.par) { st.par[c] = v; changed(); } },
-    get faulted() { return !!st.fault; }, defs: DEFS, defaults: () => { st.par = defaults(); changed(); },
+    get state() { return st; }, param: c => val(c), setParam: (c, v) => { if (c in st.par) { st.par[c] = v; if (!(window.DRV && window.DRV._batch)) changed(); } }, flush: changed,
+    get faulted() { return !!st.fault; }, trip: () => { setFault(7); changed(); }, defs: DEFS, defaults: () => { st.par = defaults(); changed(); },
   };
 })();

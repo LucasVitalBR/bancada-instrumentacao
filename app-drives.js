@@ -7,7 +7,7 @@
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 
   /* ================= seletora (hub) ================= */
-  const KSEL = "partida-bomba";
+  const KSEL = "nivel-partida-bomba";
   const NAMES = { direta: "Direta (K1)", pf525: "PowerFlex 525", atv12: "Altivar ATV12", cfw500: "WEG CFW500" };
   let sel = "direta";
   try { const v = localStorage.getItem(KSEL); sel = v === "inversor" ? "pf525" : (NAMES[v] ? v : "direta"); } catch (e) { }
@@ -33,6 +33,25 @@
       }
     },
   };
+  // Parametrização automática: grava nos inversores os dados de placa de exemplo (0,75 kW, 220 V, 60 Hz), as rampas e o comando
+  // pelo CLP (Y0 na entrada digital, referência 4–20 mA), para a aula não gastar tempo parametrizando. Desligue para parametrizar à mão.
+  const AUTO = {
+    pf525: { P031: 220, P032: 60, P033: 3, P034: 3, P035: 4, P036: 1720, P041: 5, P042: 5, P043: 0, P044: 60, P045: 0, P046: 2, P047: 6, t062: 48, t064: 0 },
+    cfw500: { P0400: 220, P0401: 3, P0402: 1720, P0403: 60, P0404: 5, P0100: 5, P0101: 5, P0134: 60, P0220: 1, P0222: 1, P0227: 1, P0233: 1, P0263: 1 },
+    atv12: { bFr: 1, UnS: 220, nCr: 3, FrS: 60, nSP: 1720, ACC: 5, dEC: 5, HSP: 60, Fr1: 0, tCC: 0, AI1t: 2 },
+  };
+  const KAUTO = "nivel-drv-auto";
+  let auto = true;
+  auto = false;   // não aplica nada sozinho: cada inversor é parametrizado pelo botão do HUD
+  DRV.auto = () => auto;
+  DRV.applyAuto = (key) => {
+    const ks = key ? [key] : Object.keys(AUTO);
+    DRV._batch = true;
+    try { ks.forEach(k => { const D = DRV.list[k]; if (!D || !AUTO[k]) return; for (const c in AUTO[k]) { try { D.setParam(c, AUTO[k][c]); } catch (e) { } } if (D.state) { D.state.fault = 0; } }); }
+    finally { DRV._batch = false; }
+    ks.forEach(k => { const D = DRV.list[k]; if (D && D.flush) { try { D.flush(); } catch (e) { } } });
+  };
+  DRV.setAuto = (v) => { auto = !!v; try { localStorage.setItem(KAUTO, auto ? "1" : "0"); } catch (e) { } if (auto) DRV.applyAuto(); else subs.forEach(f => { try { f(); } catch (e) { } }); };
   window.DRV = DRV;
   if (window.PF525) DRV.list.pf525 = window.PF525;
 
@@ -113,7 +132,7 @@
   /* ================= fábrica de inversores ================= */
   // spec: key, name, model, img, FW, FH, FACE, defs, groups, logic(), ref(), rampBase(), acc(), dec(), fmin(), fmax(), motor(), draw(), key(), hints, checklists
   function makeDrive(spec) {
-    const KP = "drv-" + spec.key + "-v1";
+    const KP = "nivel-drv-" + spec.key + "-v1";
     const BY = {}; spec.defs.forEach(d => { BY[d.c] = d; if (d.dec == null) d.dec = 0; });
     const st = { par: {}, run: false, dir: 1, outF: 0, cmdF: 0, n: 0, I: 0, V: 0, bus: 325, fault: 0, ol: 0, di1: false, di1Prev: false, ai: null,
       coast: false, accel: false, decel: false, ach45: false, stopAfter45: false, ranDI: false, rem: false, jogT: 0, hit: null, warn: false };
@@ -128,7 +147,7 @@
     const api = {
       st, ui, P, BY, running, spec,
       val: c => { const d = BY[c]; return d.ro ? d.get(st, api) : st.par[c]; },
-      set: (c, v) => { st.par[c] = v; save(); subsD.forEach(f => { try { f(); } catch (e) { } }); },
+      set: (c, v) => { st.par[c] = v; if (DRV._batch) return; save(); subsD.forEach(f => { try { f(); } catch (e) { } }); },
       msg: (h, k = "") => { ui.msg = h; ui.msgKind = k; },
       changed: () => { save(); subsD.forEach(f => { try { f(); } catch (e) { } }); },
       defaults: () => { st.par = defaults(); save(); },
@@ -242,9 +261,9 @@
     }
     const D = {
       key: spec.key, name: spec.name, model: spec.model, size3d: spec.size3d, FW: spec.FW, FH: spec.FH,
-      get state() { return st; }, get faulted() { return !!st.fault; }, param: c => api.val(c), setParam: (c, v) => api.set(c, v),
+      get state() { return st; }, get faulted() { return !!st.fault; }, param: c => api.val(c), setParam: (c, v) => api.set(c, v), flush: () => api.changed(),
       defaults: () => { api.defaults(); }, step, mount, paint, pressAt, hitKey, paint3D: (c) => drawFace(c.getContext("2d"), c.width, c.height),
-      onChange: f => subsD.push(f), key: k => press(k),
+      onChange: f => subsD.push(f), key: k => press(k), trip: () => api.setFault(spec.olFault),
     };
     DRV.list[spec.key] = D;
     return D;

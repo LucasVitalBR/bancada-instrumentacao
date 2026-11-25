@@ -3,27 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Instrumentação · Aula 01</title>
+<title>Controle de Nível Simples</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="manifest" href="site.webmanifest">
-<meta name="theme-color" content="#1E3A5F">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#0F2236">
 <style>
 :root{
-  --navy:#1E3A5F; --ink:#1F2A37; --bg:#EEF2F7; --card:#FFFFFF; --line:#D5DDE8;
-  --orange:#E87722; --blue:#2F6DB5; --teal:#2E8B7A; --amber:#F2A05A; --slate:#8FA3BC; --red:#B83A2E;
+  --navy:#0F2236; --ink:#0F2236; --bg:#F5F6F8; --card:#FFFFFF; --line:#D5DDE8;
+  --orange:#EE7A10; --blue:#2F6DB5; --teal:#2E8B7A; --amber:#F2A05A; --slate:#8FA3BC; --red:#B83A2E;
   --muted:#5B6B80; --okbg:#E3F3EF; --badbg:#F8E6E4; --warnbg:#FDF0E4;
   --water:#E48DB6; --steel1:#C5CFDB; --steel2:#EDF1F5;
   --r:14px;
 }
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font-family:Calibri,Carlito,"Segoe UI",Arial,sans-serif;font-size:17px;line-height:1.45}
+body{background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",Calibri,Carlito,"Segoe UI",Arial,sans-serif;font-size:17px;line-height:1.45}
 button,input,select{font:inherit;color:inherit}
 header{background:var(--navy);color:#fff;position:sticky;top:0;z-index:20}
 .top{display:flex;align-items:center;gap:14px;padding:10px 20px 0}
-.brand{font-weight:700;font-size:20px;white-space:nowrap}
+.brand{font-family:"Bricolage Grotesque","IBM Plex Sans",Calibri,sans-serif;font-weight:800;font-size:21px;white-space:nowrap;display:flex;align-items:center;gap:12px}
+.brand svg{width:46px;height:46px;flex:none}
+.brand small{font-family:"IBM Plex Sans",Calibri,sans-serif}
+.brand small em{font-style:normal;color:var(--orange);font-weight:700}
+h1,h2,h3{font-family:"Bricolage Grotesque","IBM Plex Sans",Calibri,sans-serif}
 .brand small{display:block;font-weight:400;font-size:13px;opacity:.75}
 nav{display:flex;gap:4px;overflow-x:auto;padding:8px 14px 0;scrollbar-width:none}
 nav::-webkit-scrollbar{display:none}
@@ -31,7 +36,7 @@ nav button{background:transparent;border:0;color:#C9D6E6;padding:9px 14px 11px;b
 nav button:hover{color:#fff;background:rgba(255,255,255,.08)}
 nav button.on{background:var(--bg);color:var(--navy);font-weight:700}
 nav button .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--orange);color:#fff;font-size:13px;font-weight:700;margin-right:6px}
-main{max-width:1240px;margin:0 auto;padding:22px 20px 60px}
+main{max-width:none;margin:0 auto;padding:16px 16px 40px}
 section.view{display:none}
 section.view.on{display:block}
 h1{font-size:30px;line-height:1.15;margin:0 0 4px;color:var(--navy)}
@@ -119,7 +124,7 @@ table.t tr.hl td{background:#FFF4EA;font-weight:700}
 .wire{fill:none;stroke-width:5;stroke-linecap:round;cursor:pointer}
 .wire:hover{stroke-width:8}
 /* 3D */
-.w3d{position:relative;height:min(76vh,760px);min-height:460px;border-radius:var(--r);overflow:hidden;background:#3A4552;user-select:none;-webkit-user-select:none}
+.w3d{position:relative;height:clamp(420px,min(calc(100vh - 150px),88vw),1300px);height:clamp(420px,min(calc(100dvh - 150px),88vw),1300px);border-radius:var(--r);overflow:hidden;background:#3A4552;user-select:none;-webkit-user-select:none}
 .w3d .c3d{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
 .l3layer{position:absolute;inset:0;pointer-events:none}
 .load3d{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:20px;padding:20px;text-align:center}
@@ -158,7 +163,7 @@ table.t tr.hl td{background:#FFF4EA;font-weight:700}
 .box3d.dock .clpdock{display:block}
 .vfddock{display:none;flex:0 0 38%;max-width:560px;min-width:340px;overflow:auto;background:var(--bg);border-radius:var(--r);padding:10px}
 .box3d.vdock .vfddock{display:block}
-.vfdtabs{display:flex;gap:4px;flex-wrap:wrap}.vfdtabs button{border:1.5px solid var(--navy);background:#fff;color:var(--navy);border-radius:8px;padding:4px 9px;font-weight:700;cursor:pointer;font-size:13px}.vfdtabs button.on{background:var(--navy);color:#fff}.vfdtabs button.sel::after{content:" ⚡";color:#E87722}
+.vfdtabs{display:flex;gap:4px;flex-wrap:wrap}.vfdtabs button{border:1.5px solid var(--navy);background:#fff;color:var(--navy);border-radius:8px;padding:4px 9px;font-weight:700;cursor:pointer;font-size:13px}.vfdtabs button.on{background:var(--navy);color:#fff}.vfdtabs button.sel::after{content:" ⚡";color:#EE7A10}
 .box3d.vdock .h3d,.box3d.vdock .h3dshow{display:none}
 .box3d:fullscreen .vfddock,.box3d.max .vfddock{max-height:100%}
 @media (max-width:760px){.box3d.vdock .stage3d{flex-direction:column}.vfddock{min-width:0;max-height:60vh;flex:none}}
@@ -179,9 +184,9 @@ table.t tr.hl td{background:#FFF4EA;font-weight:700}
 .lab-compact .l3.hot i,.lab-compact .l3.alarm i{display:block}
 .lab-compact .l3.hot,.lab-compact .l3.alarm{opacity:1;z-index:2}
 .lab-off .l3{display:none}
-.lab-off .l3.hot,.lab-off .l3.alarm{display:block}
+.lab-off .l3.hot{display:block}
 .l3.hot{border-color:var(--orange);box-shadow:0 0 0 3px rgba(232,119,34,.3)}
-.bot3d{display:flex;gap:12px;align-items:stretch;margin-top:12px}
+.bot3d{display:none!important}
 .tray3d{flex:1;min-width:0;background:var(--card);border-radius:var(--r);padding:10px 12px;box-shadow:0 1px 2px rgba(31,42,55,.06),0 4px 14px rgba(31,42,55,.05)}
 .tray3d .trh{color:var(--navy);font-weight:700;font-size:15px;margin-bottom:8px}
 .trs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
@@ -219,10 +224,10 @@ table.t tr.hl td{background:#FFF4EA;font-weight:700}
 .rung .slot{fill:transparent;cursor:pointer}
 .rung .slot:hover{fill:rgba(232,119,34,.12);stroke:rgba(232,119,34,.5);stroke-dasharray:4 3}
 .rung .w{stroke:#9AA5B1;stroke-width:2.5}.rung .w.on{stroke:#2E8B7A;stroke-width:4}
-.rung .rail{stroke:#1E3A5F;stroke-width:4}
-.rung .la{font-size:14px;font-weight:700;fill:#1E3A5F;font-family:"Courier New",monospace}
+.rung .rail{stroke:#0F2236;stroke-width:4}
+.rung .la{font-size:14px;font-weight:700;fill:#0F2236;font-family:"Courier New",monospace}
 .rung .ls{font-size:11px;fill:#5B6B80}
-.rung .lb{font-size:14px;font-weight:700;fill:#1E3A5F;font-family:"Courier New",monospace}
+.rung .lb{font-size:14px;font-weight:700;fill:#0F2236;font-family:"Courier New",monospace}
 .rung .lv{font-size:11px;fill:#2E8B7A;font-family:"Courier New",monospace}
 .ldpop{position:fixed;z-index:80;background:#fff;border-radius:12px;box-shadow:0 10px 32px rgba(0,0,0,.25);padding:12px 14px;width:270px}
 .pbtn{flex:1;min-width:90px;border:0;border-radius:12px;padding:12px 8px;font-weight:800;color:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;box-shadow:0 4px 0 rgba(0,0,0,.25);user-select:none;touch-action:none}
@@ -231,7 +236,6 @@ table.t tr.hl td{background:#FFF4EA;font-weight:700}
 .pbtn.on{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25);filter:brightness(1.15)}
 .pbtn.s.on{background:var(--orange)}
 #plcRun.on{background:var(--red);border-color:var(--red);color:#fff}
-#plcFail.on{background:var(--red);color:#fff}
 .ladwrap{background:#FBFCFE;border:1px solid var(--line);border-radius:12px;padding:10px;overflow-x:auto}
 .ladwrap svg{min-width:620px}
 #clpRun.on{background:var(--red);border-color:var(--red);color:#fff}
@@ -253,6 +257,23 @@ table.t tr.hl td{background:#FFF4EA;font-weight:700}
 .v3d-views button.full{background:var(--orange);border-color:var(--orange)}
 .box3d:fullscreen,.box3d.max{background:#1d2733;display:flex;flex-direction:column;padding:10px}
 .box3d.max{position:fixed;inset:0;z-index:100}
+.box3d.splitview{position:fixed;inset:0;z-index:200;box-sizing:border-box;width:100vw;height:100vh;display:flex;flex-direction:column;padding:8px;background:#1d2733}
+.box3d.splitview .stage3d{flex:1;min-height:0;gap:0}
+.box3d.splitview .w3d{flex:1;height:auto;min-height:0}
+.box3d.splitview .bot3d{display:none}
+.box3d.tray-collapsed .bot3d{align-items:center}
+.box3d.tray-collapsed .tray3d{flex:none;width:100%;padding:6px 10px}
+.box3d.tray-collapsed .tray3d .trs,.box3d.tray-collapsed .tip3d{display:none}
+.box3d.tray-collapsed .tray3d .trh{margin:0}
+.tray3d .trh{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tray3d .trh .tray-toggle{background:transparent;border:1px solid var(--line);border-radius:8px;color:var(--navy);padding:4px 9px;cursor:pointer;font-weight:700}
+.box3d.splitview .v3d-views{top:8px;left:8px;bottom:auto;width:auto;max-width:calc(100% - 16px);padding:6px}
+.box3d.splitview .v3d-views.col{background:transparent;padding:0}
+.box3d.splitview .v3d-views.col .vgrp:first-of-type{display:flex;flex-direction:row;gap:6px}
+.box3d.splitview .v3d-views.col .vgrp:first-of-type .vlbl,.box3d.splitview .v3d-views.col .vgrp:first-of-type button:not(#b3split):not(#b3full):not(#b3auto){display:none}
+.box3d.splitview .v3d-views button{width:auto;text-align:center;padding:6px 9px;font-size:13px}
+.box3d.splitview .h3d{top:8px;right:8px;max-height:calc(100% - 16px);width:min(270px,40%)}
+body.splitview-on{overflow:hidden}
 .box3d:fullscreen .w3d,.box3d.max .w3d{flex:1;height:auto;min-height:0}
 .box3d:fullscreen .bot3d,.box3d.max .bot3d{margin-top:10px}
 .tip3d .dica{display:inline-block;background:var(--blue);color:#fff;font-size:11px;font-weight:700;padding:1px 8px;border-radius:0 8px 8px 0;margin-right:6px}
@@ -265,54 +286,68 @@ table.t tr.hl td{background:#FFF4EA;font-weight:700}
 .l3.pre{border-color:var(--slate)}
 .l3.tank{background:rgba(30,58,95,.85);color:#fff;border-color:transparent}.l3.tank i{color:#C9D6E6}
 .l3.alarm{border-color:var(--red);background:#FBE3E0}
+@media (max-height:820px) and (min-width:761px){.w3d{height:clamp(400px,calc(100vh - 140px),1300px);height:clamp(400px,calc(100dvh - 140px),1300px)}}
 @media (max-width:760px){
-  .w3d{height:78vh}
+  .w3d{height:78vh;height:78dvh}
   .v3d-views{max-width:calc(100% - 24px)}
   .h3d{top:auto;bottom:12px;width:auto;left:12px;right:12px;max-height:38%;overflow:auto}
   .bot3d{flex-direction:column}
   .tip3d{width:auto;max-height:90px}
 }
-footer{max-width:1240px;margin:0 auto;padding:0 20px 30px;color:var(--muted);font-size:13px}
+footer{max-width:none;margin:0 auto;padding:0 16px 24px;color:var(--muted);font-size:13px}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
 .legend i{display:inline-block;width:18px;height:4px;border-radius:2px;vertical-align:middle;margin-right:5px}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.2);opacity:0;pointer-events:none;transition:opacity .2s;z-index:50;max-width:90vw}
 .toast.on{opacity:1}
+/* Bancada 3D fixa: a página ocupa exatamente a janela, sem rolagem */
+html,body{height:100%;overflow:hidden}
+body{display:flex;flex-direction:column;height:100vh;height:100dvh}
+header{position:static;flex:none}
+main{flex:1 1 0;min-height:0;overflow:auto;padding:8px 10px;position:relative;width:100%;margin:0}
+footer{display:none}
+#v-bancada3d.on{position:absolute;inset:8px 10px;display:flex;flex-direction:column}
+#v-bancada3d .box3d{flex:1 1 0;min-height:0;display:flex;flex-direction:column}
+#v-bancada3d .stage3d{flex:1 1 0;min-height:0;display:flex}
+#v-bancada3d .stage3d>.w3d{height:auto;min-height:0;flex:1;align-self:stretch}
+main:has(#v-bancada3d.on){overflow:hidden}
+.navhelp{margin-left:auto;display:flex;flex-wrap:wrap;gap:6px 8px;justify-content:flex-end;align-self:center;max-width:70%;padding-bottom:4px}
+.navhelp span{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:#DCE6F2;border-radius:999px;padding:3px 11px;font-size:13px;white-space:nowrap}
+.navhelp b{color:#fff}
+@media (max-width:900px){.navhelp{display:none}}
+body:not([data-view="bancada3d"]) .navhelp{display:none}
+.v3d-views button.demo{background:var(--orange);border-color:var(--orange);color:#fff}
+.v3d-views button.demo:hover{background:#ff8a1f}
+.v3d-views button.demo.on{background:var(--red);border-color:var(--red)}
+.clppage{display:grid;grid-template-columns:minmax(440px,1.7fr) minmax(300px,1fr);gap:14px;align-items:start;margin-top:8px}
+.clpcol{display:grid;gap:14px}
+.clpcard{background:var(--navy);color:#fff;border-radius:var(--r);padding:14px 16px;font-size:14px;box-shadow:0 1px 2px rgba(15,34,54,.15),0 6px 18px rgba(15,34,54,.12)}
+.clpcard.main{border-top:4px solid var(--orange)}
+.clpcard.main .hh{font-size:19px}
+.clpcard .hh{font-weight:700;font-size:17px;color:#FFD3AE;margin-bottom:4px;font-family:"Bricolage Grotesque","IBM Plex Sans",Calibri,sans-serif}
+.clpcard .small{font-size:13px;opacity:.88;margin-top:4px}
+.clpcard .b3:hover{background:rgba(238,122,16,.25)}
+.ctsel{display:inline-flex;gap:4px;margin-left:8px;vertical-align:middle}
+.ctsel button{display:inline-flex;flex-direction:column;align-items:center;gap:0;line-height:1;background:rgba(255,255,255,.08);color:#C9D6E6;border:1px solid rgba(255,255,255,.28);border-radius:8px;padding:3px 6px 2px;cursor:pointer}
+.ctsel button b{font-size:10px;letter-spacing:.04em}
+.ctsel button:hover{background:rgba(238,122,16,.25);color:#fff}
+.ctsel button.on{background:var(--orange);border-color:var(--orange);color:#fff}
+.clpcard input[type=number],.clpcard select{border-radius:6px;border:1px solid #9FB1C6;padding:2px 4px}
+@media (max-width:1000px){.clppage{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <header>
-  <div class="top"><div class="brand">Instrumentação · Aula 01<small>Implementação de Equipamentos e Dispositivos</small></div></div>
+  <div class="top"><div class="brand" title="Idealizado por Lucas Ferreira Vital e Ederson Ivan Cardoso · desenvolvido por Lucas Ferreira Vital"><svg viewBox="0 0 64 64" role="img" aria-label="Logo EducaWEB"><defs><mask id="mhx" maskUnits="userSpaceOnUse" x="0" y="0" width="48" height="48"><rect width="48" height="48" fill="#fff"/><g fill="#000"><rect x="13.5" y="0.5" width="12" height="37"/><rect x="13.5" y="0.5" width="31" height="12"/><rect x="13.5" y="13" width="25" height="12"/><rect x="13.5" y="25.5" width="31" height="12"/></g></mask></defs><polygon points="32,4 56,18 56,46 32,60 8,46 8,18" fill="#F5F6F8" stroke="#F5F6F8" stroke-width="5" stroke-linejoin="round"/><g transform="translate(14 14) scale(0.75)"><g mask="url(#mhx)" fill="#EE7A10"><rect x="6" y="9" width="7" height="37" rx="1.5"/><rect x="6" y="39" width="30" height="7" rx="1.5"/></g><g fill="#0F2236"><rect x="16" y="3" width="7" height="32" rx="1.5"/><rect x="16" y="3" width="26" height="7" rx="1.5"/><rect x="16" y="15.5" width="20" height="7" rx="1.5"/><rect x="16" y="28" width="26" height="7" rx="1.5"/></g></g></svg><div>Controle de Nível Simples<small>Educa<em>WEB</em> · Simulador didático · Eletromecânica</small></div></div>
+  <div class="navhelp" aria-label="Controles de navegação"><span><b>🖱 Arrastar</b> gira</span><span><b>Roda</b> aproxima</span><span><b>W A S D</b> / setas andam</span><span><b>Q / E</b> sobe / desce</span><span><b>Shift</b> mais rápido</span><span><b>Clique</b> aciona botões, porta e boias</span></div></div>
   <nav id="nav">
-    <button data-v="planta">Planta da bancada</button>
     <button data-v="bancada3d"><span class="n" style="background:var(--teal);width:auto;padding:0 6px;border-radius:8px">3D</span>Bancada 3D</button>
-    <button data-v="clp"><span class="n" style="background:var(--blue);width:auto;padding:0 6px;border-radius:8px">CLP</span>Programar CLP</button>
-    <button data-v="controle"><span class="n">1</span>Controlar é comparar</button>
-    <button data-v="quiz"><span class="n">1</span>Malha ou intertravamento?</button>
-    <button data-v="laco"><span class="n">2</span>Laço 4–20 mA</button>
-    <button data-v="pt100"><span class="n">2</span>Ligação do PT100</button>
-    <button data-v="conv"><span class="n">2</span>Conversões</button>
-    <button data-v="tags"><span class="n">3</span>Tags</button>
+    <button data-v="clpcfg"><span class="n" style="background:var(--orange);width:auto;padding:0 6px;border-radius:8px">PLC</span>CLP</button>
   </nav>
 </header>
 
 <main>
-<!-- ============ PLANTA ============ -->
-<section class="view" id="v-planta">
-  <div class="kicker">Visão geral</div>
-  <h1>A planta tem dois tanques e quatro variáveis</h1>
-  <p class="lead">Toque em um instrumento para ver o que a tag significa e onde ele aparece na aula. Temperatura e pressão ficam no TQ-01, nível no tanque de acrílico e vazão na tubulação.</p>
-  <div class="grid g-main">
-    <div class="card"><svg id="plantSvg" viewBox="0 0 1000 620" role="img" aria-label="Esquema da bancada com os instrumentos"></svg>
-      <p class="note" style="margin:8px 0 0">Esquema didático, não é o P&amp;ID oficial. Confira no painel as tags PIT-103, PSH-103, TIC-104, TSH-104, FIT-102, FV-102 e FY-102.</p></div>
-    <div class="card" id="plantInfo"></div>
-  </div>
-</section>
-
 <!-- ============ BANCADA 3D ============ -->
 <section class="view" id="v-bancada3d">
-  <div class="kicker">Bancada 3D · Blocos 1, 2 e 3</div>
-  <h1>Instale os instrumentos da bancada</h1>
-  <p class="lead">Escolha uma peça na Bancada de Peças, leia a tag e toque na área azul onde ela deve ser instalada. Com cada parte montada, as malhas passam a funcionar. Arraste para girar, use a roda do mouse ou dois dedos para aproximar. No teclado: <b>W A S D</b> ou <b>setas</b> para andar e <b>Q/E</b> para descer/subir (Shift anda mais rápido).</p>
   <div class="box3d" id="box3d">
     <div class="stage3d" id="stage3d">
     <div class="clpdock" id="clpDock"><div class="dockhead"><b>CLP DVP20SX2 · programação</b><button class="btn" id="dockClose">✕ Fechar painel</button></div></div>
@@ -321,8 +356,8 @@ footer{max-width:1240px;margin:0 auto;padding:0 20px 30px;color:var(--muted);fon
       <div class="load3d" id="load3d">Carregando a cena 3D…</div>
       <div class="v3d-views" id="v3d-views">
         <button id="v3dToggle" class="vtog" title="Mostrar ou ocultar o menu">☰ Menu</button>
-        <div class="vgrp"><div class="vlbl">Ações</div><button id="b3full" class="full">⛶ Tela cheia</button><button id="b3clp" class="clpb">⌨ Programar CLP</button><button id="b3vfd">🎛 Inversores</button><button id="b3labels">🏷 Rótulos: compactos</button><button id="b3cond">🔌 Eletrodutos: visíveis</button><button id="b3fx" title="Alto: sombreamento, brilho e bordas lisas · Médio: sem sombreamento · Leve: para PCs mais simples">✨ Gráficos: alto</button><button id="b3therm">🌡 Visão térmica</button><button id="b3reset">↺ Recomeçar</button></div>
-        <div class="vgrp"><div class="vlbl">Vistas</div><button data-view="geral">Vista geral</button><button data-view="topo">Topo do TQ-01</button><button data-view="lateral">Lateral do TQ-01</button><button data-view="acrilico">Tanque de acrílico</button><button data-view="tubulacao">Tubulação</button><button data-view="painel">Painel</button><button data-view="clp">CLP</button><button data-view="inversor">Inversores</button></div>
+        <div class="vgrp"><div class="vlbl">Ações</div><button id="b3split" class="full" aria-pressed="false">◫ Vista lado a lado</button><button id="b3full">⛶ Tela cheia</button><button id="b3auto">⚡ Montar automaticamente</button><button id="b3vfd">🎛 Inversores</button><button id="b3cond">🔌 Eletrodutos: visíveis</button><button id="b3prof" title="Abre a área do professor (erros de zero do TT-104 e do LT-101)">🎓 Professor</button><button id="b3therm">🌡 Visão térmica</button><button id="b3reset">↺ Recomeçar</button><button id="b3demo" class="demo" aria-pressed="false" title="Monta a bancada e simula sem programa: enche até a boia superior e esvazia até a inferior">▶ Simular sem programa</button></div>
+        <div class="vgrp"><div class="vlbl">Vistas</div><button data-view="geral">Vista geral</button><button data-view="topo">Topo do tanque</button><button data-view="lateral">Lateral do tanque</button><button data-view="acrilico">Tanque de acrílico</button><button data-view="tubulacao">Tubulação</button><button data-view="painel">Painel</button><button data-view="clp">CLP</button><button data-view="inversor">Inversores</button></div>
       </div>
       <div class="h3d" id="h3d"></div>
       <button class="h3dshow" id="h3dShow" title="Mostrar o painel do processo">📊 Painel</button>
@@ -332,20 +367,27 @@ footer{max-width:1240px;margin:0 auto;padding:0 20px 30px;color:var(--muted);fon
     <div class="ovl3d" id="ovl3d"><div class="ovlbox"><div class="ovlhead"><b>Ligação do PT100 · TE-104 → TT-104 → CLP</b><button class="btn" id="ovlClose">✕ Fechar e voltar à bancada</button></div><div id="ovlBody"></div></div></div>
     <div class="ovl3d" id="ovlVfd"><div class="ovlbox" style="max-width:1180px"><div class="ovlhead"><b id="vfdTitle">Inversor</b><button class="btn" id="vfdClose">✕ Fechar e voltar à bancada</button></div><div id="vfdBody"></div></div></div>
   </div>
-  <div class="card" style="margin-top:18px;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap">
-    <div><div class="kicker">CLP Delta DVP-SX2</div><h2 style="margin:0">Programe o CLP e veja a bancada responder</h2>
-      <p class="note" style="margin:4px 0 0">Monte o ladder com contatos, bobinas, SET/RST e o bloco comparador CMP. Em RUN, as saídas comandam a bomba e a VY-01 aqui na cena.</p></div>
-    <button class="btn pri" onclick="show('clp')">Abrir a programação do CLP</button>
-  </div>
-  <p class="note">Cena didática, inspirada na bancada. Para funcionar sem internet, mantenha a pasta <b>vendor</b> e os arquivos <b>app-3d.js</b> e <b>app-clp.js</b> junto deste HTML.</p>
 </section>
 
 <!-- ============ PROGRAMAR CLP ============ -->
+<section class="view" id="v-clpcfg">
+  <div class="kicker">CLP Delta DVP20SX2 · ISPSoft</div>
+  <h1>Configuração do CLP</h1>
+  <p class="lead">Escolha o modo de comando, conecte ao ISPSoft e defina quais entradas (X) e saídas (Y) o simulador usa. A simulação continua rodando na aba Bancada 3D.</p>
+  <div class="clppage">
+    <div class="clpcard main"><div class="hh">Conexão com o ISPSoft e mapa de E/S</div><div id="cfgIsp"></div></div>
+    <div class="clpcol">
+      <div class="clpcard"><div class="hh">Modo de comando</div><div id="cfgMd"></div></div>
+      <div class="clpcard"><div class="hh">Partida da bomba · inversor</div><div id="cfgDrv"></div></div>
+    </div>
+  </div>
+</section>
+
 <section class="view" id="v-clp">
   <div class="kicker">CLP Delta DVP-SX2 · programação em ladder</div>
   <h1>Programe o CLP e controle a bancada</h1>
   <p class="lead">Escolha uma ferramenta na paleta e toque numa célula da rede. Contatos ficam à esquerda; bobinas e blocos (OUT, SET, RST, CMP, MOV) ficam à direita. Coloque em RUN e opere pelos botões do painel: a cena 3D segue o seu programa.</p>
-  <div id="clpLock2" class="msg warn" style="margin-bottom:14px">A bancada ainda não está montada: o CLP precisa do LIT-101, das chaves boia, da bomba e da VY-01 instalados. <button class="btn pri" id="clpAuto" style="margin-left:8px">Montar a bancada automaticamente</button> ou monte na aba Bancada 3D.</div>
+  <div id="clpLock2" class="msg warn" style="margin-bottom:14px">A bancada ainda não está montada: o CLP precisa das chaves boia, da bomba e da VY-01 instalados. <button class="btn pri" id="clpAuto" style="margin-left:8px">Montar a bancada automaticamente</button> ou monte na aba Bancada 3D.</div>
   <div class="row" style="margin:-4px 0 14px"><button class="btn pri" id="clpFull">⛶ Programar em tela cheia, com a bancada grande</button><span class="note">Recomendado para projetar em sala.</span></div>
   <div class="clpgrid" id="clpGrid">
     <div class="card" id="ldCard">
@@ -364,7 +406,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 20px 30px;color:var(--muted);fon
       <div id="ldExInfo" class="note" style="margin:-4px 0 10px"></div>
       <div id="ldEditor" class="ldeditor"></div>
       <div id="ldMsg" class="msg neu">Comece por uma rede: escolha <b>NA</b> e toque na primeira célula; depois escolha <b>OUT</b> e toque na saída à direita.</div>
-      <datalist id="ldAddrs"><option value="X0">LSL-101</option><option value="X1">LSH-101</option><option value="X2">Botão LIGA</option><option value="X3">Botão DESLIGA (NF)</option><option value="X4">Seletora AUTO</option><option value="X5">TSH-104</option><option value="X6">PSH-103</option><option value="D1112">FIT-102 (vazão)</option><option value="D1113">PIT-103 (pressão)</option><option value="D220">SP vazão</option><option value="D222">Abertura pedida</option><option value="M1012">clock 100 ms</option><option value="M1013">clock 1 s</option><option value="Y4">Resistência TZ-104</option><option value="D1111">TT-104</option><option value="D200">SP temperatura</option><option value="D210">Nível liga</option><option value="D211">Nível desliga</option><option value="K600">60 °C</option><option value="Y0">Bomba</option><option value="Y1">VY-01</option><option value="Y2">Alarme</option><option value="Y3">Sinaleiro</option><option value="M0"></option><option value="M10"></option><option value="M20"></option><option value="M1000">sempre ON</option><option value="D1110">LIT-101</option><option value="D1115">Modo AI/AO (K7967 = 4–20 mA)</option><option value="D1116">FY-102</option><option value="D1117">Velocidade do inversor (4000 = 100%)</option><option value="X7">Falha do inversor</option><option value="K800">40%</option><option value="K1400">70%</option></datalist>
+      <datalist id="ldAddrs"><option value="X0">LSL-101</option><option value="X1">LSH-101</option><option value="X2">Botão LIGA</option><option value="X3">Botão DESLIGA (NF)</option><option value="X4">Seletora AUTO</option><option value="X5">TSH-104</option><option value="X6">Seletora da resistência</option><option value="X7">Falha do inversor</option><option value="D222">Velocidade pedida</option><option value="D1116">Referência do inversor</option><option value="M1012">clock 100 ms</option><option value="M1013">clock 1 s</option><option value="Y4">Resistência TZ-104</option><option value="D1111">TT-104</option><option value="D200">SP temperatura</option><option value="K600">60 °C</option><option value="Y0">Bomba</option><option value="Y1">VY-01</option><option value="Y2">Alarme</option><option value="Y3">Sinaleiro</option><option value="M0"></option><option value="M10"></option><option value="M20"></option><option value="M1000">sempre ON</option><option value="D1115">Modo AI/AO (K7967 = 4–20 mA)</option><option value="D1116">FY-102</option><option value="D1117">Velocidade do inversor (4000 = 100%)</option><option value="X7">Falha do inversor</option><option value="K800">40%</option><option value="K1400">70%</option></datalist>
     </div>
     <div class="clpside">
       <div class="clp3dslot" id="clp3dSlot"></div>
@@ -378,125 +420,19 @@ footer{max-width:1240px;margin:0 auto;padding:0 20px 30px;color:var(--muted);fon
         </div>
         <div class="row" style="margin-top:12px">
           <button class="btn" id="plcDrain">Abrir dreno</button>
-          <button class="btn danger" id="plcFail">Falha no LIT-101 (travado em 10%)</button>
         </div>
         <div class="adj">
           <div class="lbl" style="margin-top:12px">Ajustes do processo · ao vivo</div>
           <label class="small" style="display:block;margin-top:6px">Setpoint de temperatura (D200): <b id="plcSpT"></b></label>
           <input type="range" id="plcSp" min="30" max="95" step="1" value="60">
-          <label class="small" style="display:block;margin-top:6px">Nível: liga a bomba abaixo de (D210): <b id="plcLoT"></b></label>
-          <input type="range" id="plcLo" min="5" max="90" step="1" value="40">
-          <label class="small" style="display:block;margin-top:6px">Nível: desliga acima de (D211): <b id="plcHiT"></b></label>
-          <input type="range" id="plcHi" min="10" max="95" step="1" value="70">
-          <label class="small" style="display:block;margin-top:6px">Setpoint de vazão (D220): <b id="plcFqT"></b></label>
-          <input type="range" id="plcFq" min="0" max="30" step="0.5" value="15">
-          <label class="small" style="display:block;margin-top:6px">Abertura pedida da FV-102 (D222): <b id="plcAvT"></b></label>
+          <label class="small" style="display:block;margin-top:6px">Referência de velocidade pedida (D222): <b id="plcAvT"></b></label>
           <input type="range" id="plcAv" min="0" max="100" step="1" value="50">
         </div>
-        <label class="small" style="display:block;margin-top:10px">Abertura da FV-102 (manual, ou pelo MOV em D1116): <b id="plcFvT"></b></label>
+        <label class="small" style="display:block;margin-top:10px">Referência de velocidade do inversor (manual, ou pelo MOV em D1116): <b id="plcFvT"></b></label>
         <input type="range" id="plcFv" min="0" max="100" step="5" value="60">
         <table class="t" id="plcIO" style="margin-top:10px;font-size:14px"></table>
-        <p class="note">Endereços e escalas conforme o manual do DVP-SX2: entradas D1110–D1113 (4–20 mA = 0 a 2000), saída D1116 (4–20 mA = 0 a 4000), modo 4–20 mA em D1115 = H1F1F (K7967). O programa fica salvo neste navegador.</p>
+        <p class="note">Endereços e escalas conforme o manual do DVP-SX2: entrada D1111 = temperatura (4–20 mA = 0 a 2000), saída D1116 = referência de velocidade do inversor (4–20 mA = 0 a 4000 = 0 a 60 Hz), modo 4–20 mA em D1115 = H1F1F (K7967). O programa fica salvo neste navegador.</p>
       </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ CONTROLE ============ -->
-<section class="view" id="v-controle">
-  <div class="kicker">Bloco 1 · Controlar é comparar</div>
-  <h1>O forno da padaria, peça por peça</h1>
-  <p class="lead">O sensor mede, o controlador compara com o setpoint, o atuador corrige e o processo reage. Ajuste o setpoint e acompanhe o sinal do erro. Depois provoque uma falha e veja o intertravamento agir.</p>
-  <div class="grid g-main">
-    <div class="card">
-      <div class="grid g3" style="gap:12px">
-        <div class="stat"><div class="lbl">Valor medido (TT)</div><div class="big" id="cT">25 °C</div></div>
-        <div class="stat"><div class="lbl">Setpoint</div><div class="big" id="cSP" style="color:var(--orange)">180 °C</div></div>
-        <div class="stat"><div class="lbl">Erro = SP − medido</div><div class="big" id="cE">+155 °C</div></div>
-      </div>
-      <div id="cAction" class="msg neu"></div>
-      <svg id="trend" viewBox="0 0 760 300" style="margin-top:12px" aria-label="Gráfico da temperatura no tempo"></svg>
-      <div class="legend"><span><i style="background:var(--navy)"></i>Temperatura medida</span><span><i style="background:var(--orange)"></i>Setpoint</span><span><i style="background:var(--red)"></i>Limite do TSH (250 °C)</span><span><i style="background:var(--amber);height:10px;opacity:.5"></i>Resistência ligada</span></div>
-    </div>
-    <div class="grid" style="align-content:start">
-      <div class="card">
-        <h3>Setpoint escolhido pelo padeiro</h3>
-        <input type="range" id="spR" min="50" max="240" step="5" value="180" aria-label="Setpoint">
-        <div class="row" style="justify-content:space-between"><span class="note">50 °C</span><span class="note">240 °C</span></div>
-        <h3 style="margin-top:14px">Simulação</h3>
-        <div class="row"><div class="seg" id="spd"><button data-s="1">×1</button><button data-s="4" class="on">×4</button><button data-s="10">×10</button></div>
-          <button class="btn" id="pauseB">Pausar</button><button class="btn" id="resetB">Reiniciar</button></div>
-        <h3 style="margin-top:14px">Perturbações e falhas</h3>
-        <div class="row"><button class="btn" id="doorB">Abrir a porta</button><button class="btn danger" id="stuckB">Relé colado</button></div>
-      </div>
-      <div class="card">
-        <h3>Malha × intertravamento</h3>
-        <svg id="scale" viewBox="0 0 360 120" aria-label="Escala de temperatura"></svg>
-        <div id="tshBox" class="msg ok">TSH-104 vigiando: atua só se passar de 250 °C.</div>
-        <button class="btn" id="rearmB" style="margin-top:10px" disabled>Rearmar o TSH</button>
-        <p class="note" style="margin:10px 0 0">Valores ilustrativos, como no slide. O intertravamento é independente da malha: existe para agir justamente quando ela falha.</p>
-      </div>
-    </div>
-  </div>
-  <div class="card" style="margin-top:18px">
-    <h2>As seis peças neste forno</h2>
-    <div class="grid g3" id="pieces"></div>
-  </div>
-</section>
-
-<!-- ============ QUIZ ============ -->
-<section class="view" id="v-quiz">
-  <div class="kicker">Bloco 1 · Atividade 3</div>
-  <h1>Malha ou intertravamento?</h1>
-  <p class="lead">A malha mantém um valor. O intertravamento só age ao passar do limite. Leia cada situação e escolha.</p>
-  <div class="grid g-main">
-    <div class="card" id="quizCard"></div>
-    <div class="card"><h3>Placar</h3><div class="big" id="quizScore">0/0</div><p class="note" id="quizLeft"></p>
-      <div class="msg neu"><b>Pergunta-chave:</b> ele tenta manter a variável em algum valor o tempo todo, ou fica quieto até passar de um limite perigoso?</div>
-      <button class="btn" id="quizReset" style="margin-top:12px">Recomeçar</button></div>
-  </div>
-</section>
-
-<!-- ============ LAÇO ============ -->
-<section class="view" id="v-laco">
-  <div class="kicker">Bloco 2 · O sinal de 4 a 20 mA</div>
-  <h1>Como a corrente circula no laço</h1>
-  <p class="lead">Fonte de 24 Vcc, transmissor de dois fios, entrada do controlador e multímetro <b>em série</b>. A mesma corrente passa por todo o laço. Mexa na variável, alongue o cabo e provoque falhas.</p>
-  <div class="grid g-main">
-    <div class="card">
-      <svg id="loopSvg" viewBox="0 0 760 400" aria-label="Diagrama do laço 4 a 20 mA"></svg>
-      <svg id="ruler" viewBox="0 0 760 120" style="margin-top:6px" aria-label="Régua de 0 a 24 mA"></svg>
-      <div id="loopDiag" class="msg neu"></div>
-    </div>
-    <div class="grid" style="align-content:start">
-      <div class="card">
-        <label class="f">Transmissor
-          <select id="lPreset"></select></label>
-        <div class="row" style="margin-top:8px" id="lCustom">
-          <label class="f" style="flex:1">Mín<input type="number" id="lMin" step="any"></label>
-          <label class="f" style="flex:1">Máx<input type="number" id="lMax" step="any"></label>
-          <label class="f" style="flex:1">Unidade<input type="text" id="lUnit" style="text-transform:none"></label>
-        </div>
-        <h3 style="margin-top:14px" id="lVarLbl">Variável do processo</h3>
-        <input type="range" id="lVar" min="0" max="100" step="0.5" value="25" aria-label="Valor da variável">
-        <div class="row" style="justify-content:space-between"><span class="note" id="lVarMin"></span><b class="mid" id="lVarTxt"></b><span class="note" id="lVarMax"></span></div>
-      </div>
-      <div class="card">
-        <h3>Falhas</h3>
-        <div class="row" id="lFaults">
-          <button class="btn on" data-f="ok">Normal</button>
-          <button class="btn" data-f="open">Fio rompido</button>
-          <button class="btn" data-f="nopwr">Fonte desligada</button>
-          <button class="btn" data-f="hi">Transmissor em alarme</button>
-        </div>
-        <h3 style="margin-top:14px">Cabo até o painel</h3>
-        <div class="row"><input type="range" id="lCable" min="0" max="8000" step="100" value="100" style="flex:1" aria-label="Comprimento do cabo"><b id="lCableTxt" style="min-width:70px;text-align:right"></b></div>
-        <div class="row" style="margin-top:6px"><span class="note">Seção do fio</span><div class="seg" id="lSec"><button data-s="0.5" class="on">0,5 mm²</button><button data-s="1">1,0 mm²</button><button data-s="1.5">1,5 mm²</button></div></div>
-        <h3 style="margin-top:14px">Multímetro na escala de mA</h3>
-        <div class="row"><div class="seg" id="lMeter"><button data-m="serie" class="on">Em série</button><button data-m="paralelo">Em paralelo com a fonte</button></div></div>
-      </div>
-      <div class="card"><h3>Tensões no laço</h3><table class="t" id="lVolt"></table>
-        <p class="note" style="margin:8px 0 0">Entrada do controlador de 250 Ω e mínimo de 12 V no transmissor: valores ilustrativos, confira no manual do instrumento.</p></div>
     </div>
   </div>
 </section>
@@ -531,94 +467,8 @@ footer{max-width:1240px;margin:0 auto;padding:0 20px 30px;color:var(--muted);fon
   </div>
 </section>
 
-<!-- ============ CONVERSÕES ============ -->
-<section class="view" id="v-conv">
-  <div class="kicker">Bloco 2 · Quatro fórmulas, em dois pares</div>
-  <h1>De mA para valor, e de volta</h1>
-  <p class="lead">A porcentagem é sempre a ponte. De mA para valor: fórmula 1 e depois 3. De valor para mA: fórmula 4 e depois 2. No fim, confira pelos 12 mA, que são sempre o meio da faixa.</p>
-  <div class="grid g3" style="margin-bottom:18px">
-    <div class="stat"><div class="lbl">Fórmula 1 · mA → %</div><div class="formula" style="display:inline-block;margin-top:4px">% = (mA − 4) ÷ 16 × 100</div></div>
-    <div class="stat"><div class="lbl">Fórmula 2 · % → mA</div><div class="formula" style="display:inline-block;margin-top:4px">mA = 4 + 16 × (% ÷ 100)</div></div>
-    <div class="stat"><div class="lbl">Fórmulas 3 e 4 · % ↔ valor</div><div class="formula" style="display:inline-block;margin-top:4px">valor = mín + (% ÷ 100) × (máx − mín)</div><div class="formula" style="display:inline-block;margin-top:4px">% = (valor − mín) ÷ (máx − mín) × 100</div></div>
-  </div>
-  <div class="grid g2">
-    <div class="card">
-      <h2>Calculadora passo a passo</h2>
-      <div class="row">
-        <label class="f" style="flex:1">Mín<input type="number" id="cMin" value="0" step="any"></label>
-        <label class="f" style="flex:1">Máx<input type="number" id="cMax" value="10" step="any"></label>
-        <label class="f" style="flex:1">Unidade<input type="text" id="cUnit" value="bar" style="text-transform:none"></label>
-      </div>
-      <div class="row" style="margin-top:10px"><div class="seg" id="cFrom"><button data-k="mA" class="on">Tenho mA</button><button data-k="pct">Tenho %</button><button data-k="val">Tenho o valor</button></div>
-        <input type="number" id="cIn" value="8" step="any" style="width:110px" aria-label="Valor de entrada"></div>
-      <div id="cOut"></div>
-    </div>
-    <div class="card">
-      <h2>Treino</h2>
-      <div id="trQ"></div>
-      <div class="row" style="margin-top:10px" id="trInRow"><input type="number" id="trIn" step="any" style="width:140px" aria-label="Sua resposta"><b id="trUnit"></b><button class="btn pri" id="trOk">Conferir</button></div>
-      <div class="row" style="margin-top:8px" id="trFailRow"><button class="btn" id="trValid">É medição válida</button><button class="btn danger" id="trFail">É falha</button></div>
-      <div id="trMsg"></div>
-      <div class="row" style="margin-top:12px;justify-content:space-between"><button class="btn" id="trNext">Novo exercício</button><span class="score" id="trScore"></span></div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ TAGS ============ -->
-<section class="view" id="v-tags">
-  <div class="kicker">Bloco 3 · Lendo a tag do instrumento</div>
-  <h1>Primeira letra é a variável, as seguintes são a função, o número é a malha</h1>
-  <p class="lead">A tag é o RG do instrumento: aparece no desenho, na etiqueta de campo, na lista de instrumentos e no programa do CLP.</p>
-  <div class="tabs2"><div class="seg" id="tagTabs"><button data-t="ler" class="on">Ler</button><button data-t="montar">Montar</button><button data-t="planta">Achar na planta</button></div></div>
-
-  <div id="t-ler" class="tpane">
-    <div class="grid g2">
-      <div class="card">
-        <h2>Decifrador</h2>
-        <input type="text" id="decIn" value="PIC-103" maxlength="10" style="width:100%;font-family:'Courier New',monospace;font-size:22px;font-weight:700" aria-label="Digite uma tag">
-        <div id="decOut" style="margin-top:12px"></div>
-      </div>
-      <div class="card">
-        <h2>Qual é a leitura?</h2>
-        <div id="lerQ"></div>
-        <div class="row" style="margin-top:12px;justify-content:space-between"><button class="btn" id="lerNext">Próxima tag</button><span class="score" id="lerScore"></span></div>
-      </div>
-    </div>
-    <div class="card" style="margin-top:18px">
-      <h2>As letras desta aula</h2>
-      <div class="grid g2">
-        <div><h3>Primeira letra: a variável</h3><table class="t" id="tbVar"></table></div>
-        <div><h3>Letras seguintes: a função</h3><table class="t" id="tbFun"></table></div>
-      </div>
-      <p class="note">Os modificadores H e L vêm por último. Na ordem, I vem antes de C e T (TIC, PIT). Na planta aparecem também Y (posicionador), Z (atuador) e G (visor local).</p>
-    </div>
-  </div>
-
-  <div id="t-montar" class="tpane" style="display:none">
-    <div class="grid g-main">
-      <div class="card">
-        <h2>Da descrição para a tag</h2>
-        <div id="monQ"></div>
-        <div class="row" style="margin-top:10px"><input type="text" id="monIn" maxlength="10" placeholder="Ex.: TT-104" style="font-family:'Courier New',monospace;font-size:22px;font-weight:700;width:200px" aria-label="Sua tag"><button class="btn pri" id="monOk">Conferir</button><button class="btn" id="monNext">Próxima</button></div>
-        <div id="monMsg"></div>
-      </div>
-      <div class="card"><h3>Dica</h3><p>1. Primeiro a variável.<br>2. Depois a função, com I antes de C e T.<br>3. H ou L no fim.<br>4. Por último, o número da malha.</p><div class="score" id="monScore"></div></div>
-    </div>
-  </div>
-
-  <div id="t-planta" class="tpane" style="display:none">
-    <div class="card">
-      <h2>Cada tag no seu instrumento</h2>
-      <p class="note" style="margin-top:-4px">Escolha uma tag e toque no instrumento da bancada. Tocar num instrumento sem tag escolhida mostra o que ele é.</p>
-      <svg id="gameSvg" viewBox="0 0 1000 620" style="max-width:860px;margin:0 auto" aria-label="Bancada para posicionar as tags"></svg>
-      <div class="chips" id="gameChips"></div>
-      <div id="gameMsg" class="msg neu">Escolha uma tag.</div>
-      <div class="row" style="margin-top:10px;justify-content:space-between"><button class="btn" id="gameReset">Recomeçar</button><span class="score" id="gameScore"></span></div>
-    </div>
-  </div>
-</section>
 </main>
-<footer>Material de apoio à Aula 01 · Blocos 1, 2 e 3 · Os valores de faixa, cabo e resistência são ilustrativos: confira sempre o manual e o diagrama da instalação.</footer>
+<footer>Controle de Nível Simples · Os valores de faixa, cabo e resistência são ilustrativos: confira sempre o manual e o diagrama da instalação.</footer>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -646,496 +496,16 @@ const CSS = n => getComputedStyle(document.documentElement).getPropertyValue("--
 /* ---------- navegação ---------- */
 const views = {};
 function show(v) {
-  if (!document.getElementById("v-" + v)) v = "planta";
+  if (!document.getElementById("v-" + v)) v = "bancada3d";
   $$("section.view").forEach(s => s.classList.toggle("on", s.id === "v-" + v));
   $$("#nav button").forEach(b => b.classList.toggle("on", b.dataset.v === v));
+  document.body.dataset.view = v;
   if (location.hash !== "#" + v) history.replaceState(null, "", "#" + v);
   window.scrollTo(0, 0);
   if (views[v]) views[v]();
 }
 $$("#nav button").forEach(b => b.addEventListener("click", () => show(b.dataset.v)));
 window.addEventListener("hashchange", () => show(location.hash.slice(1)));
-
-/* =====================================================
-   TAGS: dicionário e leitura
-   ===================================================== */
-const VAR = { P: ["pressão", "f"], T: ["temperatura", "f"], F: ["vazão", "f"], L: ["nível", "m"] };
-const FUN = { E: "Elemento sensor", T: "Transmissor", I: "Indicador", C: "Controlador", V: "Válvula", S: "Chave (switch)", H: "Alto (high)", L: "Baixo (low)", Y: "Posicionador / conversor", Z: "Atuador (elemento final)", G: "Visor local" };
-function parseTag(raw) {
-  const s = String(raw).toUpperCase().replace(/\s+/g, "");
-  const m = s.match(/^([A-Z]+)-?(\d*)$/);
-  if (!m) return null;
-  return { letters: m[1], num: m[2] };
-}
-function readTag(raw) {
-  if (/^VY-?01$/i.test(String(raw).trim())) return { text: "Válvula solenoide (rótulo do fabricante, fora da norma)", ok: true, special: true };
-  const p = parseTag(raw);
-  if (!p || p.letters.length < 2) return { ok: false, text: "Digite letras e número, como TT-104." };
-  const v = VAR[p.letters[0]];
-  if (!v) return { ok: false, text: `A primeira letra "${p.letters[0]}" não é uma das variáveis desta aula (P, T, F, L).` };
-  let rest = p.letters.slice(1).split("");
-  let mod = null;
-  if (rest.length >= 2 && (rest[rest.length - 1] === "H" || rest[rest.length - 1] === "L")) mod = rest.pop();
-  for (const c of rest) if (!FUN[c] || c === "H" || c === "L") return { ok: false, text: `A letra "${c}" não está na tabela de funções desta aula.` };
-  const has = c => rest.includes(c);
-  let noun = has("C") ? "Controlador" : has("T") ? "Transmissor" : has("S") ? "Chave" : has("V") ? "Válvula" : has("E") ? "Elemento primário (sensor)" : has("Y") ? "Posicionador" : has("Z") ? "Elemento final (atuador)" : has("G") ? (p.letters[0] === "T" ? "Termômetro local" : p.letters[0] === "P" ? "Manômetro (visor local)" : "Visor local") : has("I") ? "Indicador" : "?";
-  let txt = noun;
-  if (has("I") && noun !== "Indicador") txt += " indicador";
-  txt += " de " + v[0];
-  if (mod) txt += " " + (mod === "H" ? (v[1] === "f" ? "alta" : "alto") : (v[1] === "f" ? "baixa" : "baixo"));
-  if (has("G") && p.letters[0] !== "L") txt = noun;
-  txt += p.num ? " da malha " + p.num : "";
-  // ordem: I antes de C e T
-  let warn = "";
-  const iI = rest.indexOf("I"), iC = rest.indexOf("C"), iT = rest.indexOf("T");
-  if (iI > -1 && ((iC > -1 && iI > iC) || (iT > -1 && iI > iT))) warn = "Ordem fora do padrão: o I vem antes de C e T (ex.: FIT, TIC).";
-  return { ok: true, text: txt, warn, parts: { v: p.letters[0], f: rest.join(""), mod: mod || "", n: p.num } };
-}
-function tagHTML(raw) {
-  const p = parseTag(raw);
-  if (!p) return raw;
-  return `<span class="tv">${p.letters[0]}</span><span class="tf">${p.letters.slice(1)}</span>${p.num ? "-" : ""}<span class="tn">${p.num}</span>`;
-}
-
-/* =====================================================
-   PLANTA
-   ===================================================== */
-const INSTR = [
-  { tag: "TE-104", x: 60, y: 360, to: [176, 372], fis: "PT100 com poço de proteção, dentro do TQ-01", desc: "Elemento sensor de temperatura: o PT100. Muda a resistência com a temperatura.", go: "pt100", bloco: "Blocos 2 e 3" },
-  { tag: "TT-104", x: 180, y: 80, to: [180, 134], fis: "Transmissor no cabeçote do PT100", desc: "Transmissor de temperatura: converte a resistência do PT100 em 4 a 20 mA.", go: "laco", preset: "tt104", bloco: "Blocos 2 e 3" },
-  { tag: "TIC-104", x: 500, y: 76, panel: true, fis: "Controlador no CLP do painel", desc: "Controlador indicador de temperatura: o programa do CLP compara a temperatura com o setpoint e decide.", go: "controle", bloco: "Blocos 1 e 3" },
-  { tag: "TZ-104", x: 190, y: 510, to: [232, 410], fis: "Resistência de aquecimento no fundo do TQ-01", desc: "Elemento final (atuador) da malha 104: a resistência que aquece a água.", go: "controle", bloco: "Blocos 1 e 3" },
-  { tag: "TSH-104", x: 395, y: 345, to: [330, 345], fis: "Termostato de imersão (segurança)", desc: "Chave de temperatura alta: intertravamento que corta o aquecimento ao passar do limite.", go: "controle", bloco: "Blocos 1 e 3" },
-  { tag: "TG", x: 60, y: 250, to: [104, 262], fis: "Termômetro de leitura local", desc: "Termômetro de leitura local, sem sinal elétrico.", bloco: "Bloco 3" },
-  { tag: "PIT-103", x: 300, y: 120, to: [300, 172], fis: "Sensor de pressão no topo do TQ-01", desc: "Transmissor indicador de pressão (sensor de 0 a 6 bar), envia 4 a 20 mA.", go: "laco", preset: "pit103", bloco: "Blocos 2 e 3" },
-  { tag: "PSH-103", x: 395, y: 200, to: [330, 210], fis: "Pressostato", desc: "Chave de pressão alta: pressostato de proteção (intertravamento).", go: "quiz", bloco: "Blocos 1 e 3" },
-  { tag: "PG", x: 395, y: 272, to: [352, 272], fis: "Manômetro", desc: "Manômetro: indicação local de pressão, sem sinal elétrico.", bloco: "Bloco 3" },
-  { tag: "FIT-102", x: 420, y: 492, to: [420, 548], fis: "Sensor de fluxo na tubulação", desc: "Transmissor indicador de vazão: o sensor de fluxo da tubulação, envia 4 a 20 mA.", go: "laco", preset: "fit102", bloco: "Blocos 2 e 3" },
-  { tag: "FV-102", x: 560, y: 492, to: [560, 540], fis: "Válvula proporcional", desc: "Válvula de vazão da malha 102: o atuador que abre ou fecha a passagem.", bloco: "Bloco 3" },
-  { tag: "FY-102", x: 630, y: 432, to: [576, 516], fis: "Posicionador da válvula", desc: "Posicionador: recebe 4 a 20 mA e converte em abertura da FV-102 (o Y significa converter ou calcular).", bloco: "Bloco 3" },
-  { tag: "VY-01", x: 700, y: 500, to: [700, 548], fis: "Válvula solenoide", desc: "Válvula solenoide. VY-01 é rótulo do fabricante e foge da norma: aqui o V não é variável.", bloco: "Bloco 3" },
-  { tag: "LSH-101", x: 920, y: 250, to: [838, 252], fis: "Chave boia superior do tanque de acrílico", desc: "Chave de nível alto: atua quando o nível passa do limite superior.", go: "tags", bloco: "Bloco 3" },
-  { tag: "LSL-101", x: 920, y: 400, to: [838, 402], fis: "Chave boia inferior do tanque de acrílico", desc: "Chave de nível baixo: o primeiro L é nível, o último L é baixo. A posição manda.", go: "tags", bloco: "Bloco 3" },
-];
-
-function drawPlant(svg, mode, onClick) {
-  svg.innerHTML = "";
-  const defs = el("defs", {}, svg);
-  const gS = el("linearGradient", { id: mode + "steel", x1: 0, x2: 1 }, defs);
-  el("stop", { offset: 0, "stop-color": "#B9C4D1" }, gS); el("stop", { offset: .45, "stop-color": "#EEF2F6" }, gS); el("stop", { offset: 1, "stop-color": "#AEB9C7" }, gS);
-  const cp = el("clipPath", { id: mode + "tq" }, defs); el("rect", { x: 120, y: 180, width: 210, height: 250, rx: 36 }, cp);
-  const cp2 = el("clipPath", { id: mode + "ac" }, defs); el("rect", { x: 660, y: 200, width: 190, height: 230, rx: 10 }, cp2);
-
-  // painel
-  el("rect", { x: 410, y: 22, width: 180, height: 100, rx: 12, fill: "#F4F7FB", stroke: CSS("slate"), "stroke-width": 1.5 }, svg);
-  el("text", { x: 500, y: 40, "text-anchor": "middle", "font-size": 13, fill: CSS("muted"), "font-weight": 700 }, svg, "PAINEL · CLP");
-  // sinais
-  const sig = { fill: "none", stroke: CSS("blue"), "stroke-width": 1.6, "stroke-dasharray": "6 5" };
-  el("polyline", Object.assign({ points: "206,80 474,80" }, sig), svg);
-  el("text", { x: 340, y: 72, "text-anchor": "middle", "font-size": 12, fill: CSS("blue") }, svg, "4–20 mA");
-  el("polyline", Object.assign({ points: "500,102 500,150 486,150 486,600 190,600 190,536" }, sig), svg);
-  el("text", { x: 512, y: 300, "font-size": 12, fill: CSS("blue"), transform: "rotate(-90 512 300)", "text-anchor": "middle" }, svg, "comando do aquecimento");
-
-  // tubulação
-  const pipe = "755,430 755,560 280,560 280,432";
-  el("polyline", { points: pipe, fill: "none", stroke: "#7E8EA3", "stroke-width": 14, "stroke-linejoin": "round" }, svg);
-  el("polyline", { points: pipe, fill: "none", stroke: CSS("water"), "stroke-width": 7, "stroke-linejoin": "round" }, svg);
-  el("polyline", { points: pipe, fill: "none", stroke: "#fff", "stroke-width": 3, class: "flow", opacity: .8 }, svg);
-  el("text", { x: 520, y: 590, "text-anchor": "middle", "font-size": 13, fill: CSS("muted"), "font-weight": 700 }, svg, "TUBULAÇÃO · VAZÃO E VÁLVULAS");
-  // rotâmetro
-  el("rect", { x: 340, y: 520, width: 18, height: 50, rx: 4, fill: "#E8F2FB", stroke: "#7E8EA3", "stroke-width": 2 }, svg);
-  el("rect", { x: 343, y: 538, width: 12, height: 6, fill: CSS("orange") }, svg);
-  el("text", { x: 349, y: 512, "text-anchor": "middle", "font-size": 12, fill: CSS("muted") }, svg, "rotâmetro");
-  // FIT sensor
-  el("rect", { x: 408, y: 548, width: 24, height: 24, rx: 4, fill: "#fff", stroke: CSS("navy"), "stroke-width": 2 }, svg);
-  // FV válvula (bowtie) + atuador
-  el("path", { d: "M540 548 L580 572 L580 548 L540 572 Z", fill: "#fff", stroke: CSS("navy"), "stroke-width": 2 }, svg);
-  el("line", { x1: 560, y1: 560, x2: 560, y2: 528, stroke: CSS("navy"), "stroke-width": 2 }, svg);
-  el("path", { d: "M545 528 A15 12 0 0 1 575 528 Z", fill: "#fff", stroke: CSS("navy"), "stroke-width": 2 }, svg);
-  // VY solenoide
-  el("path", { d: "M682 548 L718 572 L718 548 L682 572 Z", fill: "#fff", stroke: CSS("navy"), "stroke-width": 2 }, svg);
-  el("rect", { x: 691, y: 528, width: 18, height: 20, fill: "#fff", stroke: CSS("navy"), "stroke-width": 2 }, svg);
-  el("text", { x: 700, y: 543, "text-anchor": "middle", "font-size": 11, "font-weight": 700, fill: CSS("navy") }, svg, "S");
-  // seta de fluxo
-  el("path", { d: "M282 470 l-9 14 h18 z", fill: "#7E8EA3", transform: "rotate(180 282 477)" }, svg);
-
-  // TQ-01
-  el("rect", { x: 120, y: 180, width: 210, height: 250, rx: 36, fill: `url(#${mode}steel)`, stroke: "#7E8EA3", "stroke-width": 2.5 }, svg);
-  const wq = el("g", { "clip-path": `url(#${mode}tq)` }, svg);
-  el("rect", { x: 120, y: 236, width: 210, height: 200, fill: CSS("water"), opacity: .55 }, wq);
-  el("text", { x: 268, y: 455, "text-anchor": "end", "font-size": 14, "font-weight": 700, fill: CSS("navy") }, svg, "TQ-01 · tanque inox");
-  el("text", { x: 268, y: 472, "text-anchor": "end", "font-size": 12, fill: CSS("muted") }, svg, "temperatura e pressão");
-  // PT100 + cabeçote
-  el("line", { x1: 180, y1: 156, x2: 180, y2: 378, stroke: "#5D6B7C", "stroke-width": 6, "stroke-linecap": "round" }, svg);
-  el("rect", { x: 166, y: 134, width: 28, height: 24, rx: 5, fill: "#fff", stroke: CSS("navy"), "stroke-width": 2 }, svg);
-  // resistência
-  el("polyline", { points: "205,410 215,398 225,410 235,398 245,410 255,398 265,410 275,398 285,410", fill: "none", stroke: CSS("orange"), "stroke-width": 4, "stroke-linejoin": "round" }, svg);
-  // TSH
-  el("line", { x1: 330, y1: 345, x2: 272, y2: 345, stroke: "#5D6B7C", "stroke-width": 5, "stroke-linecap": "round" }, svg);
-  // TG termômetro
-  el("line", { x1: 120, y1: 262, x2: 104, y2: 262, stroke: "#5D6B7C", "stroke-width": 4 }, svg);
-  // PIT
-  el("rect", { x: 292, y: 160, width: 16, height: 22, fill: "#fff", stroke: CSS("navy"), "stroke-width": 2 }, svg);
-  // PSH
-  el("rect", { x: 320, y: 202, width: 16, height: 16, fill: "#fff", stroke: CSS("navy"), "stroke-width": 2 }, svg);
-  // PG manômetro
-  el("line", { x1: 330, y1: 272, x2: 342, y2: 272, stroke: "#5D6B7C", "stroke-width": 4 }, svg);
-  el("circle", { cx: 352, cy: 272, r: 10, fill: "#fff", stroke: CSS("navy"), "stroke-width": 2 }, svg);
-  el("line", { x1: 352, y1: 272, x2: 357, y2: 266, stroke: CSS("red"), "stroke-width": 2 }, svg);
-
-  // tanque de acrílico
-  el("rect", { x: 660, y: 200, width: 190, height: 230, rx: 10, fill: "rgba(220,235,248,.35)", stroke: "#7E8EA3", "stroke-width": 2.5 }, svg);
-  const wa = el("g", { "clip-path": `url(#${mode}ac)` }, svg);
-  el("rect", { x: 660, y: 310, width: 190, height: 130, fill: CSS("water"), opacity: .6 }, wa);
-  el("text", { x: 755, y: 172, "text-anchor": "middle", "font-size": 14, "font-weight": 700, fill: CSS("navy") }, svg, "Tanque de processo · acrílico");
-  el("text", { x: 755, y: 189, "text-anchor": "middle", "font-size": 12, fill: CSS("muted") }, svg, "nível");
-  // boias
-  for (const y of [252, 402]) { el("line", { x1: 850, y1: y, x2: 826, y2: y, stroke: "#5D6B7C", "stroke-width": 3 }, svg); el("ellipse", { cx: 818, cy: y, rx: 10, ry: 7, fill: "#fff", stroke: CSS("navy"), "stroke-width": 2 }, svg); }
-
-  // bolhas
-  const bubbles = {};
-  for (const it of INSTR) {
-    if (it.to) el("line", { x1: it.x, y1: it.y, x2: it.to[0], y2: it.to[1], stroke: CSS("slate"), "stroke-width": 1.5 }, svg);
-  }
-  for (const it of INSTR) {
-    const g = el("g", { class: "bubble", tabindex: 0, role: "button", "aria-label": mode === "game" ? "Instrumento: " + it.fis : it.tag }, svg);
-    el("circle", { class: "b", cx: it.x, cy: it.y, r: 27 }, g);
-    if (it.panel) el("line", { x1: it.x - 27, y1: it.y, x2: it.x + 27, y2: it.y, stroke: CSS("navy"), "stroke-width": 1.8 }, g);
-    const t1 = el("text", { x: it.x, y: it.y - 3, "text-anchor": "middle", "font-size": 14, "font-weight": 700, fill: CSS("navy") }, g);
-    const t2 = el("text", { x: it.x, y: it.y + 15, "text-anchor": "middle", "font-size": 13, fill: CSS("navy") }, g);
-    const set = (tag) => { if (!tag) { t1.textContent = "?"; t1.setAttribute("y", it.y + 6); t1.setAttribute("font-size", 20); t2.textContent = ""; return; } const p = parseTag(tag); t1.textContent = p.letters; t1.setAttribute("y", p.num ? it.y - 3 : it.y + 5); t1.setAttribute("font-size", 14); t2.textContent = p.num; };
-    set(mode === "game" ? null : it.tag);
-    g.addEventListener("click", () => onClick(it, g, set));
-    g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(it, g, set); } });
-    bubbles[it.tag] = { g, set };
-  }
-  return bubbles;
-}
-
-function plantInfo(it) {
-  const box = $("#plantInfo");
-  if (!it) {
-    box.innerHTML = `<div class="kicker">Como ler</div><h2>Toque em um instrumento</h2>
-      <p>Cada círculo é um instrumento com a sua tag. Círculo com um traço no meio indica instrumento no painel (aqui, o controlador no CLP).</p>
-      <div class="info-tag">${tagHTML("PIC-103")}</div>
-      <p><span class="tv"><b>Laranja</b></span>: o que se mede · <span class="tf"><b>Azul</b></span>: o que ele faz · <span class="tn"><b>Verde</b></span>: a malha.</p>
-      <div class="msg neu">Linha tracejada azul = sinal elétrico (4–20 mA ou comando). Faixa clara animada = água circulando.</div>`;
-    return;
-  }
-  const r = readTag(it.tag);
-  const goLbl = { pt100: "Ver a ligação do PT100", laco: "Ver no laço 4–20 mA", controle: "Ver a malha do forno", quiz: "Treinar malha × intertravamento", tags: "Treinar a leitura de tags" }[it.go];
-  box.innerHTML = `<div class="kicker">${it.bloco}</div>
-    <div class="info-tag">${tagHTML(it.tag)}</div>
-    <h2 style="margin-top:6px">${r.text}</h2>
-    <p>${it.desc}</p>
-    <div class="msg neu"><b>Na bancada:</b> ${it.fis}</div>
-    ${goLbl ? `<button class="btn pri" id="plGo" style="margin-top:12px">${goLbl}</button>` : ""}`;
-  if (goLbl) $("#plGo").onclick = () => { if (it.preset) laco.setPreset(it.preset); show(it.go); };
-}
-let plantSel = null;
-const plantB = drawPlant($("#plantSvg"), "info", (it, g) => {
-  if (plantSel) plantSel.classList.remove("sel");
-  plantSel = g; g.classList.add("sel"); plantInfo(it);
-});
-plantInfo(null);
-
-/* =====================================================
-   1 · CONTROLE (forno)
-   ===================================================== */
-const forno = (() => {
-  const S = { T: 25, Tm: 25, sp: 180, heat: false, stuck: false, trip: false, t: 0, speed: 4, run: true, hist: [] };
-  const AMB = 25, A = 2.2, B = 0.0065, TAU_S = 6, HYST = 1, LIM = 250, WIN = 240;
-  function step(dt) {
-    const e = S.sp - S.Tm;
-    if (e > HYST) S.ctrl = true; else if (e < -HYST) S.ctrl = false; else if (S.ctrl === undefined) S.ctrl = false;
-    if (S.T >= LIM) S.trip = true;
-    S.heat = !S.trip && (S.stuck || S.ctrl);
-    S.T += ((S.heat ? A : 0) - B * (S.T - AMB)) * dt;
-    S.Tm += (S.T - S.Tm) / TAU_S * dt;
-    S.t += dt;
-  }
-  let last = performance.now(), acc = 0, sample = 0;
-  function loop(now) {
-    const real = Math.min(0.1, (now - last) / 1000); last = now;
-    if (S.run) {
-      let sim = real * S.speed;
-      while (sim > 0) { const d = Math.min(0.05, sim); step(d); sim -= d; sample += d; if (sample >= 0.5) { sample = 0; S.hist.push([S.t, S.Tm, S.sp, S.heat]); while (S.hist.length && S.hist[0][0] < S.t - WIN) S.hist.shift(); } }
-      if ($("#v-controle").classList.contains("on")) render();
-    }
-    requestAnimationFrame(loop);
-  }
-  const trend = $("#trend"), W = 760, H = 300, L = 46, R = 12, TP = 12, BT = 34;
-  const X = t => L + (t - (S.t - WIN)) / WIN * (W - L - R);
-  const Y = v => TP + (1 - v / 300) * (H - TP - BT);
-  function render() {
-    const e = S.sp - S.Tm;
-    $("#cT").textContent = fmt(S.Tm, 0) + " °C";
-    $("#cSP").textContent = S.sp + " °C";
-    const ee = $("#cE"); ee.textContent = fmtS(Math.round(e), 0) + " °C";
-    ee.style.color = Math.abs(e) <= HYST ? CSS("teal") : e > 0 ? CSS("orange") : CSS("blue");
-    let a;
-    if (S.trip) a = `<span class="pill bad">Intertravamento</span> O TSH-104 cortou a energia da resistência. O forno esfria e o processo fica parado até alguém rearmar.`;
-    else if (S.stuck && !S.ctrl) a = `<span class="pill bad">Falha</span> Erro negativo: o controlador manda <b>desligar</b>, mas o relé está colado e a resistência continua ligada. A malha perdeu o controle.`;
-    else if (Math.abs(e) <= HYST) a = `<span class="pill ok">Erro ≈ 0</span> No valor desejado: nada a corrigir. A malha só observa.`;
-    else if (e > 0) a = `<span class="pill warn">Erro positivo</span> Medido abaixo do setpoint: o controlador manda <b>aquecer</b> (resistência ligada).`;
-    else a = `<span class="pill neu">Erro negativo</span> Medido acima do setpoint: o controlador <b>corta o aquecimento</b> e espera esfriar.`;
-    $("#cAction").innerHTML = a;
-    // gráfico
-    trend.innerHTML = "";
-    for (let v = 0; v <= 300; v += 50) { el("line", { x1: L, x2: W - R, y1: Y(v), y2: Y(v), stroke: "#E3E9F1" }, trend); el("text", { x: L - 8, y: Y(v) + 4, "text-anchor": "end", "font-size": 12, fill: CSS("muted") }, trend, v); }
-    el("text", { x: L, y: H - 8, "font-size": 12, fill: CSS("muted") }, trend, `últimos ${WIN / 60} min de processo`);
-    // faixas de aquecimento
-    const hs = S.hist;
-    for (let i = 1; i < hs.length; i++) if (hs[i][3]) el("rect", { x: X(hs[i - 1][0]), y: TP, width: Math.max(0.5, X(hs[i][0]) - X(hs[i - 1][0])), height: H - TP - BT, fill: CSS("amber"), opacity: .18 }, trend);
-    el("line", { x1: L, x2: W - R, y1: Y(LIM), y2: Y(LIM), stroke: CSS("red"), "stroke-width": 2, "stroke-dasharray": "7 5" }, trend);
-    el("text", { x: W - R - 4, y: Y(LIM) - 6, "text-anchor": "end", "font-size": 12, fill: CSS("red"), "font-weight": 700 }, trend, "limite TSH 250 °C");
-    if (hs.length > 1) {
-      el("polyline", { points: hs.map(h => X(h[0]) + "," + Y(h[2])).join(" "), fill: "none", stroke: CSS("orange"), "stroke-width": 2.5, "stroke-dasharray": "8 5" }, trend);
-      el("polyline", { points: hs.map(h => X(h[0]) + "," + Y(h[1])).join(" "), fill: "none", stroke: CSS("navy"), "stroke-width": 3 }, trend);
-    }
-    // escala
-    const sc = $("#scale"); sc.innerHTML = "";
-    const sx = v => 14 + v / 300 * 332;
-    el("rect", { x: sx(0), y: 30, width: sx(S.sp) - sx(0), height: 22, fill: CSS("teal"), opacity: .8, rx: 4 }, sc);
-    el("rect", { x: sx(S.sp), y: 30, width: sx(LIM) - sx(S.sp), height: 22, fill: CSS("amber"), opacity: .85 }, sc);
-    el("rect", { x: sx(LIM), y: 30, width: sx(300) - sx(LIM), height: 22, fill: CSS("red"), opacity: .85, rx: 4 }, sc);
-    el("text", { x: (sx(0) + sx(S.sp)) / 2, y: 46, "text-anchor": "middle", "font-size": 12, fill: "#fff", "font-weight": 700 }, sc, "normal");
-    if (LIM - S.sp > 40) el("text", { x: (sx(S.sp) + sx(LIM)) / 2, y: 46, "text-anchor": "middle", "font-size": 12, fill: CSS("ink"), "font-weight": 700 }, sc, "desvio");
-    el("text", { x: (sx(LIM) + sx(300)) / 2, y: 46, "text-anchor": "middle", "font-size": 12, fill: "#fff", "font-weight": 700 }, sc, "perigo");
-    for (const v of [0, S.sp, LIM, 300]) el("text", { x: sx(v), y: 70, "text-anchor": "middle", "font-size": 12, fill: CSS("muted") }, sc, v + " °C");
-    const mx = sx(clamp(S.T, 0, 300));
-    el("path", { d: `M${mx - 8} 12 L${mx + 8} 12 L${mx} 26 Z`, fill: CSS("navy") }, sc);
-    el("text", { x: 180, y: 100, "text-anchor": "middle", "font-size": 13, fill: CSS("navy"), "font-weight": 700 }, sc, S.trip ? "Intertravamento atuou" : S.T > S.sp + 5 ? "Malha tentando corrigir" : "Malha mantendo o setpoint");
-    // TSH
-    const tb = $("#tshBox");
-    if (S.trip) { tb.className = "msg bad"; tb.innerHTML = `<b>TSH-104 atuou</b> a ${LIM} °C e cortou a energia. ${S.T > 230 ? "Espere esfriar abaixo de 230 °C para rearmar." : "Já pode rearmar."}`; }
-    else { tb.className = "msg ok"; tb.innerHTML = "TSH-104 vigiando: só atua se passar de 250 °C."; }
-    $("#rearmB").disabled = !(S.trip && S.T <= 230);
-  }
-  // peças
-  const P = [["Variável", "Temperatura da câmara do forno"], ["Sensor", "Termopar ou PT100 dentro do forno"], ["Setpoint", "Valor escolhido pelo padeiro"], ["Erro", "Setpoint menos o valor medido"], ["Controlador", "Controlador de temperatura do painel"], ["Atuador", "Resistência de aquecimento"]];
-  $("#pieces").innerHTML = P.map((p, i) => `<div class="stat"><div class="lbl" style="color:var(--orange)">0${i + 1} · ${p[0]}</div><div style="font-weight:600">${p[1]}</div></div>`).join("");
-  // controles
-  $("#spR").addEventListener("input", e => { S.sp = +e.target.value; render(); });
-  segBind("#spd", d => S.speed = +d.s);
-  $("#pauseB").onclick = () => { S.run = !S.run; $("#pauseB").textContent = S.run ? "Pausar" : "Continuar"; };
-  $("#resetB").onclick = () => { Object.assign(S, { T: 25, Tm: 25, heat: false, stuck: false, trip: false, t: 0, hist: [], ctrl: undefined }); $("#stuckB").classList.remove("on"); render(); };
-  $("#doorB").onclick = () => { S.T = Math.max(AMB, S.T - 40); toast("Porta aberta: a temperatura caiu 40 °C. Veja a malha corrigir."); };
-  $("#stuckB").onclick = () => { S.stuck = !S.stuck; $("#stuckB").classList.toggle("on", S.stuck); toast(S.stuck ? "Relé colado: a resistência não desliga mais." : "Relé consertado."); };
-  $("#rearmB").onclick = () => { S.trip = false; if (S.stuck) toast("Atenção: o relé continua colado. Conserte antes de rearmar."); render(); };
-  requestAnimationFrame(loop);
-  return { render };
-})();
-views.controle = forno.render;
-
-/* =====================================================
-   1 · QUIZ malha × intertravamento
-   ===================================================== */
-const quiz = (() => {
-  const Q = [
-    ["O ar-condicionado mantém a sala em 23 °C.", "m", "Trabalha o tempo todo para manter a temperatura no valor escolhido."],
-    ["O pressostato da caldeira desliga o queimador quando a pressão passa do limite.", "i", "Fica quieto até a pressão passar do limite; aí desliga. É proteção."],
-    ["O cruise control mantém o carro a 100 km/h.", "m", "Corrige o acelerador o tempo todo para manter a velocidade no setpoint."],
-    ["O motor desliga por falta de pressão de óleo.", "i", "Só age quando a pressão de óleo cai abaixo do limite, para proteger o motor."],
-    ["A geladeira mantém o interior em 4 °C.", "m", "Liga e desliga o compressor para manter a temperatura escolhida no termostato."],
-    ["O disjuntor abre o circuito com sobrecorrente.", "i", "Ele não tenta manter a corrente em valor nenhum: só abre quando passa do limite."],
-    ["A válvula de alívio da panela de pressão solta vapor.", "i", "Só age quando a pressão passa do limite, para proteger."],
-    ["O TIC-104 liga o TZ-104 para manter o TQ-01 em 60 °C.", "m", "Compara com o setpoint e corrige o tempo todo: é a malha de temperatura 104."],
-    ["O TSH-104 corta a resistência se a água do TQ-01 passar do limite.", "i", "Chave de temperatura alta: independente da malha, age quando ela falha."],
-    ["A boia da caixa d'água fecha a entrada quando o nível chega no ponto regulado.", "m", "Mantém o nível no valor em que foi regulada: sensor, controlador e atuador na mesma peça."],
-    ["O ferro de passar mantém a base em 150 °C.", "m", "O termostato liga e desliga a resistência para manter a temperatura do seletor."],
-    ["O PSH-103 desliga o processo se a pressão do TQ-01 ficar alta demais.", "i", "Pressostato de pressão alta: atua só ao passar do limite."],
-  ];
-  let order, i, ok, done;
-  function reset() { order = shuffle(Q); i = 0; ok = 0; done = 0; render(); }
-  function render() {
-    $("#quizScore").textContent = `${ok}/${done}`;
-    $("#quizLeft").textContent = i < order.length ? `Situação ${i + 1} de ${order.length}` : "Fim das situações.";
-    const c = $("#quizCard");
-    if (i >= order.length) { c.innerHTML = `<h2>Terminou!</h2><p class="mid">${ok} de ${done} certas</p><p>Frase para guardar: <b>a malha mantém, o intertravamento protege.</b></p>`; return; }
-    const q = order[i];
-    c.innerHTML = `<div class="lbl">Situação ${i + 1}</div><p class="mid" style="font-size:24px;margin:8px 0 16px">${q[0]}</p>
-      <div class="row"><button class="btn" data-a="m" style="font-size:18px;padding:12px 20px">Malha de controle</button><button class="btn" data-a="i" style="font-size:18px;padding:12px 20px">Intertravamento</button></div><div id="qFb"></div>`;
-    $$("#quizCard [data-a]").forEach(b => b.onclick = () => {
-      if (c.dataset.ans) return; c.dataset.ans = 1;
-      const right = b.dataset.a === q[1]; done++; if (right) ok++;
-      $$("#quizCard [data-a]").forEach(x => { x.disabled = true; if (x.dataset.a === q[1]) x.classList.add("on"); });
-      $("#qFb").innerHTML = `<div class="msg ${right ? "ok" : "bad"}"><b>${right ? "Certo!" : "Não é isso."}</b> É ${q[1] === "m" ? "malha de controle" : "intertravamento"}. ${q[2]}</div><button class="btn pri" id="qNext" style="margin-top:10px">Próxima</button>`;
-      $("#quizScore").textContent = `${ok}/${done}`;
-      $("#qNext").onclick = () => { i++; delete c.dataset.ans; render(); };
-    });
-  }
-  $("#quizReset").onclick = reset;
-  reset();
-})();
-
-/* =====================================================
-   2 · LAÇO 4–20 mA
-   ===================================================== */
-const PRESETS = {
-  folhaP: { name: "Pressão 0 a 10 bar (folha)", tag: "PT", min: 0, max: 10, unit: "bar", v: 2.5 },
-  pit103: { name: "PIT-103 · pressão do TQ-01 (0 a 6 bar)", tag: "PIT-103", min: 0, max: 6, unit: "bar", v: 3 },
-  tt104: { name: "TT-104 · temperatura (0 a 200 °C, folha)", tag: "TT-104", min: 0, max: 200, unit: "°C", v: 150 },
-  fit102: { name: "FIT-102 · vazão (0 a 30 L/min, ilustrativo)", tag: "FIT-102", min: 0, max: 30, unit: "L/min", v: 12 },
-  nivel: { name: "LT · nível (0 a 100 cm, exemplo)", tag: "LT", min: 0, max: 100, unit: "cm", v: 50 },
-  custom: { name: "Faixa personalizada", tag: "TX", min: 50, max: 150, unit: "°C", v: 100 },
-};
-const laco = (() => {
-  const S = { p: "folhaP", min: 0, max: 10, unit: "bar", tag: "PT", v: 2.5, fault: "ok", cable: 100, sec: 0.5, meter: "serie", fuse: true };
-  const RIN = 250, VS = 24, VMIN = 12, RHO = 0.0172;
-  const sel = $("#lPreset");
-  sel.innerHTML = Object.entries(PRESETS).map(([k, p]) => `<option value="${k}">${p.name}</option>`).join("");
-  function setPreset(k) { const p = PRESETS[k]; Object.assign(S, { p: k, min: p.min, max: p.max, unit: p.unit, tag: p.tag, v: p.v }); sel.value = k; syncInputs(); render(); }
-  function syncInputs() {
-    $("#lMin").value = S.min; $("#lMax").value = S.max; $("#lUnit").value = S.unit;
-    const custom = S.p === "custom"; ["#lMin", "#lMax", "#lUnit"].forEach(s => $(s).disabled = !custom);
-    const r = $("#lVar"); r.min = S.min; r.max = S.max; r.step = (S.max - S.min) / 200; r.value = S.v;
-    $("#lVarMin").textContent = fmt(S.min) + " " + S.unit; $("#lVarMax").textContent = fmt(S.max) + " " + S.unit;
-    $("#lVarLbl").textContent = "Variável do processo · " + S.tag;
-  }
-  sel.onchange = () => setPreset(sel.value);
-  ["#lMin", "#lMax", "#lUnit"].forEach(s => $(s).addEventListener("input", () => {
-    const a = parseFloat($("#lMin").value), b = parseFloat($("#lMax").value);
-    if (isFinite(a) && isFinite(b) && b > a) { S.min = a; S.max = b; S.v = clamp(S.v, a, b); }
-    S.unit = $("#lUnit").value || "";
-    const r = $("#lVar"); r.min = S.min; r.max = S.max; r.step = (S.max - S.min) / 200; r.value = S.v;
-    $("#lVarMin").textContent = fmt(S.min) + " " + S.unit; $("#lVarMax").textContent = fmt(S.max) + " " + S.unit;
-    render();
-  }));
-  $("#lVar").addEventListener("input", e => { S.v = +e.target.value; render(); });
-  $$("#lFaults button").forEach(b => b.onclick = () => { $$("#lFaults button").forEach(x => x.classList.remove("on")); b.classList.add("on"); S.fault = b.dataset.f; render(); });
-  $("#lCable").addEventListener("input", e => { S.cable = +e.target.value; render(); });
-  segBind("#lSec", d => { S.sec = +d.s; render(); });
-  segBind("#lMeter", d => { S.meter = d.m; if (d.m === "paralelo") { S.fuse = false; toast("Fusível do multímetro queimado!"); } render(); });
-
-  function compute() {
-    const pct = (S.v - S.min) / (S.max - S.min) * 100;
-    let want = 4 + 16 * pct / 100;
-    if (S.fault === "hi") want = 22;
-    const rc = 2 * S.cable * RHO / S.sec;
-    const rt = rc + RIN;
-    let I = want, limited = false, reason = "";
-    if (S.fault === "open") { I = 0; reason = "open"; }
-    else if (S.fault === "nopwr") { I = 0; reason = "nopwr"; }
-    else if (S.meter === "paralelo" || !S.fuse) { I = 0; reason = "fuse"; }
-    else { const imax = (VS - VMIN) / rt * 1000; if (want > imax) { I = imax; limited = true; } }
-    const vin = I / 1000 * RIN, vc = I / 1000 * rc, vtx = (reason ? (reason === "open" ? VS : 0) : VS - vin - vc);
-    return { pct, want, I, rc, vin, vc, vtx, limited, reason };
-  }
-  function diag(I) {
-    if (I < 3.6) return ["bad", "Falha", "0 mA nunca é medição válida: fio rompido, sem alimentação ou defeito."];
-    if (I < 3.8) return ["bad", "Falha", "Abaixo de 3,8 mA: o transmissor sinaliza falha (alarme baixo)."];
-    if (I < 4) return ["warn", "Abaixo da faixa", "Processo abaixo do mínimo da faixa: verifique."];
-    if (I <= 20) return ["ok", "Medição normal", ""];
-    if (I <= 21) return ["warn", "Acima da faixa", "Processo acima do máximo da faixa: verifique."];
-    return ["bad", "Falha", "Acima de ~21 mA: transmissor em alarme."];
-  }
-  // desenho do laço
-  const svg = $("#loopSvg");
-  const PATH = "M110 300 L110 90 L320 90 L520 90 L650 90 L650 300 L110 300";
-  let dots = [], pathEl, meterTxt, ctrlTxt, ctrlTxt2, txTxt, srcTxt, cableTxt, warnG;
-  function build() {
-    svg.innerHTML = "";
-    pathEl = el("path", { d: PATH, fill: "none", stroke: CSS("navy"), "stroke-width": 4, "stroke-linejoin": "round" }, svg);
-    dots = [];
-    for (let k = 0; k < 18; k++) dots.push(el("circle", { r: 5, fill: CSS("orange") }, svg));
-    // fonte
-    el("rect", { x: 60, y: 160, width: 100, height: 80, rx: 10, fill: "#fff", stroke: CSS("navy"), "stroke-width": 2.5 }, svg);
-    el("text", { x: 110, y: 188, "text-anchor": "middle", "font-size": 15, "font-weight": 700, fill: CSS("navy") }, svg, "Fonte");
-    srcTxt = el("text", { x: 110, y: 212, "text-anchor": "middle", "font-size": 20, "font-weight": 700, fill: CSS("orange") }, svg, "24 Vcc");
-    el("text", { x: 168, y: 176, "font-size": 16, "font-weight": 700, fill: CSS("red") }, svg, "+");
-    el("text", { x: 168, y: 236, "font-size": 18, "font-weight": 700, fill: CSS("navy") }, svg, "−");
-    // transmissor
-    el("rect", { x: 250, y: 50, width: 150, height: 80, rx: 12, fill: "#fff", stroke: CSS("navy"), "stroke-width": 2.5 }, svg);
-    txTxt = el("text", { x: 325, y: 80, "text-anchor": "middle", "font-size": 15, "font-weight": 700, fill: CSS("navy") }, svg, "Transmissor");
-    el("text", { x: 325, y: 104, "text-anchor": "middle", "font-size": 13, fill: CSS("muted") }, svg, "2 fios · regula a corrente");
-    el("text", { x: 238, y: 82, "font-size": 16, "font-weight": 700, fill: CSS("red") }, svg, "+");
-    el("text", { x: 404, y: 82, "font-size": 18, "font-weight": 700, fill: CSS("navy") }, svg, "−");
-    // cabo
-    cableTxt = el("text", { x: 470, y: 78, "text-anchor": "middle", "font-size": 13, fill: CSS("muted") }, svg, "");
-    el("text", { x: 380, y: 322, "text-anchor": "middle", "font-size": 13, fill: CSS("muted") }, svg, "retorno do laço");
-    // multímetro
-    el("rect", { x: 580, y: 120, width: 140, height: 100, rx: 14, fill: "#2B3440", stroke: CSS("navy"), "stroke-width": 2.5 }, svg);
-    el("rect", { x: 592, y: 132, width: 116, height: 46, rx: 6, fill: "#CFE3C9" }, svg);
-    meterTxt = el("text", { x: 700, y: 166, "text-anchor": "end", "font-size": 28, "font-weight": 700, fill: "#1F2A37", "font-family": "Courier New, monospace" }, svg, "");
-    el("text", { x: 650, y: 202, "text-anchor": "middle", "font-size": 13, fill: "#fff" }, svg, "Multímetro · mA");
-    // controlador
-    el("rect", { x: 560, y: 240, width: 180, height: 120, rx: 12, fill: "#fff", stroke: CSS("navy"), "stroke-width": 2.5 }, svg);
-    el("text", { x: 650, y: 262, "text-anchor": "middle", "font-size": 14, "font-weight": 700, fill: CSS("navy") }, svg, "Controlador · entrada AI");
-    el("path", { d: "M600 300 l6 -10 l8 20 l8 -20 l8 20 l8 -20 l6 10", fill: "none", stroke: CSS("navy"), "stroke-width": 2 }, svg);
-    el("text", { x: 618, y: 326, "text-anchor": "middle", "font-size": 12, fill: CSS("muted") }, svg, "250 Ω");
-    ctrlTxt = el("text", { x: 700, y: 300, "text-anchor": "middle", "font-size": 20, "font-weight": 700, fill: CSS("navy") }, svg, "");
-    ctrlTxt2 = el("text", { x: 700, y: 322, "text-anchor": "middle", "font-size": 14, fill: CSS("muted") }, svg, "");
-    // fusível/aviso
-    warnG = el("g", {}, svg);
-  }
-  build();
-  let phase = 0, curI = 0, lastT = performance.now();
-  function anim(now) {
-    const dt = Math.min(.1, (now - lastT) / 1000); lastT = now;
-    if ($("#v-laco").classList.contains("on")) {
-      const len = pathEl.getTotalLength();
-      phase = (phase + dt * curI * 9) % len;
-      dots.forEach((d, k) => { const p = pathEl.getPointAtLength((phase + k * len / dots.length) % len); d.setAttribute("cx", p.x); d.setAttribute("cy", p.y); d.style.display = curI > 0.05 ? "" : "none"; });
-    }
-    requestAnimationFrame(anim);
-  }
-  requestAnimationFrame(anim);
-
-  function render() {
-    const c = compute();
-    curI = c.I;
-    $("#lVarTxt").textContent = fmt(S.v, 2) + " " + S.unit;
-    $("#lCableTxt").textContent = fmt(S.cable, 0) + " m";
-    txTxt.textContent = S.tag.length > 3 ? S.tag : "Transmissor " + S.tag;
-    meterTxt.textContent = S.meter === "paralelo" || !S.fuse ? "FUSE" : c.I.toFixed(2).replace(".", ",");
-    srcTxt.textContent = S.fault === "nopwr" ? "0 V" : "24 Vcc";
-    cableTxt.textContent = `cabo ${fmt(S.cable, 0)} m · ${fmt(c.rc, 1)} Ω`;
-    const d = diag(c.I);
-    if (d[0] === "bad") { ctrlTxt.textContent = "FALHA"; ctrlTxt.setAttribute("fill", CSS("red")); ctrlTxt2.textContent = fmt(c.I, 2) + " mA"; }
-    else { ctrlTxt.textContent = fmt((c.I - 4) / 16 * 100, 1) + " %"; ctrlTxt.setAttribute("fill", CSS("navy")); ctrlTxt2.textContent = fmt(S.min + (c.I - 4) / 16 * (S.max - S.min), 2) + " " + S.unit; }
-    warnG.innerHTML = "";
-    if (S.fault === "open") { el("rect", { x: 495, y: 80, width: 30, height: 20, fill: "#fff" }, warnG); el("text", { x: 510, y: 98, "text-anchor": "middle", "font-size": 22, fill: CSS("red"), "font-weight": 700 }, warnG, "✕"); }
-    if (S.meter === "paralelo") { el("path", { d: "M160 250 C 260 380, 520 380, 600 222", fill: "none", stroke: CSS("red"), "stroke-width": 3, "stroke-dasharray": "6 5" }, warnG); el("text", { x: 380, y: 372, "text-anchor": "middle", "font-size": 14, fill: CSS("red"), "font-weight": 700 }, warnG, "multímetro em paralelo = curto na fonte"); }
-    // régua
-    const r = $("#ruler"); r.innerHTML = "";
-    const rx = v => 30 + v / 24 * 700;
-    el("rect", { x: rx(0), y: 34, width: rx(3.8) - rx(0), height: 26, fill: CSS("red"), opacity: .85, rx: 4 }, r);
-    el("rect", { x: rx(3.8), y: 34, width: rx(4) - rx(3.8), height: 26, fill: CSS("amber") }, r);
-    el("rect", { x: rx(4), y: 34, width: rx(20) - rx(4), height: 26, fill: CSS("teal"), opacity: .85 }, r);
-    el("rect", { x: rx(20), y: 34, width: rx(21) - rx(20), height: 26, fill: CSS("amber") }, r);
-    el("rect", { x: rx(21), y: 34, width: rx(24) - rx(21), height: 26, fill: CSS("red"), opacity: .85, rx: 4 }, r);
-    el("text", { x: rx(1.9), y: 52, "text-anchor": "middle", "font-size": 13, fill: "#fff", "font-weight": 700 }, r, "falha");
-    el("text", { x: rx(12), y: 52, "text-anchor": "middle", "font-size": 13, fill: "#fff", "font-weight": 700 }, r, "medição normal · 16 mA = 100% da faixa");
-    el("text", { x: rx(22.5), y: 52, "text-anchor": "middle", "font-size": 13, fill: "#fff", "font-weight": 700 }, r, "falha");
-    for (const [m, p] of [[0, ""], [4, "0%"], [8, "25%"], [12, "50%"], [16, "75%"], [20, "100%"], [24, ""]]) {
-      el("line", { x1: rx(m), x2: rx(m), y1: 60, y2: 68, stroke: CSS("ink") }, r);
-      el("text", { x: rx(m), y: 84, "text-anchor": "middle", "font-size": 14, "font-weight": 700, fill: CSS("ink") }, r, m + " mA");
-      if (p) el("text", { x: rx(m), y: 102, "text-anchor": "middle", "font-size": 13, fill: CSS("muted") }, r, p);
-    }
-    const mx = rx(clamp(c.I, 0, 24));
-    el("path", { d: `M${mx - 9} 10 L${mx + 9} 10 L${mx} 30 Z`, fill: CSS("navy") }, r);
-    el("text", { x: clamp(mx, 60, 700), y: 8, "text-anchor": "middle", "font-size": 0 }, r, "");
-    // diagnóstico
-    let h;
-    if (c.reason === "fuse") h = `<span class="pill bad">Fusível queimado</span> Na escala de mA o multímetro é quase um curto. Em paralelo com a fonte, a corrente dispara e queima o fusível. <b>Sempre em série:</b> abre-se o laço e o multímetro fecha o caminho. <button class="btn" id="lFuse" style="margin-left:6px">Trocar o fusível e ligar em série</button>`;
-    else if (c.reason === "open") h = `<span class="pill bad">0 mA · Falha</span> Fio rompido: não há caminho para a corrente. Como a faixa começa em 4 mA, o controlador sabe que 0 mA é <b>falha</b>, não "tanque vazio" (zero vivo).`;
-    else if (c.reason === "nopwr") h = `<span class="pill bad">0 mA · Falha</span> Sem alimentação: o transmissor de 2 fios depende da fonte do laço para funcionar. O controlador reconhece a falha e dá alarme.`;
-    else if (S.fault === "hi") h = `<span class="pill bad">22 mA · Falha</span> Acima de ~21 mA o transmissor está em alarme (recomendação NAMUR NE 43; confira no manual).`;
-    else if (c.limited) h = `<span class="pill warn">Tensão insuficiente</span> O cabo ficou longo demais: o transmissor queria ${fmt(c.want, 2)} mA, mas não sobra tensão para ele (mínimo de ${VMIN} V). A corrente ficou limitada em ${fmt(c.I, 2)} mA e a leitura está errada. Use fio mais grosso ou uma fonte maior.`;
-    else h = `<span class="pill ok">${fmt(c.I, 2)} mA</span> = <b>${fmt(c.pct, 1)} %</b> da faixa = <b>${fmt(S.v, 2)} ${S.unit}</b>. Conferência: 12 mA é o meio da faixa (${fmt((S.min + S.max) / 2, 2)} ${S.unit}); ${c.I < 11.995 ? "abaixo de 12 mA, valor abaixo da metade." : c.I > 12.005 ? "acima de 12 mA, valor acima da metade." : "exatamente no meio."} O cabo de ${fmt(S.cable, 0)} m derruba ${fmt(c.vc, 2)} V, mas <b>a corrente é a mesma</b> no transmissor e no controlador.`;
-    $("#loopDiag").innerHTML = h;
-    if ($("#lFuse")) $("#lFuse").onclick = () => { S.fuse = true; S.meter = "serie"; $$("#lMeter button").forEach(b => b.classList.toggle("on", b.dataset.m === "serie")); render(); };
-    $("#lVolt").innerHTML = `<tr><th>Ponto</th><th>Valor</th></tr>
-      <tr><td>Corrente no laço (igual em todo ponto)</td><td><b>${fmt(c.I, 2)} mA</b></td></tr>
-      <tr><td>Queda no cabo (ida e volta)</td><td>${fmt(c.vc, 2)} V</td></tr>
-      <tr><td>Tensão na entrada do controlador (I × 250 Ω)</td><td>${fmt(c.vin, 2)} V</td></tr>
-      <tr><td>Sobra para o transmissor</td><td style="color:${c.limited ? CSS("red") : "inherit"}">${fmt(Math.max(0, c.vtx), 2)} V</td></tr>`;
-  }
-  syncInputs(); render();
-  return { setPreset, render };
-})();
-views.laco = laco.render;
 
 /* =====================================================
    2 · PT100 – ligação e 2/3/4 fios
@@ -1296,187 +666,6 @@ const pt = (() => {
   renderB();
   return { renderB };
 })();
-
-/* =====================================================
-   2 · CONVERSÕES
-   ===================================================== */
-(() => {
-  let from = "mA";
-  segBind("#cFrom", d => { from = d.k; $("#cIn").value = from === "mA" ? 8 : from === "pct" ? 75 : (+$("#cMin").value + +$("#cMax").value) / 2; calc(); });
-  ["#cMin", "#cMax", "#cUnit", "#cIn"].forEach(s => $(s).addEventListener("input", calc));
-  function calc() {
-    const mn = parseFloat($("#cMin").value), mx = parseFloat($("#cMax").value), u = $("#cUnit").value, x = parseFloat($("#cIn").value);
-    const out = $("#cOut");
-    if (![mn, mx, x].every(isFinite) || mx <= mn) { out.innerHTML = `<div class="msg warn">Preencha mínimo, máximo (maior que o mínimo) e o valor.</div>`; return; }
-    const sp = mx - mn, mid = (mn + mx) / 2;
-    let st = [];
-    if (from === "mA") {
-      if (x < 3.8 || x > 21) { out.innerHTML = `<div class="msg bad"><b>${fmt(x, 2)} mA não é medição válida.</b> ${x < 3.8 ? "Abaixo de ~3,8 mA: fio rompido, sem alimentação ou defeito." : "Acima de ~21 mA: transmissor em alarme."}</div>`; return; }
-      const p = (x - 4) / 16 * 100, v = mn + p / 100 * sp;
-      st = [["Dados", `mín = ${fmt(mn)} ${u} · máx = ${fmt(mx)} ${u} · corrente = ${fmt(x, 3)} mA`], ["Fórmula 1", `% = (${fmt(x, 3)} − 4) ÷ 16 × 100 = <b>${fmt(p, 2)} %</b>`], ["Fórmula 3", `valor = ${fmt(mn)} + (${fmt(p, 2)} ÷ 100) × (${fmt(mx)} − ${fmt(mn)}) = <b>${fmt(v, 3)} ${u}</b>`], ["Conferência", conf(x, mid, u)]];
-    } else if (from === "pct") {
-      const m = 4 + 16 * x / 100, v = mn + x / 100 * sp;
-      st = [["Dados", `mín = ${fmt(mn)} ${u} · máx = ${fmt(mx)} ${u} · ${fmt(x, 3)} %`], ["Fórmula 2", `mA = 4 + 16 × (${fmt(x, 3)} ÷ 100) = <b>${fmt(m, 3)} mA</b>`], ["Fórmula 3", `valor = ${fmt(mn)} + (${fmt(x, 3)} ÷ 100) × (${fmt(mx)} − ${fmt(mn)}) = <b>${fmt(v, 3)} ${u}</b>`], ["Conferência", conf(m, mid, u)]];
-    } else {
-      const p = (x - mn) / sp * 100, m = 4 + 16 * p / 100;
-      st = [["Dados", `mín = ${fmt(mn)} ${u} · máx = ${fmt(mx)} ${u} · valor = ${fmt(x, 3)} ${u}`], ["Fórmula 4", `% = (${fmt(x, 3)} − ${fmt(mn)}) ÷ (${fmt(mx)} − ${fmt(mn)}) × 100 = <b>${fmt(p, 2)} %</b>`], ["Fórmula 2", `mA = 4 + 16 × (${fmt(p, 2)} ÷ 100) = <b>${fmt(m, 3)} mA</b>`], ["Conferência", conf(m, mid, u)]];
-      if (p < 0 || p > 100) st.push(["Atenção", "O valor está fora da faixa do instrumento: um transmissor real não mandaria essa corrente, sinalizaria saturação ou falha."]);
-    }
-    out.innerHTML = `<div class="steps">${st.map(s => `<div class="step"><b>${s[0]}</b><span>${s[1]}</span></div>`).join("")}</div>`;
-  }
-  function conf(m, mid, u) { return Math.abs(m - 12) < 0.005 ? `12 mA é exatamente o meio da faixa (${fmt(mid, 2)} ${u}).` : `12 mA é o meio da faixa (50 %, ou ${fmt(mid, 2)} ${u}). Como ${fmt(m, 2)} mA está ${m < 12 ? "abaixo" : "acima"} de 12 mA, o valor tem que ser ${m < 12 ? "menor" : "maior"} que ${fmt(mid, 2)} ${u}.`; }
-  calc();
-
-  // treino
-  const RANGES = [[0, 10, "bar", "transmissor de pressão"], [0, 200, "°C", "transmissor de temperatura"], [0, 6, "bar", "PIT-103"], [50, 150, "°C", "transmissor de temperatura"], [0, 100, "cm", "transmissor de nível"]];
-  let q, ok = 0, tot = 0;
-  function next() {
-    const [mn, mx, u, nome] = pick(RANGES);
-    const type = pick(["mA2v", "mA2v", "v2mA", "v2mA", "diag"]);
-    q = { mn, mx, u, nome, type, done: false };
-    if (type === "mA2v") { q.x = pick([5.6, 6, 7.2, 8, 9.6, 10, 10.4, 13.6, 14, 15.2, 16.8, 18, 19.2]); q.ans = mn + (q.x - 4) / 16 * (mx - mn); q.unitAns = u; q.text = `Um ${nome} de ${fmt(mn)} a ${fmt(mx)} ${u} envia <b>${fmt(q.x, 1)} mA</b>. Qual é o valor da variável?`; }
-    else if (type === "v2mA") { const p = pick([10, 20, 25, 30, 40, 60, 62.5, 75, 80, 90]); q.x = mn + p / 100 * (mx - mn); q.ans = 4 + 16 * p / 100; q.unitAns = "mA"; q.text = `Um ${nome} de ${fmt(mn)} a ${fmt(mx)} ${u} está medindo <b>${fmt(q.x, 2)} ${u}</b>. Qual é a corrente?`; }
-    else { q.x = pick([0, 22, 3.2, 4, 7.2, 12, 16.8, 20]); q.fail = q.x < 3.8 || q.x > 21; q.ans = mn + (q.x - 4) / 16 * (mx - mn); q.text = `O multímetro no laço de um ${nome} de ${fmt(mn)} a ${fmt(mx)} ${u} marcou <b>${fmt(q.x, 1)} mA</b>. É medição válida ou falha?`; }
-    $("#trQ").innerHTML = `<p style="font-size:20px;margin:0">${q.text}</p>`;
-    $("#trInRow").style.display = type === "diag" ? "none" : "flex";
-    $("#trFailRow").style.display = type === "diag" ? "flex" : "none";
-    $("#trUnit").textContent = q.unitAns || "";
-    $("#trIn").value = ""; $("#trMsg").innerHTML = "";
-    if (type !== "diag") setTimeout(() => $("#trIn").focus({ preventScroll: true }), 0);
-  }
-  function sol() {
-    const sp = q.mx - q.mn;
-    if (q.type === "mA2v") { const p = (q.x - 4) / 16 * 100; return `Fórmula 1: (${fmt(q.x, 1)} − 4) ÷ 16 × 100 = ${fmt(p, 2)} %. Fórmula 3: ${fmt(q.mn)} + ${fmt(p, 2)}% × ${fmt(sp)} = <b>${fmt(q.ans, 3)} ${q.u}</b>.`; }
-    if (q.type === "v2mA") { const p = (q.x - q.mn) / sp * 100; return `Fórmula 4: (${fmt(q.x, 2)} − ${fmt(q.mn)}) ÷ ${fmt(sp)} × 100 = ${fmt(p, 2)} %. Fórmula 2: 4 + 16 × ${fmt(p / 100, 4)} = <b>${fmt(q.ans, 2)} mA</b>.`; }
-    return q.fail ? (q.x < 3.8 ? "0 mA (ou abaixo de ~3,8 mA) indica fio rompido, falta de alimentação ou defeito." : "Acima de ~21 mA o transmissor está em alarme.") : `${fmt(q.x, 1)} mA está entre 4 e 20 mA: vale <b>${fmt(q.ans, 2)} ${q.u}</b>.`;
-  }
-  function mark(right, extra = "") {
-    if (q.done) return; q.done = true; tot++; if (right) ok++;
-    $("#trMsg").innerHTML = `<div class="msg ${right ? "ok" : "bad"}"><b>${right ? "Certo!" : "Não foi dessa vez."}</b> ${extra}${sol()}</div>`;
-    $("#trScore").textContent = `${ok}/${tot} certas`;
-  }
-  $("#trOk").onclick = () => {
-    const v = parseFloat(String($("#trIn").value).replace(",", "."));
-    if (!isFinite(v)) { toast("Digite um número."); return; }
-    const tol = q.type === "v2mA" ? 0.06 : Math.max(0.01 * (q.mx - q.mn), 0.02);
-    let hint = "";
-    if (q.type === "mA2v" && Math.abs(v - (q.mn + q.x / 16 * (q.mx - q.mn))) < tol) hint = "Parece que faltou subtrair os 4 mA antes de dividir. ";
-    if (q.type === "v2mA" && Math.abs(v - (q.ans - 4)) < tol) hint = "Parece que faltou somar os 4 mA no final. ";
-    mark(Math.abs(v - q.ans) <= tol, hint);
-  };
-  $("#trIn").addEventListener("keydown", e => { if (e.key === "Enter") $("#trOk").click(); });
-  $("#trValid").onclick = () => mark(!q.fail);
-  $("#trFail").onclick = () => mark(q.fail);
-  $("#trNext").onclick = next;
-  next();
-})();
-
-/* =====================================================
-   3 · TAGS
-   ===================================================== */
-(() => {
-  segBind("#tagTabs", d => { $$(".tpane").forEach(p => p.style.display = p.id === "t-" + d.t ? "" : "none"); });
-  // tabelas
-  $("#tbVar").innerHTML = Object.entries(VAR).map(([k, v]) => `<tr><td class="tv" style="font-family:'Courier New';font-weight:700;font-size:20px">${k}</td><td>${v[0][0].toUpperCase() + v[0].slice(1)}</td></tr>`).join("");
-  $("#tbFun").innerHTML = ["E", "T", "I", "C", "V", "S", "H", "L"].map(k => `<tr><td class="tf" style="font-family:'Courier New';font-weight:700;font-size:20px">${k}</td><td>${FUN[k]}</td></tr>`).join("");
-  // decifrador
-  function dec() {
-    const v = $("#decIn").value; const r = readTag(v); const o = $("#decOut");
-    if (!r.ok) { o.innerHTML = `<div class="msg warn">${r.text}</div>`; return; }
-    if (r.special) { o.innerHTML = `<div class="tagbig">${v.toUpperCase()}</div><div class="msg warn">${r.text}</div>`; return; }
-    const p = r.parts;
-    const fl = (p.f + p.mod).split("").map((c, i, arr) => { const isMod = i === arr.length - 1 && p.mod; return `<div class="step"><b class="big1" style="color:var(--blue)">${c}</b><span>${isMod ? (c === "H" ? "Alto (high): limite superior" : "Baixo (low): limite inferior") : FUN[c]}</span></div>`; }).join("");
-    o.innerHTML = `<div class="tagbig">${tagHTML(v)}</div>
-      <div class="steps"><div class="step"><b class="big1">${p.v}</b><span>${VAR[p.v][0][0].toUpperCase() + VAR[p.v][0].slice(1)}: o que se mede</span></div>${fl}${p.n ? `<div class="step"><b class="big1" style="color:var(--teal)">${p.n}</b><span>Malha ${p.n}</span></div>` : ""}</div>
-      <div class="msg ok"><b>Leitura:</b> ${r.text}</div>${r.warn ? `<div class="msg warn">${r.warn}</div>` : ""}${/^PT-?100$/i.test(v.trim()) ? `<div class="msg warn">Cuidado: PT100 (sem hífen) é o sensor de temperatura de platina. PT-100 seria um transmissor de pressão da malha 100.</div>` : ""}`;
-  }
-  $("#decIn").addEventListener("input", dec); dec();
-
-  // ler quiz
-  const LER = ["PT-101", "TIT-205", "FIC-310", "LSH-410", "PSL-415", "TV-102", "LIC-101", "TE-104", "TT-104", "TZ-104", "LSL-101", "PIT-103", "FIT-102", "FV-102", "TIC-104", "FY-102", "PSH-103", "TSH-104", "FIT-205"];
-  const LETTERS = ["PT", "TIT", "FIC", "LSH", "PSL", "TV", "LIC", "TE", "TT", "TZ", "LSL", "PIT", "FIT", "FV", "TIC", "PSH", "TSH", "LSH", "PSH", "TSL", "FT", "LT", "PIC"];
-  let lq = shuffle(LER), li = 0, lok = 0, ltot = 0;
-  function lerShow() {
-    if (li >= lq.length) { lq = shuffle(LER); li = 0; }
-    const tag = lq[li], p = parseTag(tag), right = readTag(tag).text;
-    const pool = shuffle(LETTERS.filter(l => l !== p.letters)).map(l => readTag(l + "-" + p.num).text).filter((t, i, a) => t !== right && a.indexOf(t) === i);
-    const opts = shuffle([right, ...pool.slice(0, 3)]);
-    $("#lerQ").innerHTML = `<div class="tagbig" style="font-size:44px">${tagHTML(tag)}</div><div class="opts">${opts.map(o => `<button class="opt">${o}</button>`).join("")}</div><div id="lerFb"></div>`;
-    $$("#lerQ .opt").forEach(b => b.onclick = () => {
-      if ($("#lerQ").dataset.d === tag + li) return; $("#lerQ").dataset.d = tag + li;
-      const ok = b.textContent === right; ltot++; if (ok) lok++;
-      $$("#lerQ .opt").forEach(x => { if (x.textContent === right) x.classList.add("right"); else if (x === b) x.classList.add("wrong"); x.disabled = true; });
-      $("#lerScore").textContent = `${lok}/${ltot} certas`;
-      const extra = /LSL|PSL|TSL/.test(tag) ? " O último L é baixo (low), não nível: a posição manda." : tag.startsWith("PT-") ? " PT-101 não é PT100!" : "";
-      $("#lerFb").innerHTML = `<div class="msg ${ok ? "ok" : "bad"}">${ok ? "Certo!" : "Confira a posição de cada letra."}${extra}</div>`;
-    });
-  }
-  $("#lerNext").onclick = () => { li++; lerShow(); };
-  lerShow();
-
-  // montar
-  const MON = [
-    ["Transmissor de pressão da malha 105", "PT-105"], ["Chave de nível alto da malha 201", "LSH-201"], ["Controlador indicador de temperatura da malha 302", "TIC-302"],
-    ["Transmissor indicador de vazão da malha 102", "FIT-102"], ["Válvula de controle de vazão da malha 102", "FV-102"], ["Chave de pressão alta da malha 410", "PSH-410"],
-    ["Chave de pressão baixa da malha 415", "PSL-415"], ["Controlador indicador de nível da malha 101", "LIC-101"],
-    ["Forno da padaria, malha 201: o sensor PT100", "TE-201", "Controla: faz parte da malha."], ["Forno da padaria, malha 201: o transmissor de temperatura", "TT-201", "Controla: faz parte da malha."],
-    ["Forno da padaria, malha 201: o controlador indicador de temperatura", "TIC-201", "Controla: compara com o setpoint e decide."], ["Forno da padaria, malha 201: o termostato de segurança que corta a energia", "TSH-201", "Protege: é o intertravamento, independente da malha."],
-  ];
-  let mq = shuffle(MON), mi = 0, mok = 0, mtot = 0, mdone = false;
-  function monShow() { if (mi >= mq.length) { mq = shuffle(MON); mi = 0; } mdone = false; $("#monQ").innerHTML = `<p class="mid" style="font-size:24px;margin:4px 0">${mq[mi][0]}</p>`; $("#monIn").value = ""; $("#monMsg").innerHTML = ""; }
-  $("#monOk").onclick = () => {
-    const ans = mq[mi][1], raw = $("#monIn").value.toUpperCase().replace(/\s+/g, "");
-    if (!raw) return;
-    const a = parseTag(ans), u = parseTag(raw);
-    let ok = !!u && u.letters === a.letters && u.num === a.num, msg;
-    if (ok) msg = `<b>Certo: ${tagHTML(ans)}.</b> ${!raw.includes("-") ? "Escreva com o hífen: " + ans + ". " : ""}${mq[mi][2] || ""}`;
-    else if (!u) msg = "Escreva letras, hífen e número, como TT-104.";
-    else if (u.letters[0] !== a.letters[0]) msg = "A primeira letra é a variável que se mede. Releia a descrição.";
-    else if (u.letters.split("").sort().join("") === a.letters.split("").sort().join("")) msg = "As letras estão certas, mas a ordem não: I vem antes de C e T, e H ou L vão no fim.";
-    else if (u.letters === a.letters) msg = "Letras certas. Confira o número da malha.";
-    else msg = "A função não bate com a descrição. Confira as letras seguintes.";
-    if (!mdone) { mtot++; if (ok) mok++; if (ok) mdone = true; }
-    $("#monMsg").innerHTML = `<div class="msg ${ok ? "ok" : "bad"}">${msg}</div>`;
-    $("#monScore").textContent = `${mok}/${mtot} certas`;
-  };
-  $("#monIn").addEventListener("keydown", e => { if (e.key === "Enter") $("#monOk").click(); });
-  $("#monNext").onclick = () => { mi++; monShow(); };
-  monShow();
-
-  // planta (jogo)
-  let gsel = null, placed = {}, gB;
-  function gameReset() {
-    placed = {}; gsel = null;
-    gB = drawPlant($("#gameSvg"), "game", (it, g, set) => {
-      if (placed[it.tag]) { $("#gameMsg").className = "msg ok"; $("#gameMsg").innerHTML = `${tagHTML(it.tag)}: ${readTag(it.tag).text}. Na bancada: ${it.fis}.`; return; }
-      if (!gsel) { $("#gameMsg").className = "msg neu"; $("#gameMsg").innerHTML = `Este instrumento é: <b>${it.fis}</b>. Escolha a tag dele abaixo.`; return; }
-      if (gsel === it.tag) {
-        placed[it.tag] = true; set(it.tag); g.classList.add("ok");
-        $(`#gameChips [data-t="${gsel}"]`).classList.add("used"); $(`#gameChips [data-t="${gsel}"]`).classList.remove("sel");
-        $("#gameMsg").className = "msg ok"; $("#gameMsg").innerHTML = `<b>Certo!</b> ${tagHTML(it.tag)}: ${readTag(it.tag).text}.`; gsel = null;
-      } else {
-        g.classList.remove("shake"); void g.getBBox(); g.classList.add("shake");
-        const r = readTag(gsel);
-        $("#gameMsg").className = "msg bad"; $("#gameMsg").innerHTML = `Não. ${tagHTML(gsel)} é <b>${r.text.toLowerCase()}</b>, e este instrumento é: ${it.fis}.`;
-      }
-      score();
-    });
-    $("#gameChips").innerHTML = shuffle(INSTR.map(i => i.tag)).map(t => `<button class="chip" data-t="${t}">${t}</button>`).join("");
-    $$("#gameChips .chip").forEach(c => c.onclick = () => {
-      if (c.classList.contains("used")) return;
-      $$("#gameChips .chip").forEach(x => x.classList.remove("sel"));
-      if (gsel === c.dataset.t) { gsel = null; return; }
-      gsel = c.dataset.t; c.classList.add("sel");
-      $("#gameMsg").className = "msg neu"; $("#gameMsg").innerHTML = `Tag escolhida: ${tagHTML(gsel)}. Agora toque no instrumento.`;
-    });
-    $("#gameMsg").className = "msg neu"; $("#gameMsg").textContent = "Escolha uma tag.";
-    score();
-  }
-  function score() { const n = Object.keys(placed).length; $("#gameScore").textContent = `${n}/${INSTR.length} no lugar`; if (n === INSTR.length) { $("#gameMsg").className = "msg ok"; $("#gameMsg").innerHTML = "<b>Planta completa!</b> Cada tag aponta um instrumento da bancada."; } }
-  $("#gameReset").onclick = gameReset;
-  gameReset();
-})();
-
 /* =====================================================
    BANCADA 3D (carregada só quando a aba é aberta)
    ===================================================== */
@@ -1484,23 +673,47 @@ const pt = (() => {
   const box = document.getElementById("box3d"), b = document.getElementById("b3full");
   const isFull = () => document.fullscreenElement === box || box.classList.contains("max");
   const label = () => { b.textContent = isFull() ? "✕ Sair da tela cheia" : "⛶ Tela cheia"; };
+  // "Tela cheia" = ocupa só a janela da página (sem tela cheia do navegador/sistema); Esc ou o botão saem
   b.addEventListener("click", () => {
-    if (isFull()) { if (document.fullscreenElement) document.exitFullscreen(); box.classList.remove("max"); document.body.style.overflow = ""; if (box.classList.contains("dock") && typeof dockOpen === "function") dockOpen(false); if (typeof closeWiring === "function") closeWiring(); }
-    else if (box.requestFullscreen) box.requestFullscreen().catch(() => { box.classList.add("max"); document.body.style.overflow = "hidden"; label(); });
+    if (document.fullscreenElement) document.exitFullscreen();
+    if (isFull()) { box.classList.remove("max"); document.body.style.overflow = ""; if (box.classList.contains("dock") && typeof dockOpen === "function") dockOpen(false); if (typeof closeWiring === "function") closeWiring(); }
     else { box.classList.add("max"); document.body.style.overflow = "hidden"; }
     label();
   });
-  document.addEventListener("fullscreenchange", label);
   document.addEventListener("keydown", e => { if (e.key === "Escape" && box.classList.contains("max")) { box.classList.remove("max"); document.body.style.overflow = ""; label(); if (typeof closeWiring === "function") closeWiring(); } });
 })();
 let load3dP = null;
-const BUILD = "20261115-23"; // muda a cada versão para o navegador não usar arquivos antigos do cache
-function load3dAll() { if (!load3dP) load3dP = loadScript("vendor/three-bundle.js").then(() => loadScript("app-clp.js?v=" + BUILD)).then(() => loadScript("vendor/pf525-img.js?v=" + BUILD)).then(() => loadScript("app-pf525.js?v=" + BUILD)).then(() => loadScript("vendor/cfw500-img.js?v=" + BUILD)).then(() => loadScript("vendor/atv12-img.js?v=" + BUILD)).then(() => loadScript("app-drives.js?v=" + BUILD)).then(() => loadScript("app-3d.js?v=" + BUILD)); return load3dP; }
+const BUILD = "20261124-94"; // muda a cada versão para o navegador não usar arquivos antigos do cache
+function load3dAll() { if (!load3dP) load3dP = loadScript("vendor/three-bundle.js").then(() => loadScript("app-clp.js?v=" + BUILD)).then(() => loadScript("modo-direto.js?v=" + BUILD)).then(() => loadScript("modo-ispsoft.js?v=" + BUILD)).then(() => loadScript("vendor/pf525-img.js?v=" + BUILD)).then(() => loadScript("app-pf525.js?v=" + BUILD)).then(() => loadScript("vendor/cfw500-img.js?v=" + BUILD)).then(() => loadScript("vendor/atv12-img.js?v=" + BUILD)).then(() => loadScript("app-drives.js?v=" + BUILD)).then(() => loadScript("app-3d.js?v=" + BUILD)); return load3dP; }
+(() => {
+  const box = document.getElementById("box3d");
+  try { box.classList.toggle("tray-collapsed", localStorage.getItem("nivel-tray3d-collapsed") === "1"); } catch (e) { }
+})();
 (() => {
   const v = document.getElementById("v3d-views"), t = document.getElementById("v3dToggle");
-  const set = (col) => { v.classList.toggle("col", col); t.textContent = col ? "☰ Menu" : "✕ Recolher menu"; try { localStorage.setItem("menu3d", col ? "1" : "0"); } catch (e) { } };
-  let col = false; try { col = localStorage.getItem("menu3d") === "1"; } catch (e) { }
+  const set = (col) => { v.classList.toggle("col", col); t.textContent = col ? "☰ Menu" : "✕ Recolher menu"; try { localStorage.setItem("nivel-menu3d", col ? "1" : "0"); } catch (e) { } };
+  let col = false; try { col = localStorage.getItem("nivel-menu3d") === "1"; } catch (e) { }
   set(col); t.addEventListener("click", () => set(!v.classList.contains("col")));
+})();
+(() => {
+  const box = document.getElementById("box3d"), btn = document.getElementById("b3split"), menu = document.getElementById("v3d-views"), menuBtn = document.getElementById("v3dToggle");
+  let wasCollapsed = false, hudWasOn = true;
+  const setSplit = (on) => {
+    box.classList.toggle("splitview", on); document.body.classList.toggle("splitview-on", on);
+    btn.textContent = on ? "⤢ Sair da vista dividida" : "◫ Vista lado a lado"; btn.setAttribute("aria-pressed", String(on));
+    if (on) {
+      wasCollapsed = menu.classList.contains("col"); menu.classList.add("col"); menuBtn.textContent = "☰ Menu";
+      hudWasOn = !document.getElementById("w3d").classList.contains("hud-off");
+      if (window.App3D) { window.App3D.showHud(false); window.App3D.view("geral"); }
+      else load3dAll().then(() => { window.App3D.start(document.getElementById("w3d")); window.App3D.showHud(false); window.App3D.view("geral"); });
+    } else {
+      menu.classList.toggle("col", wasCollapsed); menuBtn.textContent = wasCollapsed ? "☰ Menu" : "✕ Recolher menu";
+      if (window.App3D) window.App3D.showHud(hudWasOn);
+    }
+    requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
+  };
+  btn.addEventListener("click", () => setSplit(!box.classList.contains("splitview")));
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && box.classList.contains("splitview")) setSplit(false); });
 })();
 function place3d(where) {
   const w = document.getElementById("w3d");
@@ -1524,10 +737,22 @@ function closeWiring() {
 }
 function backFromWiring() { if (document.getElementById("ovl3d").classList.contains("on")) closeWiring(); else show("bancada3d"); }
 function openClp() { if (isFull3d()) { goFullClp(); } else show("clp"); }
+document.getElementById("b3auto").addEventListener("click", () => {
+  load3dAll().then(() => { window.App3D.start(document.getElementById("w3d")); window.App3D.autoInstall(); try { sessionStorage.setItem("nivel-montado", "1"); } catch (e) {} if (window.ISP && window.ISP.autoFill) window.ISP.autoFill(); });   // só aqui o mapa de E/S é preenchido (e só se ainda estiver vazio)
+});
+document.getElementById("b3demo").addEventListener("click", () => {
+  const b = document.getElementById("b3demo");
+  load3dAll().then(() => {
+    window.App3D.start(document.getElementById("w3d"));
+    window.App3D.autoInstall(); try { sessionStorage.setItem("nivel-montado", "1"); } catch (e) {}
+    const on = window.MD.toggleDemo();
+    b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); b.textContent = on ? "■ Parar demonstração" : "▶ Simular sem programa";
+  });
+});
 // inversores: PF525 (app-pf525.js), ATV12 e CFW500 (app-drives.js); a seletora fica em window.DRV
 const VFD_TITLES = { pf525: "Inversor Allen-Bradley PowerFlex 525 · 25B-B5P0N104", atv12: "Inversor Schneider Altivar ATV12 · ATV12H075M2", cfw500: "Inversor WEG CFW500 · 200–240 V · 4,3 A" };
 let vfdCur = "pf525";
-try { const v = localStorage.getItem("vfd-aba"); if (VFD_TITLES[v]) vfdCur = v; } catch (e) { }
+try { const v = localStorage.getItem("nivel-vfd-aba"); if (VFD_TITLES[v]) vfdCur = v; } catch (e) { }
 const vfdDev = (k) => (window.DRV && window.DRV.list[k]) || (k === "pf525" ? window.PF525 : null);
 function vfdTabs() { document.querySelectorAll("#vfdTabs button").forEach(b => { b.classList.toggle("on", b.dataset.d === vfdCur); b.classList.toggle("sel", !!window.DRV && window.DRV.sel === b.dataset.d); b.title = window.DRV && window.DRV.sel === b.dataset.d ? "Este inversor aciona a bomba" : ""; }); }
 document.querySelectorAll("#vfdTabs button").forEach(b => b.addEventListener("click", () => openVfdDock(b.dataset.d)));
@@ -1547,7 +772,7 @@ document.getElementById("vfdClose").addEventListener("click", closeVfd);
 function openVfdDock(which) {
   if (typeof which === "string" && VFD_TITLES[which]) vfdCur = which;
   const D = vfdDev(vfdCur); if (!D) return;
-  try { localStorage.setItem("vfd-aba", vfdCur); } catch (e) { }
+  try { localStorage.setItem("nivel-vfd-aba", vfdCur); } catch (e) { }
   vfdTabs();
   const box = document.getElementById("box3d");
   if (box.classList.contains("dock")) dockOpen(false);
@@ -1582,7 +807,6 @@ function goFullClp() {
   if (!isFull) document.getElementById("b3full").click();
   load3dAll().then(() => { window.App3D.start(document.getElementById("w3d")); window.PLC.mount(); dockOpen(true); });
 }
-document.getElementById("b3clp").addEventListener("click", () => { const box = document.getElementById("box3d"); if (box.classList.contains("dock")) dockOpen(false); else goFullClp(); });
 document.getElementById("dockClose").addEventListener("click", () => dockOpen(false));
 document.getElementById("clpFull").addEventListener("click", goFullClp);
 document.addEventListener("fullscreenchange", () => { const box = document.getElementById("box3d"); if (document.fullscreenElement !== box && !box.classList.contains("max") && box.classList.contains("dock")) dockOpen(false); });
@@ -1595,11 +819,13 @@ views.clp = () => {
 function loadScript(src) { return new Promise((res, rej) => { const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = () => rej(src); document.head.appendChild(s); }); }
 views.bancada3d = () => {
   place3d("bancada");
-  load3dAll().then(() => window.App3D.start(document.getElementById("w3d")))
+  load3dAll().then(() => { window.App3D.start(document.getElementById("w3d")); if (!window.__remontou) { window.__remontou = true; let m = false; try { m = sessionStorage.getItem("nivel-montado") === "1"; } catch (e) {} if (m) window.App3D.autoInstall(); } })
     .catch(() => { $("#load3d").textContent = "Não foi possível carregar os arquivos 3D. Mantenha a pasta vendor, app-clp.js e app-3d.js na mesma pasta deste HTML."; });
 };
 
-show(location.hash.slice(1) || "planta");
+views.clpcfg = () => { if (window.App3D && App3D.renderClpTab) App3D.renderClpTab(); };
+show(location.hash.slice(1) || "bancada3d");
+if ((location.hash.slice(1) || "bancada3d") !== "bancada3d") views.bancada3d();   // o simulador carrega sempre, mesmo abrindo direto na aba CLP
 </script>
 </body>
 </html>

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#101923">
+  <title>Esteiras Industriais • Simulador 3D</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark">▰</div><div><strong>LAB<span>3D</span></strong><small>SIMULADOR DIDÁTICO DE AUTOMAÇÃO</small></div></div>
+    <div class="system-title"><span class="eyebrow">PROJETO DE AUTOMAÇÃO</span><strong>Sistema de esteiras industriais</strong></div>
+    <div class="top-status"><i id="statusLed"></i><span id="statusText">SISTEMA PARADO</span><button id="estop" class="stop-button"><b>■</b> EMERGÊNCIA</button></div>
+  </header>
+  <main>
+    <section class="viewport" id="viewport">
+      <canvas id="scene"></canvas>
+      <div class="scene-vignette"></div>
+      <div class="scene-head"><div><span class="eyebrow">VISUALIZAÇÃO EM TEMPO REAL</span><h1>Linha de classificação</h1><p>Selecione uma caixa para acompanhar o fluxo do processo.</p></div><button id="homeView" class="icon-button" title="Restaurar câmera">⌂ <span>VISÃO GERAL</span></button></div>
+      <div class="belt-tags">
+        <div><b>01</b><span>ALIMENTAÇÃO</span></div><div><b>02</b><span>TRANSFERÊNCIA</span></div><div><b>03</b><span>CLASSIFICAÇÃO</span></div><div><b>04</b><span>ESTEIRA AÉREA</span></div><div><b>05</b><span>ESTEIRA AÉREA</span></div>
+      </div>
+      <div class="scene-footer"><span><i class="dot green"></i> SENSOR ATIVO</span><span><i class="beam"></i> BARREIRA ÓPTICA</span><span><i class="dot orange"></i> DESVIADOR PNEUMÁTICO</span><span class="hint">ARRASTE PARA GIRAR · SCROLL PARA APROXIMAR</span></div>
+      <div class="selection" id="selection">CAIXA <b>—</b> <span>AGUARDANDO SELEÇÃO</span></div>
+    </section>
+    <aside class="sidebar">
+      <div class="panel-heading"><div><span class="eyebrow">OPERAÇÃO</span><h2>Comando da linha</h2></div><span class="pill" id="modePill">MANUAL</span></div>
+      <div class="run-controls"><button id="runBtn" class="run-button"><span>▶</span><b>INICIAR LINHA</b></button><button id="resetBtn" class="reset-button" title="Reiniciar simulação">↻</button></div>
+      <div class="control-group"><div class="control-label"><span>Velocidade das esteiras</span><b id="speedValue">55%</b></div><input id="speed" type="range" min="20" max="100" value="55"><div class="range-labels"><span>20%</span><span>100%</span></div></div>
+      <div class="control-group compact"><div class="control-label"><span>Modo de operação</span></div><div class="segmented"><button class="selected" data-mode="manual">MANUAL</button><button data-mode="auto">AUTOMÁTICO</button></div></div>
+      <div class="divider"></div>
+      <div class="panel-heading compact-head"><div><span class="eyebrow">PROCESSO</span><h2>Fluxo de caixas</h2></div><span class="live"><i></i> AO VIVO</span></div>
+      <div class="flow-list">
+        <div class="flow-row"><div class="flow-icon">01</div><div class="flow-copy"><b>Alimentação</b><small>Entrada de volumes</small></div><span class="flow-state" id="flow1">PARADA</span></div>
+        <div class="flow-row"><div class="flow-icon">02</div><div class="flow-copy"><b>Transferência</b><small>Transporte principal</small></div><span class="flow-state" id="flow2">PARADA</span></div>
+        <div class="flow-row"><div class="flow-icon">03</div><div class="flow-copy"><b>Classificação</b><small>Leitura e direcionamento</small></div><span class="flow-state" id="flow3">PARADA</span></div>
+        <div class="flow-row"><div class="flow-icon aerial">04</div><div class="flow-copy"><b>Esteira aérea 1</b><small>Rota superior</small></div><span class="flow-state" id="flow4">PARADA</span></div>
+        <div class="flow-row"><div class="flow-icon aerial">05</div><div class="flow-copy"><b>Esteira aérea 2</b><small>Rota superior</small></div><span class="flow-state" id="flow5">PARADA</span></div>
+      </div>
+      <div class="divider"></div>
+      <div class="panel-heading compact-head"><div><span class="eyebrow">INSTRUMENTAÇÃO</span><h2>Sensores e atuadores</h2></div></div>
+      <div class="io-grid"><div class="io-card"><i class="sensor-icon">◉</i><span><b>PE-01</b><small>Fotoelétrico</small></span><em id="sensor1">LIVRE</em></div><div class="io-card"><i class="sensor-icon">◉</i><span><b>PE-02</b><small>Fotoelétrico</small></span><em id="sensor2">LIVRE</em></div><div class="io-card"><i class="act-icon">↔</i><span><b>CY-01</b><small>Desviador A</small></span><em id="cyl1">RECUADO</em></div><div class="io-card"><i class="act-icon">↔</i><span><b>CY-02</b><small>Desviador B</small></span><em id="cyl2">RECUADO</em></div></div>
+      <div class="bottom-card"><div class="plc-badge">PLC</div><div><b>Controlador lógico</b><small>Interface de comunicação preparada</small></div><span class="offline"><i></i> OFFLINE</span></div>
+      <p class="prototype-note">PROTÓTIPO VISUAL · SIMULAÇÃO LOCAL</p>
+    </aside>
+  </main>
+  <script src="../vendor/three-bundle.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

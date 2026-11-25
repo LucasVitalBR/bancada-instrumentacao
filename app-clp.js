@@ -1,22 +1,23 @@
 /* CLP Delta DVP-SX2 (simulado) · editor de ladder + varredura
    Contatos NA/NF, OUT, SET, RST, CMP e MOV. Duas linhas em paralelo por rede.
    Endereços e escalas conferidos no manual do DVP-SX2:
-   AI CH0–CH3 = D1110–D1113 (média, D1062), 4–20 mA → 0..2000;
-   AO CH0 = D1116, 4–20 mA → 0..4000; modo 4–20 mA ligado em D1115 = H1F1F (K7967). */
+   AI CH1 = D1111 (TT-104), 4-20 mA -> 0..2000;
+   AO CH0 = D1116 (referencia de velocidade do inversor), 4-20 mA -> 0..4000 (= 0..60 Hz);
+   modo 4–20 mA ligado em D1115 = H1F1F (K7967). */
 (function () {
   "use strict";
   const $ = s => document.querySelector(s);
-  const NS = 6, RAW = 2000, RAO = 4000, D1115_OK = 7967, KEY = "clp-sx2-programa-v1";
+  const NS = 6, RAW = 2000, RAO = 4000, D1115_OK = 7967, KEY = "nivel-clp-programa-v1";
   const SYM = {
     X0: "LSL-101 · nível baixo", X1: "LSH-101 · nível alto", X2: "Botão LIGA", X3: "Botão DESLIGA (NF)", X4: "Seletora AUTO",
-    X5: "TSH-104 · temperatura alta", X6: "PSH-103 · pressão alta",
+    X5: "TSH-104 · temperatura alta", X6: "Chave seletora da resistência (porta do painel)", X7: "Falha do inversor (relé)",
     M1011: "clock 10 ms", M1012: "clock 100 ms", M1013: "clock 1 s",
-    D1112: "AI CH2 · FIT-102 (vazão)", D1113: "AI CH3 · PIT-103 (pressão)", D220: "SP de vazão (painel)", D222: "Abertura pedida da FV (painel)",
-    Y0: "Bomba (K1 na partida direta · borne 02 do inversor)", Y1: "VY-01 · solenoide", Y2: "Lâmpada de alarme", Y3: "Sinaleiro bomba ligada", Y4: "Resistência TZ-104 (contator K2)",
-    M1000: "sempre ON em RUN", M1002: "pulso no 1º scan", D1110: "AI CH0 · LIT-101", D1111: "AI CH1 · TT-104", D1116: "AO CH0 · FY-102", D1117: "AO CH1 · velocidade do inversor PF525 (borne 15, 4000 = 100 %)", X7: "Falha do inversor PF525 (relé R1)", D1115: "modo das E/S analógicas (H1F1F = 4–20 mA)",
-    D200: "SP de temperatura (painel)", D210: "Nível: liga abaixo de (painel)", D211: "Nível: desliga acima de (painel)",
+    D222: "Referência de velocidade pedida (painel)",
+    Y0: "Bomba (marcha do inversor)", Y1: "VY-01 · solenoide", Y2: "Lâmpada de alarme", Y3: "Sinaleiro bomba ligada", Y4: "Resistência TZ-104 (contator K2)",
+    M1000: "sempre ON em RUN", M1002: "pulso no 1º scan", D1111: "AI CH1 · TT-104", D1116: "AO CH0 · referência de velocidade do inversor (4000 = 60 Hz)", D1115: "modo das E/S analógicas (H1F1F = 4–20 mA)",
+    D200: "SP de temperatura (painel)",
   };
-  const io = { X: new Array(8).fill(false), Y: new Array(6).fill(false), M: {}, D: { 1110: 0, 1116: 0 }, btn: { X2: false, X3: false, X4: false } };
+  const io = { X: new Array(8).fill(false), Y: new Array(6).fill(false), M: {}, D: { 1116: 0 }, btn: { X2: false, X3: false, X4: false } };
   const PLC = { io, run: false, firstScan: false, rt: [], tool: "NO", errors: {}, program: null, t: 0, edge: {} };
   window.PLC = PLC;
 
@@ -50,7 +51,7 @@
       if (!parseBit(nextBit(el.d, 2))) return `CMP: ${up(el.d)}+2 passa do limite`;
       return "";
     }
-    const wr = (d, op) => { if (!isD(d)) return `${op}: o destino deve ser um registrador D`; if (["D1110", "D1111", "D1112", "D1113"].includes(d)) return `${op}: ${d} é entrada analógica, só leitura`; if (["D200", "D210", "D211", "D220", "D222"].includes(d)) return `${op}: ${d} é ajustado pelo painel (setpoint). Use outro D.`; return ""; };
+    const wr = (d, op) => { if (!isD(d)) return `${op}: o destino deve ser um registrador D`; if (["D1111"].includes(d)) return `${op}: ${d} é entrada analógica, só leitura`; if (["D200", "D222"].includes(d)) return `${op}: ${d} é ajustado pelo painel (setpoint). Use outro D.`; return ""; };
     if (el.op === "MOV") {
       if (!(isK(el.s) || isD(el.s))) return "MOV: S deve ser K ou D";
       return wr(el.d, "MOV");
@@ -106,7 +107,7 @@
   }
   PLC.scan = function (dt) {
     PLC.t += dt || 0.05;
-    io.X[2] = io.btn.X2; io.X[3] = !io.btn.X3; io.X[4] = io.btn.X4;
+    io.X[2] = io.btn.X2; io.X[3] = !io.btn.X3; io.X[4] = io.btn.X4; io.X[6] = !!io.btn.X6;
     if (!PLC.run) { io.Y.fill(false); PLC.rt = []; return; }
     PLC.rt = PLC.program.rungs.map((r, i) => {
       if (PLC.errors[i]) return null;
@@ -132,31 +133,26 @@
   const pad = a => { const r = a.slice(0, NS); while (r.length < NS) r.push(null); return r; };
   const R = (a, out, b, cm) => ({ a: pad(a), b: b ? pad(b) : null, out, cm: cm || "" });
   const M0 = () => c("NO", "M1000");
-  const bomba = () => [
-    R([c("NO", "X4"), c("NC", "X1")], { op: "OUT", addr: "Y0" }, null, "AUTO liga a bomba; LSH-101 (X1, NF) protege contra transbordar"),
+  const vel = k => R([M0()], { op: "MOV", s: "K" + k, d: "D1116" }, null, "referência de velocidade pelo inversor: K4000 = 100 % (60 Hz)");
+  const bomba = (k = 4000) => [
+    R([c("NO", "X4"), c("NC", "X1"), c("NC", "X7")], { op: "OUT", addr: "Y0" }, null, "AUTO liga o inversor (marcha); LSH-101 (X1, NF) e falha do inversor (X7, NF) desligam"),
     R([c("NO", "Y0")], { op: "OUT", addr: "Y1" }, null, "a solenoide VY-01 abre junto com a bomba"),
     R([c("NO", "Y0")], { op: "OUT", addr: "Y3" }, null, "sinaleiro de bomba ligada"),
+    vel(k),
   ];
   const nivel = () => [
-    R([M0()], { op: "CMP", s1: "D210", s2: "D1110", d: "M10" }, null, "M10 = nível abaixo do ponto de ligar (D210)"),
-    R([M0()], { op: "CMP", s1: "D211", s2: "D1110", d: "M20" }, null, "M22 = nível acima do ponto de desligar (D211)"),
-    R([c("NO", "M10")], { op: "SET", addr: "M0" }, null, "pede para encher"),
-    R([c("NO", "M22")], { op: "RST", addr: "M0" }, null, "para de encher"),
-    R([c("NO", "X4"), c("NO", "M0"), c("NC", "X1")], { op: "OUT", addr: "Y0" }, null, "bomba: AUTO · pedido · LSH (NF)"),
+    R([c("NO", "X0")], { op: "SET", addr: "M0" }, null, "LSL-101 (boia baixa) atuou: pede para encher"),
+    R([c("NO", "X1")], { op: "RST", addr: "M0" }, null, "LSH-101 (boia alta) atuou: para de encher"),
+    R([c("NO", "X4"), c("NO", "M0"), c("NC", "X1"), c("NC", "X7")], { op: "OUT", addr: "Y0" }, null, "inversor em marcha: AUTO · pedido · LSH (NF) · sem falha"),
     R([c("NO", "Y0")], { op: "OUT", addr: "Y1" }, null, "VY-01 abre com a bomba"),
     R([c("NO", "Y0")], { op: "OUT", addr: "Y3" }, null, "sinaleiro"),
     R([c("NO", "X0")], { op: "OUT", addr: "Y2" }, null, "alarme de nível baixo (LSL-101)"),
+    vel(4000),
   ];
   const temperatura = () => [
     R([M0()], { op: "CMP", s1: "D200", s2: "D1111", d: "M30" }, null, "M30 = temperatura abaixo do setpoint (D200)"),
-    R([c("NO", "X4"), c("NO", "M30"), c("NC", "X5")], { op: "OUT", addr: "Y4" }, null, "resistência: AUTO · frio · TSH-104 (NF)"),
+    R([c("NO", "X6"), c("NO", "M30"), c("NC", "X5")], { op: "OUT", addr: "Y4" }, null, "resistência: chave seletora (X6) · frio · TSH-104 (NF)"),
     R([c("NO", "X5")], { op: "OUT", addr: "Y2" }, null, "alarme de temperatura alta (TSH-104)"),
-  ];
-  const pressao = () => [
-    R([M0()], { op: "CMP", s1: "D1113", s2: "K667", d: "M80" }, null, "M80 = pressão acima de 2,0 bar (K667)"),
-    R([c("NO", "M80")], { op: "OUT", addr: "Y2" }, [c("NO", "X6")], "alarme: pressão alta pelo PIT ou pelo PSH-103"),
-    R([M0()], { op: "CMP", s1: "D200", s2: "D1111", d: "M30" }, null, "controle de temperatura (gera a pressão)"),
-    R([c("NO", "X4"), c("NO", "M30"), c("NC", "X5"), c("NC", "X6")], { op: "OUT", addr: "Y4" }, null, "resistência só liga se TSH e PSH estiverem OK"),
   ];
   const limita = (d, mn, mx, m) => [
     R([M0()], { op: "CMP", s1: d, s2: "K" + mx, d: m }, null, "verifica se passou de 100 %"),
@@ -164,43 +160,29 @@
     R([M0()], { op: "CMP", s1: d, s2: "K" + mn, d: "M" + (+m.slice(1) + 10) }, null, "verifica se ficou abaixo de 0 %"),
     R([c("NO", "M" + (+m.slice(1) + 12))], { op: "MOV", s: "K" + mn, d }, null, "limite inferior (0 %)"),
   ];
-  const vazaoP = () => [
-    ...bomba(),
-    R([M0()], { op: "SUB", s1: "D220", s2: "D1112", d: "D10" }, null, "erro = SP de vazão (D220) − vazão medida (FIT-102)"),
-    R([M0()], { op: "MUL", s1: "D10", s2: "K4", d: "D12" }, null, "ação proporcional: Kp = 2 (×4 porque a AO vai até 4000 e a AI até 2000)"),
-    R([M0()], { op: "ADD", s1: "D12", s2: "K2000", d: "D14" }, null, "saída = 50 % (bias) + Kp × erro"),
-    ...limita("D14", 0, RAO, "M60"),
-    R([M0()], { op: "MOV", s: "D14", d: "D1116" }, null, "envia ao FY-102 pela saída analógica"),
-  ];
-  const vazaoF = () => [
-    ...bomba(),
-    R([M0()], { op: "CMP", s1: "D220", s2: "D1112", d: "M50" }, null, "M50 = vazão abaixo do SP · M52 = acima"),
-    R([c("PU", "M1012"), c("NO", "M50")], { op: "ADD", s1: "D1116", s2: "K40", d: "D1116" }, null, "a cada 100 ms: abre 1 % se faltar vazão"),
-    R([c("PU", "M1012"), c("NO", "M52")], { op: "SUB", s1: "D1116", s2: "K40", d: "D1116" }, null, "a cada 100 ms: fecha 1 % se sobrar vazão"),
-    ...limita("D1116", 0, RAO, "M60"),
-  ];
-  const valvula = () => [
-    ...bomba(),
-    R([c("NO", "X2")], { op: "MOV", s: "K4000", d: "D1116" }, null, "LIGA (X2): abre a FV-102 em 100 %"),
-    R([c("NC", "X3")], { op: "MOV", s: "K0", d: "D1116" }, null, "DESLIGA (X3, NF) apertado: fecha a FV-102"),
-    R([c("NO", "X4"), c("NC", "X2"), c("NO", "X3")], { op: "MOV", s: "D222", d: "D1116" }, null, "AUTO: segue a abertura pedida no painel (D222)"),
+  const velFixa = () => bomba(2400);
+  const velPainel = () => [...bomba().slice(0, 3), R([M0()], { op: "MOV", s: "D222", d: "D1116" }, null, "referência de velocidade = valor pedido no painel (D222)")];
+  const rampa = () => [
+    ...bomba().slice(0, 3),
+    R([c("NO", "Y0")], { op: "MOV", s: "K4000", d: "D1116" }, null, "referência 100 % enquanto a bomba roda (ajuste a rampa no painel do inversor)"),
+    R([c("NC", "Y0")], { op: "MOV", s: "K0", d: "D1116" }, null, "referência 0 com a bomba parada"),
   ];
   const EX = {
-    nivel: { t: "Nível · liga/desliga por comparador", d: "Coloque em RUN e ligue AUTO (X4). Ajuste D210/D211 no painel. Abra o dreno para ver os ciclos.", f: nivel },
-    temperatura: { t: "Temperatura · liga/desliga com intertravamento", d: "Ligue o TT-104 (aba Ligação do PT100), coloque em RUN e AUTO e mude o setpoint D200.", f: temperatura },
-    vazaoP: { t: "Vazão · controle proporcional (P)", d: "RUN + AUTO + dreno aberto. Mude o SP de vazão (D220): a válvula corrige, mas sobra um erro de regime (típico do controle P).", f: vazaoP },
-    vazaoF: { t: "Vazão · controle flutuante (passo a passo)", d: "RUN + AUTO + dreno aberto. A cada 100 ms a FV-102 abre ou fecha 1 % até a vazão chegar no SP (D220), sem erro de regime.", f: vazaoF },
-    valvula: { t: "Válvula proporcional · posicionamento", d: "RUN + AUTO. LIGA abre 100 %, DESLIGA fecha; em repouso a FV-102 segue a abertura pedida (D222) no painel.", f: valvula },
-    pressao: { t: "Pressão · alarme e intertravamento", d: "Ligue o TT-104, coloque em RUN e AUTO e suba o setpoint de temperatura: acima de 2,0 bar acende o alarme; no PSH-103 a resistência é cortada.", f: pressao },
-    completa: { t: "Bancada completa · nível + vazão P + temperatura + pressão", d: "RUN + AUTO. Nível pelos comparadores, vazão controlada pela FV-102, temperatura com TSH e PSH protegendo.", f: () => [...nivel().slice(0, 4), R([c("NO", "X4"), c("NO", "M0"), c("NC", "X1")], { op: "OUT", addr: "Y0" }, null, "bomba: AUTO · pedido · LSH (NF)"), R([c("NO", "Y0")], { op: "OUT", addr: "Y1" }, null, "VY-01"), R([c("NO", "Y0")], { op: "OUT", addr: "Y3" }, null, "sinaleiro"), R([c("NO", "X0")], { op: "OUT", addr: "Y2" }, [c("NO", "X5")], "alarme: nível baixo ou temperatura alta"), ...vazaoP().slice(3), ...pressao().slice(2)] },
+    nivel: { t: "Nível · liga/desliga pelas boias (LSL/LSH)", d: "RUN + AUTO (X4). A LSL liga o enchimento e a LSH desliga. Abra o dreno para ver os ciclos.", f: nivel },
+    temperatura: { t: "Temperatura · liga/desliga com intertravamento", d: "Ligue o TT-104 (aba Ligação do PT100), coloque em RUN, gire a seletora da resistência na porta do painel (X6) e mude o setpoint D200.", f: temperatura },
+    velFixa: { t: "Inversor · velocidade fixa (60 %)", d: "RUN + AUTO. O inversor parte pelo Y0 e a referência é fixa em K2400 (60 % = 36 Hz): a vazão cai em relação aos 60 Hz.", f: velFixa },
+    velPainel: { t: "Inversor · velocidade pelo painel (D222)", d: "RUN + AUTO. Mude a referência de velocidade no painel (D222): a rotação, a corrente e a vazão acompanham, com a rampa do inversor.", f: velPainel },
+    rampa: { t: "Inversor · rampa de aceleração e desaceleração", d: "RUN + AUTO. Com o AUTO ligado a referência vai a 100 %; ao desligar, a bomba desacelera pela rampa. Mude a rampa no painel do inversor.", f: rampa },
+    completa: { t: "Bancada completa · nível + velocidade + temperatura", d: "RUN + AUTO (X4) + seletora da resistência (X6). Nível pelas boias com o inversor em 100 %, temperatura pelo comparador com TSH-104 protegendo.", f: () => [...nivel(), ...temperatura().slice(0, 2)] },
     selo: { t: "Partida com selo · LIGA/DESLIGA", d: "Em RUN, aperte LIGA (X2) e DESLIGA (X3). O LSH-101 (X1) também desliga.", f: () => [
-      R([c("NO", "X2"), c("NO", "X3"), c("NC", "X1")], { op: "OUT", addr: "Y0" }, [c("NO", "Y0"), c("NO", "X3"), c("NC", "X1")], "selo: (LIGA ou Y0) · DESLIGA (NF) · LSH (NF)"),
+      R([c("NO", "X2"), c("NO", "X3"), c("NC", "X1"), c("NC", "X7")], { op: "OUT", addr: "Y0" }, [c("NO", "Y0"), c("NO", "X3"), c("NC", "X1"), c("NC", "X7")], "selo: (LIGA ou Y0) · DESLIGA (NF) · LSH (NF) · falha do inversor (NF)"),
+      vel(4000),
       R([c("NO", "Y0")], { op: "OUT", addr: "Y1" }, null, "VY-01"), R([c("NO", "Y0")], { op: "OUT", addr: "Y3" }, null, "sinaleiro"), R([c("NO", "X0")], { op: "OUT", addr: "Y2" }, null, "alarme de nível baixo")] },
     vazio: { t: "Programa vazio", d: "", f: () => [R([], null)] },
   };
   // 1º scan: D1115 = H1F1F (K7967) → AD0–AD3 e DA0 em corrente, faixa 4–20 mA
   const cfg = () => R([c("NO", "M1002")], { op: "MOV", s: "K" + D1115_OK, d: "D1115" }, null, "1º scan: D1115 = H1F1F → entradas CH0–CH3 e saída CH0 em 4–20 mA");
-  ["nivel", "temperatura", "vazaoP", "vazaoF", "valvula", "pressao", "completa"].forEach(k => { const f0 = EX[k].f; EX[k].f = () => [cfg(), ...f0()]; });
+  ["nivel", "temperatura", "velFixa", "velPainel", "rampa", "completa"].forEach(k => { const f0 = EX[k].f; EX[k].f = () => [cfg(), ...f0()]; });
   PLC.examples = EX;
   function load() {
     try { const s = localStorage.getItem(KEY); if (s) { const p = JSON.parse(s); if (p && Array.isArray(p.rungs)) { p.rungs.forEach(r => { r.a = pad(r.a || []); if (r.b) r.b = pad(r.b); }); return p; } } } catch (e) { }
@@ -214,10 +196,10 @@
   const CX = i => 82 + i * 64, JX = 452, OX = 474, OW = 238, RR = 742;
   const esc = s => String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
   function wire(x1, x2, y, on) { return `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" class="w${on ? " on" : ""}"/>`; }
-  const SHORT = { X0: "LSL-101", X1: "LSH-101", X2: "LIGA", X3: "DESLIGA", X4: "AUTO", X5: "TSH-104", X6: "PSH-103", M1012: "clock 100ms", M1013: "clock 1s", Y0: "bomba", Y1: "VY-01", Y2: "alarme", Y3: "sinaleiro", Y4: "resistência", M1000: "sempre ON", M1002: "1º scan" };
+  const SHORT = { X0: "LSL-101", X1: "LSH-101", X2: "LIGA", X3: "DESLIGA", X4: "AUTO", X5: "TSH-104", X7: "falha inv.", M1012: "clock 100ms", M1013: "clock 1s", Y0: "bomba", Y1: "VY-01", Y2: "alarme", Y3: "sinaleiro", Y4: "resistência", M1000: "sempre ON", M1002: "1º scan" };
   // unidade de engenharia de um operando: temperatura (10 contagens = 1 °C) ou nível (20 contagens = 1 %)
-  const unitOf = (a, b) => { const t = [a, b].map(x => String(x).toUpperCase()); if (t.some(x => x === "D1111" || x === "D200")) return "T"; if (t.some(x => x === "D1110" || x === "D210" || x === "D211")) return "L"; if (t.some(x => x === "D1112" || x === "D220")) return "F"; if (t.some(x => x === "D1113")) return "P"; if (t.some(x => x === "D1116" || x === "D1117" || x === "D222" || x === "D14")) return "V"; return null; };
-  const eng = (v, u) => u === "T" ? (v / 10).toFixed(1).replace(".", ",") + " °C" : u === "L" ? Math.round(v / 20) + " %" : u === "F" ? (v * 30 / 2000).toFixed(1).replace(".", ",") + " L/min" : u === "P" ? (v * 6 / 2000).toFixed(2).replace(".", ",") + " bar" : u === "V" ? Math.round(v / 40) + " %" : "";
+  const unitOf = (a, b) => { const t = [a, b].map(x => String(x).toUpperCase()); if (t.some(x => x === "D1111" || x === "D200")) return "T"; if (t.some(x => x === "D1110" || x === "D210" || x === "D211")) return "L"; if (t.some(x => x === "D1116" || x === "D222" || x === "D12" || x === "D14")) return "V"; return null; };
+  const eng = (v, u) => u === "T" ? (v / 10).toFixed(1).replace(".", ",") + " °C" : u === "L" ? Math.round(v / 20) + " %" : u === "V" ? Math.round(v / 40) + " % · " + (v * 60 / 4000).toFixed(1).replace(".", ",") + " Hz" : "";
   function symb(a) { return SYM[String(a).toUpperCase()] || ""; }
   function lineSVG(cells, y, ri, ln, steps, run) {
     let s = wire(14, CX(0) - 32, y, run);
@@ -292,8 +274,8 @@
 
   /* ---------- edição ---------- */
   const CONTACT = ["NO", "NC", "PU"], OUTS = ["OUT", "SET", "RST", "CMP", "MOV", "ADD", "SUB", "MUL", "DIV"];
-  const DEF = { NO: { op: "NO", addr: "X0" }, NC: { op: "NC", addr: "X1" }, PU: { op: "PU", addr: "M1012" }, OUT: { op: "OUT", addr: "Y0" }, SET: { op: "SET", addr: "M0" }, RST: { op: "RST", addr: "M0" }, CMP: { op: "CMP", s1: "K800", s2: "D1110", d: "M10" }, MOV: { op: "MOV", s: "K2400", d: "D1116" },
-    ADD: { op: "ADD", s1: "D10", s2: "K1000", d: "D14" }, SUB: { op: "SUB", s1: "D220", s2: "D1112", d: "D10" }, MUL: { op: "MUL", s1: "D10", s2: "K2", d: "D12" }, DIV: { op: "DIV", s1: "D10", s2: "K2", d: "D12" } };
+  const DEF = { NO: { op: "NO", addr: "X0" }, NC: { op: "NC", addr: "X1" }, PU: { op: "PU", addr: "M1012" }, OUT: { op: "OUT", addr: "Y0" }, SET: { op: "SET", addr: "M0" }, RST: { op: "RST", addr: "M0" }, CMP: { op: "CMP", s1: "K600", s2: "D1111", d: "M10" }, MOV: { op: "MOV", s: "K2400", d: "D1116" },
+    ADD: { op: "ADD", s1: "D10", s2: "K1000", d: "D14" }, SUB: { op: "SUB", s1: "D222", s2: "D1111", d: "D10" }, MUL: { op: "MUL", s1: "D10", s2: "K2", d: "D12" }, DIV: { op: "DIV", s1: "D10", s2: "K2", d: "D12" } };
   function changed() { validate(); save(); render(); }
   function onEditorClick(e) {
     const act = e.target.closest("[data-act]");
@@ -331,7 +313,7 @@
     const title = { NO: "Contato NA", NC: "Contato NF", OUT: "Bobina OUT", SET: "SET (liga e mantém)", RST: "RST (desliga)", CMP: "CMP · comparador", MOV: "MOV · mover valor", PU: "Contato de pulso ↑ (LDP)", ADD: "ADD · soma (D = S1 + S2)", SUB: "SUB · subtração (D = S1 − S2)", MUL: "MUL · multiplicação (D = S1 × S2)", DIV: "DIV · divisão (D = S1 ÷ S2)" }[el.op];
     pop = document.createElement("div"); pop.className = "ldpop";
     pop.innerHTML = `<b>${title}</b>${fields.map(([k, l]) => `<label class="f" style="margin-top:8px">${l}<input type="text" list="ldAddrs" data-k="${k}" value="${esc(el[k] || "")}" style="text-transform:uppercase;font-family:'Courier New',monospace;font-weight:700"></label>`).join("")}
-      ${el.op === "CMP" || el.op === "MOV" || ["ADD", "SUB", "MUL", "DIV"].includes(el.op) ? '<div class="small" style="margin-top:8px;color:var(--muted)">Escala: temperatura <b>10 contagens = 1 °C</b> (K600 = 60 °C, D1111 = TT-104, D200 = SP do painel). Nível <b>20 contagens = 1 %</b> (K800 = 40 %, D1110 = LIT-101, D210/D211 = faixa do painel). Vazão <b>2000 = 30 L/min</b> (D1112 = FIT-102, D220 = SP). Pressão <b>2000 = 6 bar</b> (D1113). Válvula <b>4000 = 100 %</b> (D1116 = saída analógica, D222). Modo 4–20 mA: <b>MOV K7967 D1115</b> no 1º scan (M1002).</div>' : ""}
+      ${el.op === "CMP" || el.op === "MOV" || ["ADD", "SUB", "MUL", "DIV"].includes(el.op) ? '<div class="small" style="margin-top:8px;color:var(--muted)">Escala: temperatura <b>10 contagens = 1 °C</b> (K600 = 60 °C, D1111 = TT-104, D200 = SP do painel). Velocidade do inversor <b>4000 = 100 % = 60 Hz</b> (D1116 = saída analógica, D222 = pedido do painel). Modo 4–20 mA: <b>MOV K7967 D1115</b> no 1º scan (M1002).</div>' : ""}
       <div class="small" id="popErr" style="color:var(--red);min-height:16px;margin-top:6px"></div>
       <div class="row" style="margin-top:4px"><button class="btn pri" data-p="ok">OK</button><button class="btn danger" data-p="del">Apagar</button><button class="btn" data-p="x">Cancelar</button></div>`;
     document.body.appendChild(pop);
@@ -362,32 +344,24 @@
     used.delete("M1000"); used.delete("M1002");
     const ms = [...used].sort((a, b) => +a.slice(1) - +b.slice(1)).slice(0, 12);
     t.innerHTML = `<tr><th>Endereço</th><th>Ligado a</th><th>Valor</th></tr>`
-      + [0, 1, 2, 3, 4, 5, 6].map(n => `<tr><td><b>X${n}</b></td><td>${SYM["X" + n]}</td><td>${b(io.X[n])}</td></tr>`).join("")
+      + [0, 1, 2, 3, 4, 5, 6, 7].map(n => `<tr><td><b>X${n}</b></td><td>${SYM["X" + n]}</td><td>${b(io.X[n])}</td></tr>`).join("")
       + [0, 1, 2, 3, 4].map(n => `<tr><td><b>Y${n}</b></td><td>${SYM["Y" + n]}</td><td>${b(io.Y[n])}</td></tr>`).join("")
-      + `<tr><td><b>D1110</b></td><td>${SYM.D1110}${pl && pl.litFail ? " <span class='pill bad'>travado</span>" : ""}</td><td><b>${io.D[1110]}</b> <span class="note">(${(4 + 16 * io.D[1110] / RAW).toFixed(2).replace(".", ",")} mA)</span></td></tr>`
       + `<tr><td><b>D1111</b></td><td>${SYM.D1111}${pl && !pl.wired ? " <span class='pill bad'>sem ligação</span>" : ""}</td><td><b>${io.D[1111] || 0}</b> <span class="note">(${((io.D[1111] || 0) / 10).toFixed(1).replace(".", ",")} °C)</span></td></tr>`
-      + `<tr><td><b>D1112</b></td><td>${SYM.D1112}</td><td><b>${io.D[1112] || 0}</b> <span class="note">(${((io.D[1112] || 0) * 30 / 2000).toFixed(1).replace(".", ",")} L/min)</span></td></tr>`
-      + `<tr><td><b>D1113</b></td><td>${SYM.D1113}</td><td><b>${io.D[1113] || 0}</b> <span class="note">(${((io.D[1113] || 0) * 6 / 2000).toFixed(2).replace(".", ",")} bar)</span></td></tr>`
-      + `<tr><td><b>D220 / D222</b></td><td>SP de vazão / abertura pedida</td><td>${io.D[220] || 0} / ${io.D[222] || 0} <span class="note">(${((io.D[220] || 0) * 30 / 2000).toFixed(1).replace(".", ",")} L/min · ${Math.round((io.D[222] || 0) / 40)} %)</span></td></tr>`
+      + `<tr><td><b>D222</b></td><td>${SYM.D222}</td><td>${io.D[222] || 0} <span class="note">(${Math.round((io.D[222] || 0) / 40)} %)</span></td></tr>`
       + `<tr><td><b>D200</b></td><td>${SYM.D200}</td><td>${io.D[200] || 0} <span class="note">(${((io.D[200] || 0) / 10).toFixed(0)} °C)</span></td></tr>`
-      + `<tr><td><b>D210 / D211</b></td><td>Faixa de nível (painel)</td><td>${io.D[210] || 0} / ${io.D[211] || 0} <span class="note">(${Math.round((io.D[210] || 0) / 20)}–${Math.round((io.D[211] || 0) / 20)} %)</span></td></tr>`
-      + `<tr><td><b>D1116</b></td><td>${SYM.D1116}${PLC.aoUsed() ? "" : " <span class='note'>(sem MOV: abertura manual)</span>"}</td><td>${io.D[1116] || 0} <span class="note">(${Math.round((io.D[1116] || 0) / 40)} % · ${(4 + 16 * (io.D[1116] || 0) / RAO).toFixed(2).replace(".", ",")} mA)</span></td></tr>`
+      + `<tr><td><b>D1116</b></td><td>${SYM.D1116}${PLC.aoUsed() ? "" : " <span class='note'>(sem MOV: referência manual)</span>"}</td><td>${io.D[1116] || 0} <span class="note">(${Math.round((io.D[1116] || 0) / 40)} % · ${(4 + 16 * (io.D[1116] || 0) / RAO).toFixed(2).replace(".", ",")} mA)</span></td></tr>`
       + `<tr><td><b>D1115</b></td><td>${SYM.D1115}</td><td>${io.D[1115] || 0}${(io.D[1115] || 0) === D1115_OK ? " <span class='pill ok'>4–20 mA</span>" : " <span class='pill bad'>não configurado</span> <span class='note'>no CLP real as E/S ficariam em tensão</span>"}</td></tr>`
       + (ms.length ? `<tr><td colspan="3" class="note" style="padding-top:10px">Relés auxiliares usados no programa</td></tr>` + ms.map(m => `<tr><td><b>${m}</b></td><td></td><td>${b(getBit(m))}</td></tr>`).join("") : "")
-      + (pl ? `<tr><td><b>Temperatura real</b></td><td>TQ-01</td><td>${pl.T.toFixed(1).replace(".", ",")} °C</td></tr><tr><td><b>Nível real</b></td><td>tanque de acrílico</td><td>${Math.round(pl.L)} %</td></tr><tr><td><b>Vazão</b></td><td>FIT-102</td><td>${pl.Q.toFixed(1).replace(".", ",")} L/min</td></tr>` : "");
+      + (pl ? `<tr><td><b>Temperatura real</b></td><td>tanque</td><td>${pl.T.toFixed(1).replace(".", ",")} °C</td></tr><tr><td><b>Nível real</b></td><td>tanque de acrílico</td><td>${Math.round(pl.L)} %</td></tr><tr><td><b>Vazão da bomba</b></td><td>real</td><td>${pl.Q.toFixed(1).replace(".", ",")} L/min</td></tr>` : "");
     const st = $("#plcStatus");
     if (st) st.innerHTML = PLC.run ? `<span class="pill ok">RUN</span> varrendo ${PLC.program.rungs.length} rede(s)` : `<span class="pill neu">STOP</span> saídas desligadas · bancada em comando local`;
     $("#pbAuto") && $("#pbAuto").classList.toggle("on", io.btn.X4);
     if (pl) {
       $("#plcDrain") && ($("#plcDrain").textContent = pl.drain ? "Fechar dreno" : "Abrir dreno");
-      $("#plcFail") && $("#plcFail").classList.toggle("on", pl.litFail);
       const setv = (id, v, txt) => { const el = $(id); if (el && document.activeElement !== el) el.value = v; const t = $(id + "T"); if (t) t.textContent = txt; };
       setv("#plcSp", pl.sp, pl.sp + " °C · D200 = " + Math.round(pl.sp * 10));
-      setv("#plcLo", pl.spLo, pl.spLo + " % · D210 = " + Math.round(pl.spLo * 20));
-      setv("#plcHi", pl.spHi, pl.spHi + " % · D211 = " + Math.round(pl.spHi * 20));
-      setv("#plcFq", pl.spQ, String(pl.spQ).replace(".", ",") + " L/min · D220 = " + Math.round(pl.spQ * 2000 / 30));
-      setv("#plcAv", pl.av, pl.av + " % · D222 = " + Math.round(pl.av * RAO / 100));
-      const fv = $("#plcFv"); if (fv) { fv.disabled = PLC.run && PLC.aoUsed(); if (document.activeElement !== fv) fv.value = pl.fvCmd; $("#plcFvT").textContent = (PLC.run && PLC.aoUsed() ? "CLP pede " : "pedida ") + Math.round(pl.fvCmd) + " % · real " + Math.round(pl.fv) + " %"; }
+      setv("#plcAv", pl.av, pl.av + " % (" + (pl.av * 0.6).toFixed(1).replace(".", ",") + " Hz) · D222 = " + Math.round(pl.av * RAO / 100));
+      const fv = $("#plcFv"); if (fv) { fv.disabled = PLC.run && PLC.aoUsed(); if (document.activeElement !== fv) fv.value = pl.fvCmd; $("#plcFvT").textContent = (PLC.run && PLC.aoUsed() ? "CLP pede " : "manual ") + Math.round(pl.fvCmd) + " % (" + (pl.fvCmd * 0.6).toFixed(1).replace(".", ",") + " Hz)"; }
     }
     const lock = $("#clpLock2"); if (lock) lock.style.display = A && A.ready && A.ready() ? "none" : "";
   }
@@ -398,7 +372,7 @@
     if (PLC.mounted) { render(); refreshIO(); return; }
     PLC.mounted = true;
     $("#ldEditor").addEventListener("click", onEditorClick);
-    document.querySelectorAll("#ldPal [data-tool]").forEach(bt => bt.onclick = () => { PLC.tool = bt.dataset.tool; render(); msg({ NO: "Contato NA: passa energia quando o endereço vale 1.", NC: "Contato NF: passa energia quando o endereço vale 0.", OUT: "OUT: a bobina segue o resultado da rede.", SET: "SET: liga e mantém ligado, mesmo que a rede desligue.", RST: "RST: desliga o que o SET ligou.", CMP: "CMP S1 S2 D: liga D se S1 > S2, D+1 se forem iguais, D+2 se S1 < S2.", MOV: "MOV S D: copia o valor de S para D (ex.: K2400 → D1116 abre a FV-102 em 60%; na saída, 4000 = 100%).", PU: "Contato de pulso ↑ (LDP): fica ligado só na varredura em que o endereço passa de 0 para 1. Com M1012 dá um pulso a cada 100 ms.", ADD: "ADD S1 S2 D: D = S1 + S2.", SUB: "SUB S1 S2 D: D = S1 − S2 (ex.: erro = SP − PV).", MUL: "MUL S1 S2 D: D = S1 × S2 (ex.: ganho Kp).", DIV: "DIV S1 S2 D: D = S1 ÷ S2 (parte inteira).", DEL: "Apagar: toque no elemento que quer remover.", SEL: "Editar: toque num elemento para trocar o endereço." }[PLC.tool], ""); });
+    document.querySelectorAll("#ldPal [data-tool]").forEach(bt => bt.onclick = () => { PLC.tool = bt.dataset.tool; render(); msg({ NO: "Contato NA: passa energia quando o endereço vale 1.", NC: "Contato NF: passa energia quando o endereço vale 0.", OUT: "OUT: a bobina segue o resultado da rede.", SET: "SET: liga e mantém ligado, mesmo que a rede desligue.", RST: "RST: desliga o que o SET ligou.", CMP: "CMP S1 S2 D: liga D se S1 > S2, D+1 se forem iguais, D+2 se S1 < S2.", MOV: "MOV S D: copia o valor de S para D (ex.: K2400 → D1116 = velocidade de 60% (36 Hz); na saída, 4000 = 100% = 60 Hz).", PU: "Contato de pulso ↑ (LDP): fica ligado só na varredura em que o endereço passa de 0 para 1. Com M1012 dá um pulso a cada 100 ms.", ADD: "ADD S1 S2 D: D = S1 + S2.", SUB: "SUB S1 S2 D: D = S1 − S2 (ex.: erro = SP − PV).", MUL: "MUL S1 S2 D: D = S1 × S2 (ex.: ganho Kp).", DIV: "DIV S1 S2 D: D = S1 ÷ S2 (parte inteira).", DEL: "Apagar: toque no elemento que quer remover.", SEL: "Editar: toque num elemento para trocar o endereço." }[PLC.tool], ""); });
     const sel = $("#ldExSel");
     if (sel) { sel.innerHTML = Object.entries(EX).filter(([k]) => k !== "vazio").map(([k, e]) => `<option value="${k}">${e.t}</option>`).join(""); sel.onchange = () => { const e = EX[sel.value]; $("#ldExInfo").textContent = e ? e.d : ""; }; sel.onchange(); }
     $("#ldExLoad").onclick = () => { const e = EX[sel.value]; if (!e) return; armed($("#ldExLoad"), hasProgram(), () => { const was = PLC.run; if (was) PLC.setRun(false); PLC.program.rungs = e.f(); PLC.edge = {}; changed(); msg(`Programa carregado: <b>${e.t}</b>. ${e.d}`, "ok"); }); };
@@ -408,12 +382,8 @@
     hold("#pbOn", "X2"); hold("#pbOff", "X3");
     $("#pbAuto").onclick = () => { io.btn.X4 = !io.btn.X4; refreshIO(); };
     $("#plcDrain").onclick = () => { window.App3D && App3D.setDrain(!App3D.plant().drain); refreshIO(); };
-    $("#plcFail").onclick = () => { window.App3D && App3D.setLitFail(!App3D.plant().litFail); refreshIO(); };
     $("#plcFv").oninput = e => { window.App3D && App3D.setFv(+e.target.value); refreshIO(); };
     $("#plcSp").oninput = e => { window.App3D && App3D.setSp(+e.target.value); refreshIO(); };
-    $("#plcLo").oninput = e => { window.App3D && App3D.setBand(+e.target.value, null); refreshIO(); };
-    $("#plcHi").oninput = e => { window.App3D && App3D.setBand(null, +e.target.value); refreshIO(); };
-    $("#plcFq").oninput = e => { window.App3D && App3D.setFlowSp(+e.target.value); refreshIO(); };
     $("#plcAv").oninput = e => { window.App3D && App3D.setValveReq(+e.target.value); refreshIO(); };
     $("#clpAuto").onclick = () => { window.App3D && App3D.autoInstall(); refreshIO(); };
     render(); refreshIO();

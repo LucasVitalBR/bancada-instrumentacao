@@ -1,389 +1,68 @@
-# Bancada de Instrumentação: memória do projeto
+# Controle de Nível Simples (simulador didático 3D + CLP)
 
-> Leia este arquivo antes de mexer no projeto. Ele resume o que foi construído, as decisões tomadas e o plano de continuação. Atualize-o ao final de cada sessão de trabalho.
+Projeto NOVO, separado da Bancada de Instrumentação (não alterar o projeto antigo; ele é só fonte de consulta).
+Base copiada em 15/11/2026 da skill `simulador-bancada-3d` (use-a: regras de economia de tokens e mapa de funções).
 
-## 1. O que é
+## Pasta oficial (desde 17/11/2026)
+- **Trabalhar sempre em** `C:Usersederson.cardosoOneDrive - SESIMSDocumentosClaudecontrole-nivel-simples`. A pasta antiga `C:Usersederson.cardosocontrole-nivel-simples` não é mais usada (fica só como backup). Atenção: a pasta está no OneDrive e tem `.git`; se o OneDrive criar cópias em conflito dentro de `.git`, avisar o Ederson.
 
-App web didático para as aulas de **Instrumentação** do curso técnico de **Eletromecânica**, unidade "Implementação de Equipamentos e Dispositivos".
-- **Autor e dono:** Ederson, professor.
-- **Base pedagógica:** os slides `bloco1.pptx` da Aula 01:
-  - Bloco 1: controlar é comparar (malha × intertravamento);
-  - Bloco 2: sinal 4–20 mA;
-  - Bloco 3: tags ISA e a bancada.
-- **Uso:** em sala, projetado, e pelos alunos.
-- **Funcionamento:** offline, abrindo o HTML com dois cliques (Chrome/Edge).
-- **Link publicado (privado, compartilhar pelo menu Share):** https://claude.ai/artifact/JWPR6417D5qq23xkttKEt9
-  Para atualizar, republique o mesmo artifact (passe a URL como `url` na ferramenta Artifact).
+## Regras de trabalho (economia de tokens)
+- Nunca ler `app-3d.js`, `app-clp.js`, `index.html` inteiros: `grep -n` + leitura de trecho.
+- Edições pontuais; `node --check` depois. Sem screenshots durante o desenvolvimento.
+- Uma tarefa por sessão. Commit só ao fechar etapa. Histórico vai em `HISTORICO.md` (não ler por padrão).
 
-## 00. Rotina obrigatória de início e fim (vale para qualquer pessoa ou IA)
+## Escopo
+Tanque, dreno, motor/bomba, 2 boias (LSL/LSH), resistência, PT100. Dois modos: **comando direto** (botoeira + contator) e **CLP com inversor**.
 
-**Ao iniciar (antes de qualquer pedido, mesmo pequeno):**
-1. Ler este CLAUDE.md inteiro.
-2. Comparar a cópia local com o GitHub: `git fetch origin` e depois `git status` / `git log HEAD..origin/main --oneline`.
-3. Se o GitHub tiver versão mais nova, **baixar antes de editar** (`git pull`) e avisar quem está trabalhando o que mudou (ver histórico na seção 7).
-4. Se não houver pasta local com git, clonar: `git clone https://github.com/LucasVitalBR/bancada-instrumentacao` (fora do Google Drive).
+## Situação atual
+- BUILD: ver `const BUILD` no index.html (20261119-35). Etapas 1 (base enxuta), 2 (comando direto), 3 (CLP + inversor) e a redução da cena a UM tanque concluídas. Modo “Vista lado a lado” ocupa a janela atual do navegador e é adequado para encaixá-lo ao lado do ISPSoft. A montagem automática fica junto aos controles de tela cheia/divisão. Bancada de peças e dica podem ser recolhidas na faixa inferior. Bancada do processo avançada mais 25 cm em direção ao painel (DX = -3.65). Só a aba Bancada 3D (abas Programar CLP e Ligação do PT100 estão fora da interface; window.__ttWired = true fixo em app-3d.js até a nova tela do PT100).
+- Modo comando direto = `modo-direto.js` (window.MD, carregado após app-clp.js): ativo quando o CLP está em STOP; seletor Comando direto × CLP no HUD (CLP usa PLC.setRun). Botoeira LIGA(NA)/DESLIGA(NF), K1 com selo, LSH(NF) intertrava, chave AUTO (LSL dá a partida), dreno manual, resistência por termostato (setpoint + TSH-104). Esquema do circuito de comando no HUD. Ganchos: MD.level/MD.heat/MD.render/MD.refresh chamados em app-3d.js; teste: MD.press("liga"|"desl", bool).
+- Cena: laboratório real da bancada antiga (janelas, armários, ar-condicionado, mesa; buildRoom copiado) com a bancada (tanque+bomba, grupo S.bench, DX = -3.65) aproximada do painel. Só o tanque de acrílico (nível alto/baixo LSH/LSL, resistência TZ-104 imersa que fica vermelha com brilho + luz ao aquecer, PT100 TE/TT-104 pela tampa, TSH-104 na parede), bomba/motor com sucção no fundo do tanque, VY-01, dreno. Removidos: tanque inox TQ-01, retorno, manômetro (PG), pressão. Resistência e TSH são slots de montagem (autoInstall monta tudo).
+- Inversores: copiados do projeto antigo (app-pf525.js, app-drives.js, vendor/*-img.js; window.DRV com PF525, ATV12, CFW500, IHM clicável). Seletora de partida (Direta/PF525/ATV12/CFW500) na porta do painel e no HUD; os botões do HUD "Comando direto" e "CLP + inversor" ajustam a seletora (direta / pf525). CLP em RUN: Y0 = marcha (borne 02), D1116 (0..4000 = 0..60 Hz) → entrada 4-20 mA (parametrizar P046=2, P047=6, t062=48 no PF525; sem MOV em D1116 vale o slider manual), X7 = falha. Vazão ∝ rotação. localStorage com prefixo nivel-.
+- Exemplos do CLP: nivel (boias), temperatura, velFixa, velPainel (D222), rampa, completa, selo. Removidos FIT/FV/PIT/LIT: D1110, D1112, D1113, D210/D211, D220, X6 não existem mais; D222 = referência de velocidade pedida no painel.
+- Modo ISPSoft: `ponte.js` (Node, sem dependências; INICIAR-PONTE.bat serve a pasta em http://localhost:8765 e fala Modbus ASCII sobre TCP com o simulador do COMMGR/ISPSoft, driver "Simulator", porta 10004; mapa Modbus: X 0x0400 (FC02/FC05), Y 0x0500 (FC01), M 0x0800, D 0x1000 (FC03/FC06)) + `modo-ispsoft.js` (window.ISP, painel no HUD, mapeamento X/Y/D com "inverter", vazio = não escreve, padrão = ladder Controle_Tanque: X4 LSL inv, X5 LSH, X2/X3 resistência, Y2 bomba+VY, Y3 cheio, Y0 resistência; localStorage nivel-isp-cfg-v2). Com ISP.active, plcCycle chama ISP.cycle em vez de PLC.scan (PLC.run = true, aoUsed forçado); a página envia LSL/LSH/botões/TSH/falha e D da temperatura, lê Y e D1116. Testado contra DVPSimulator_ES2 real.
+- Etapa 4 concluída (BUILD -12): resistência + PT100 + TSH no CLP testados por script (exemplo temperatura: X6 seletora, Y4, D1111 10=1 °C, X5 TSH; TSH forçado agora mantém o bloqueio e apaga a resistência). A resistência TZ-104 fica vermelha por inteiro enquanto está ligada (seletora X6 no CLP, P.run no comando direto), sem piscar a cada ciclo do liga/desliga; só apaga com TSH atuado, emergência ou desligada. Flanges vazadas, bocas ocas de cano e ralo do dreno (BUILD -9).
+- Mapa de E/S livre no modo ISPSoft (BUILD -13): tabela aberta no painel ISPSoft, cada sinal escolhe X0–X17 / Y0–Y17 (octal como no Delta) por lista, com ⚠ de conflito, editável com o CLP conectado (endereço abandonado volta a 0); ponte lê 16 saídas. Ex.: BOMBA em Y5 testado com Modbus simulado.
+- Bocais passa-parede ocos dentro do tanque (BUILD -14): entrada de água (parede direita, y 1,4) e saída da sucção (fundo), com openEnd.
+- Parâmetros automáticos dos inversores (BUILD -15): DRV.auto/setAuto/applyAuto em app-drives.js (tabela AUTO: placa 220 V/3 A/1720 rpm/60 Hz, rampas 5 s, partida pelo CLP Y0 + referência 4–20 mA nos 3 inversores). Ligado por padrão (localStorage nivel-drv-auto): grava ao carregar e a cada troca de partida; botão "Parâmetros automáticos: LIGADO/DESLIGADO" + "Aplicar agora" no HUD abaixo de Trocar a partida. Desligar para parametrizar à mão. Testado: PF525, ATV12 e CFW500 partem pelo CLP (Y0, 60 Hz).
+- BUILD -16: applyAuto grava em lote (DRV._batch + D.flush: 3 atualizações de tela em vez de ~45, sem travar) e, com os parâmetros automáticos ligados, se o programa não manda velocidade (D1116 = 0) o inversor vai a 100 % (60 Hz) em stepDrive; D1116 > 0 do programa é respeitado.
+- BUILD -17: "Aplicar agora" roda assíncrono (botão mostra Aplicando…) e os avisos dos inversores ao HUD são agrupados (hudSoon, 40 ms). Relato do Ederson: o botão travava a tela toda; não reproduzi por script (nem com ISP ativo e painel de inversor aberto). Se voltar, pedir: modo (ISPSoft/CLP interno), painel aberto, e se a página para de responder.
+- BUILD -18: parametrização automática virou SOB DEMANDA e por inversor (botões PF525/ATV12/CFW500 no HUD, abaixo de Trocar a partida); não aplica mais nada ao carregar nem ao trocar de partida (DRV.auto() sempre false; toggle e Aplicar agora removidos). Motivo: o Ederson relatou 3D em branco/travado depois do Aplicar agora (print: cena escura só com rótulos, gráficos caiu para leve); não reproduzi por script. Se travar de novo, descobrir QUAL inversor e se o contexto WebGL foi perdido. A referência de velocidade vai a 100 % quando D1116 = 0 (stepDrive), independente disso.
+- BUILD -19: CAUSA DA TRAVA DO 3D achada e corrigida: em stepDrive (app-3d.js) a variável ai era const e o patch do BUILD -16 (referência 100 % quando D1116 = 0) a reatribuía; com CLP em RUN/ISPSoft conectado dava TypeError a cada quadro e abortava o laço (3D parado/em branco). Agora é let. Lição: testar com App3D._tick e olhar o erro devolvido pelo javascript_tool (o painel do navegador oculto não roda requestAnimationFrame).
+- BUILD -20: dreno aberto sai 22 L/min (era 14) em stepLevel (app-3d.js, const out); bomba a 100 % entrega 30, então ainda enche com o dreno aberto. Esvaziar de 80 % a 40 % leva ~107 s. Backup anterior: pasta DocumentosClaudeackupscontrole-nivel-simples-BUILD-20261117-19 e tag git versao-principal-BUILD-19. Ideia futura: modo mestre/escravo na rede (alunos programam partes, PC do professor com checklist ao vivo).
+- BUILD -21: jato de entrada em arco balístico saindo do bocal interno (jetCurve em app-3d.js): mais forte e mais longe quanto maior a vazão (efeito de pressão), raio 0,009–0,021 m.
+- BUILD -22: dreno voltou a 14 L/min (o Ederson relatou, na partida direta, o tanque esvaziando com 22; não reproduzi, mas voltou ao valor que funcionava). O jato forte do BUILD -21 foi mantido. Voltar tudo: git checkout versao-principal-BUILD-19. ATENÇÃO: o servidor da porta 8765 pode estar rodando de OUTRA cópia (C:...controle-nivel-simples antiga ou D: do pendrive) com BUILD velho; conferir o BUILD servido.
+- BUILD -23: jato de entrada limitado (vx <= 0,5/te) para cair sempre dentro do tanque, mesmo com nível baixo (antes atravessava a parede esquerda).
+- BUILD -24: entradas X0–X17 no painel ISPSoft clicáveis; cada clique alterna o estado enviado ao CLP e força esse endereço, inclusive quando não há sinal físico mapeado. Saídas Y permanecem somente leitura.
+- BUILD -25: painel interno detalhado com contator K1 da bomba, contator K2 da resistência e relés de interface KA1/KA2; indicadores das bobinas acompanham os comandos direto e do CLP.
+- BUILD -26: K1/K2 e KA1/KA2 usam imagens PNG transparentes em `assets/`; botão de comando direto renomeado para “Simular sem programa”; gráficos padronizados sem sombras, reflexo de ambiente, pós-processamento e textura procedural do piso, com pixel ratio limitado a 1,25. Imagens dos componentes e telas/rótulos funcionais permanecem.
+- BUILD -27: sala clareada, materiais ajustados para manter superfícies legíveis sem reflexo de ambiente, textura procedural de granitina restabelecida em resolução reduzida; fiação visível liga as três fases a K1/K2 e representa Y0/Y4 passando por KA1/KA2 até as bobinas dos contatores. Removidos restos do LIT-101/FV-102 e a banda de nível sem interface (setBand/spLo/spHi).
+- BUILD -28: fiação do painel organizada para entrar e sair pelas canaletas horizontais, sem laços soltos; slider de velocidade do dreno de 0–100% (até 60 L/min) adicionado ao painel, padrão em 100%.
+- BUILD -29: K1/K2 e KA1/KA2 substituídos por modelos formados por geometria 3D (corpo, terminais, parafusos, atuador/bobina e indicadores). Fios reposicionados nos terminais reais; as imagens PNG não são carregadas na cena.
+- BUILD -30: jato de entrada do tanque mantido preso ao bocal, com trajetória atualizada em passos de 1 mm e raio reduzido; o ponto de impacto acompanha a superfície sem saltos visíveis a cada 1% de nível.
+- BUILD -31: trajetória do jato ancorada ao nível no início do fluxo; com vazão constante não acompanha a subida da superfície. A forma só muda com a vazão e o jato livre some quando a água submerge o bocal.
+- Pendrive/SENAI: node.exe (v24) vai dentro da pasta (fora do git) e o INICIAR-PONTE.bat usa ele; testado numa máquina do SENAI (abriu).
+- Próxima etapa: a definir.
+- Pendências: a definir.
 
-**Ao finalizar a edição do dia:**
-1. Atualizar este CLAUDE.md (regra 0.1).
-2. `git add -A`, `git commit -m "o que mudou"`, `git push`.
+## Mapa de E/S (herdado; ajustar ao mudar)
+X0/X1 LSL/LSH · X2 LIGA · X3 DESLIGA(NF) · X4 AUTO · X7 falha do inversor · Y0 bomba/marcha do inversor · Y1 dreno · Y4 resistência · D1111 PT100 (10 = 1 °C) · D1116 saída analógica 0..4000 = referência de velocidade do inversor (60 Hz) · D222 velocidade pedida pelo painel.
 
-**Se a pessoa esquecer**, a IA deve lembrar: no início, de baixar/comparar com o GitHub; no fim, de enviar para o GitHub. Não encerrar uma sessão com alterações sem commit/push sem avisar.
+## Convenções
+`at(obj,pos,scale)` (position é somente leitura) · `const BUILD` incrementar · sem confirm/alert · localStorage em try/catch com prefixo `nivel-` · azul #1E3A5F, laranja #E87722.
+- Porta do quadro do CLP (clique abre/fecha; vistas CLP/Inversores abrem, Painel fecha): face externa com 5 sinaleiros (LIGADO, NÍV. ALTO, NÍV. BAIXO, RESISTÊNCIA, EMERGÊNCIA), seletora da resistência (DESL/LIG: no CLP interno = X6; no comando direto = aquece pelo termostato; no ISPSoft = SELRES), botões LIGA (X2), DESLIGA (X3) e EMERGÊNCIA travada (corta bomba, VY e resistência em qualquer modo; no ISPSoft vai ao mapa como EMERG, NF). Padrão ISPSoft (desde o BUILD 79, preenchido só por Montar automaticamente): X0 EMERG (NF), X1 LIGA, X2 DESL, X3 SELRES (NA = 1 quando acionado), X4 LSL, X5 LSH. Teste por texto: App3D._click("PORTA"|"LIGA"|"DESLIGA"|"EMERGENCIA"|"SELRES"), App3D.ui.
+- Editor de ladder INTERNO desligado da interface (aba/botões removidos; código em app-clp.js continua, PLC.io é usado como imagem de E/S). Programação só pelo ISPSoft: botão "ISPSoft + inversor" no HUD conecta a ponte (ISP.connect). Painel ao vivo de X/Y/D no bloco ISPSoft. Forçar contatos: clicar na boia LSH/LSL ou no TSH-104 no 3D (auto → forçado atuado → forçado livre → auto; S.force, App3D.force, App3D.releaseForce(); LSL/LSH true = boia levantada, TSH true = atuado). Para religar o editor: restaurar o botão data-v="clp" no nav e b3clp no index (git, commit 098c019 e anteriores).
 
-## 0. Situação atual (ler primeiro)
+## Fluxo de trabalho com o Ederson (economia de uso do plano)
+- Ao fechar uma etapa, sugerir abrir CONVERSA NOVA (o estado está aqui e em HISTORICO.md); oferecer o texto de abertura.
+- Agrupar ajustes pequenos em um só pedido; evitar capturas de tela (validar por script, ele confere o visual); no máximo 1 captura ao final de mudança visual.
+- Servidor de teste: `node ponte.js` (porta 8765) já serve a pasta; não subir outro servidor.
 
-- **Versão:** BUILD `20261115-23` (15/11/2026).
-- **Última etapa feita:** **instrumentos no estilo Smar e Hiter** (BUILD -23): PIT-103 e FIT-102 viraram Smar LD301, TT-104 virou Smar TT301 e a FV-102/FY-102 virou a válvula globo azul Hiter com posicionador, a partir da imagem `Instrumentação industrial SMAR e HITER.png` do Ederson. Antes: **três inversores no painel** (BUILD -22): PowerFlex 525, **Schneider Altivar ATV12** e **WEG CFW500** lado a lado num painel de inversores novo, com seletora de partida de 4 posições (Direta / PF525 / ATV12 / CFW500). Antes: **inversor PowerFlex 525** no painel, com IHM interativa, checklist de parâmetros e seletora de partida da bomba DIRETA/INVERSOR (BUILD -14, fases 1 e 2 do roteiro do inversor). Antes: líquido da bancada em rosa claro, igual ao fluido da bancada física (BUILD -13). Antes: régua do tanque de acrílico em % (BUILD -12). Antes: ícone do site (favicon de manômetro + sinal 4–20 mA, BUILD -11). Antes: eletrodutos do TQ-01 ligados aos prensa-cabos dos instrumentos (BUILD -10). Antes: item 2 do plano (endereços e escalas do DVP20SX2 conferidos no manual; saída D1116 corrigida para 0..4000; D1115 = K7967 no 1º scan).
-- **Próxima etapa sugerida:** o Ederson testar os três inversores e conferir os dados de placa do motor real; depois as fases 3 e 4 do inversor (ver 6.1), ou os itens 4 (PID), 6 (exportar/importar ladder) e 7 (modo avaliação) do plano; itens 1 e 3 dependem de fotos/slides.
-- **Repositório oficial:** GitHub `LucasVitalBR/bancada-instrumentacao` (**público desde 15/11**), ver 1.2. Lucas e colega trabalham por pull/push.
-- **Site:** https://bancada-instrumentacao.vercel.app (atualiza a cada push).
-- **Drive:** não é mais usado (desde 14/11 só GitHub; ver 1.1).
-
-
-## 0.00 Como nós dois trabalhamos (resumo, 15/11)
-
-- **Editar:** os dois editam pelo **GitHub** (repositório `LucasVitalBR/bancada-instrumentacao`, público desde 15/11). Cada um trabalha na sua pasta clonada: `git pull` antes de começar e `git push` ao terminar, seguindo a rotina 00. Assim os dois mexem no mesmo projeto e o git junta as mudanças.
-- **Ver o resultado:** os links dos sites (`bancada-instrumentacao.pages.dev` e `bancada-instrumentacao.vercel.app`) **só mostram o app**; não dão para editar. Servem para abrir em sala e mandar para os alunos.
-- **Publicar no Cloudflare (site novo):** hoje só sai do PC do Ederson (ver 0.0). Para os dois publicarem, escolher uma opção:
-  1. **(Recomendado) Lucas libera o repositório para o Cloudflare.** No GitHub dele: Settings → Applications → "Cloudflare Workers and Pages" → Configure, com acesso a `bancada-instrumentacao`. Depois o Ederson liga o projeto ao repositório no painel do Cloudflare (Settings → Builds → Connect to Git). A partir daí, **qualquer push de qualquer um dos dois publica sozinho** e não é mais preciso publicar na mão.
-  2. O Ederson convida o Lucas como membro da conta Cloudflare dele (Manage account → Members). Aí o Lucas também pode publicar na mão, com o mesmo comando do wrangler.
-
-### PENDENTE PARA O LUCAS (combinado com o Ederson em 15/11, manhã)
-
-1. **Autorizar o Cloudflare no GitHub** (a autorização é no **GitHub**, não no Vercel):
-   - Abrir https://github.com/apps/cloudflare-workers-and-pages → Install/Configure na conta `LucasVitalBR`.
-   - Em "Repository access", liberar `bancada-instrumentacao`.
-   - Avisar o Ederson. O Claude dele liga o projeto `bancada-instrumentacao` do Cloudflare (conta do Ederson) ao repositório.
-2. **Depois que o Cloudflare publicar sozinho**, o **Vercel deixa de ser necessário.** Decisão do Ederson: ficar só com o Cloudflare (`https://bancada-instrumentacao.pages.dev`). Então:
-   - excluir ou pausar o projeto no Vercel, o que também fecha o `CLAUDE.md` exposto em `vercel.app/CLAUDE.md`;
-   - apagar `.github/workflows/vercel-deploy.yml` e o segredo `VERCEL_DEPLOY_HOOK`;
-   - trocar neste arquivo as menções ao site do Vercel pelo do Cloudflare.
-3. **Fechar o compartilhamento da pasta do Drive** ("qualquer pessoa com o link = Editor"). O Drive não é mais usado.
-
-**Fluxo final esperado:** Ederson ou Lucas editam pelo Claude → push no GitHub → o Cloudflare publica sozinho → todos veem o mesmo link.
-
-## 0.0 Publicação do site (LEIA, Lucas)
-
-**Atualização 15/11, tarde:** o Lucas deixou o repositório **público**. No plano Hobby do Vercel, o bloqueio dos envios de quem não é dono só vale para repositório privado: agora os envios do Ederson devem publicar sozinhos no Vercel. Teste feito com o envio deste CLAUDE.md (ver histórico). Com isso, ficam disponíveis os dois sites:
-- **Vercel:** https://bancada-instrumentacao.vercel.app (automático para os dois);
-- **Cloudflare:** https://bancada-instrumentacao.pages.dev (publicado à mão do PC do Ederson).
-**Decisão (Ederson, 15/11): o site oficial é o Vercel.** Todo push no `main`, de qualquer um dos dois, publica sozinho. O Cloudflare **não é mais atualizado** e ficou parado na BUILD -21; pode ser excluído do painel do Cloudflare quando o Ederson quiser.
-**Lucas:** como o repositório é público, a automação `.github/workflows/vercel-deploy.yml` (Deploy Hook) virou redundante, porque o Vercel já publica os envios de todos. Pode apagar o arquivo e o segredo `VERCEL_DEPLOY_HOOK`. **Segurança com o repositório público:**
-- o histórico do git ainda contém o link antigo da pasta do Drive (editável por qualquer um com o link): **fechar o compartilhamento da pasta**;
-- os commits mostram o e-mail de quem enviou.
-
-**Desde 15/11/2026 há um segundo site, no Cloudflare Pages da conta do Ederson:** https://bancada-instrumentacao.pages.dev (BUILD -13 no ar, com o líquido rosa e a régua em %).
-
-**Por quê:** o Vercel (conta do Lucas, plano Hobby, repositório privado) não publica os envios do Ederson. A automação do Deploy Hook rodou na -13, o hook respondeu `PENDING`, mas nada entrou no ar e o site ficou na -12. O Ederson não quis tornar o repositório público. A ligação do Cloudflare ao GitHub também não deu, porque o repositório é do Lucas e só ele pode liberar.
-
-**Como o site do Cloudflare é atualizado hoje (manual, a partir do PC do Ederson):**
-1. `git pull` na pasta do clone.
-2. Exportar só os arquivos do site para uma pasta temporária: `git archive HEAD | tar -x -C <pasta>`. Depois apagar dela `.github`, `.gitignore`, `CLAUDE.md`, `README.md` e o prompt .md, que não devem ir para um site aberto.
-3. `npx wrangler@4 pages deploy <pasta> --project-name bancada-instrumentacao --branch main --commit-dirty=true`. Não usar `--force`: ele só foi necessário para criar o projeto.
-O login do wrangler fica salvo no PC do Ederson.
-
-**Para ficar automático para os dois (quando o Lucas puder):** no GitHub do Lucas, instalar o app "Cloudflare Workers and Pages" liberando o repositório `bancada-instrumentacao`. Depois, ligar o projeto do Cloudflare ao repositório (Settings → Builds → Connect), com framework None, build vazio e saída `/`. Aí todo push publica sozinho. A outra saída é tornar o repositório público, o que deixa o Vercel publicar tudo.
-
-**Atenção, segurança:** o Vercel publica o repositório inteiro, então https://bancada-instrumentacao.vercel.app/CLAUDE.md está aberto a qualquer pessoa. Isso inclui o link da pasta do Drive, que está como "qualquer pessoa com o link = Editor". Sugestão: fechar o compartilhamento do Drive e/ou bloquear os .md no Vercel (`vercel.json` ou `.vercelignore`). O site do Cloudflare não publica os .md.
-
-## 0.1 Regra fixa: manter este arquivo atualizado
-
-- **A cada modificação no projeto, reescrever este CLAUDE.md antes de encerrar**, para quem abrir o projeto (Lucas ou o colega) saber em que etapa estamos:
-  1. atualizar a seção **0. Situação atual** (versão/BUILD, última etapa feita, próxima etapa);
-  2. marcar o que foi concluído no **plano de continuação**;
-  3. acrescentar uma linha no **histórico** (data, BUILD, o que mudou e quem pediu);
-  4. ajustar as demais seções se algo mudou (arquivos, convenções, mapa de E/S).
-- Depois de atualizar, fazer **commit + push no GitHub** (regra 1.2). Não salvar no Drive.
-- Esta regra vale para qualquer pessoa ou IA que trabalhe no projeto.
-
-## 1.1 Google Drive (desativado)
-
-- **Desde 14/11/2026 (decisão do Ederson) as atualizações vão só para o GitHub.** Não enviar mais nada para a pasta do Drive "Bancada de Instrumentação - App" (link retirado deste arquivo porque o repositório é público), que ficou parada na BUILD -10, com cópias antigas renomeadas `.v9`.
-- Motivo: o conector do Drive não substitui arquivos (só cria novos), o que gerava duplicados.
-
-## 1.2 GitHub (repositório oficial)
-
-- Repositório: https://github.com/LucasVitalBR/bancada-instrumentacao (**público** desde 15/11, ramo `main`). Qualquer pessoa pode ver e baixar; só os colaboradores enviam. Colega entra como **collaborator**.
-- **Antes de começar:** `git pull` (traz o que o outro enviou).
-- **Ao terminar:** atualizar este CLAUDE.md (regra 0.1), `git add -A`, `git commit -m "o que mudou"`, `git push`. Se o push for recusado, fazer `git pull`, resolver conflitos e enviar de novo.
-- A pasta de trabalho fica **fora do Google Drive** (o Drive corrompe a pasta `.git`).
-- **O que NÃO vai para o GitHub** (bloqueado no `.gitignore`; manter esta lista igual ao arquivo):
-  - `senaiscormhub_*/` e `*.zip`: pacote SCORM do SENAI com **token de acesso**;
-  - `bloco1.pptx` e `*.pptx`: material do SENAI e arquivo grande (18 MB);
-  - `backup-*/` e `*.vN.js`: backups locais (o histórico do git já guarda as versões);
-  - `.claude/`, `node_modules/`, `.DS_Store`, `Thumbs.db`, `desktop.ini`: arquivos de ferramenta/sistema.
-- Antes de enviar, conferir com `git status` que nada dessa lista aparece.
-- **Envios do colega no Vercel:** no plano Hobby com repositório privado, o Vercel marca como "Blocked" os envios de quem não é dono do projeto. Tentativa de solução (ainda falhando em 14/11, ver seção 0.0): `.github/workflows/vercel-deploy.yml`: a cada envio no `main` feito por outra pessoa, o GitHub Actions chama o Deploy Hook do Vercel (`github-push`, ramo `main`), guardado no segredo `VERCEL_DEPLOY_HOOK`. Para publicar na mão: aba Actions → "Publicar no Vercel" → Run workflow.
-- **Site no ar (Vercel):** https://bancada-instrumentacao.vercel.app — projeto `bancada-instrumentacao` na conta Vercel do Lucas (Hobby), preset "Other", sem build. **Cada push do Lucas no `main` publica sozinho** em ~30 s; os do Ederson não; por isso existe o site do Cloudflare (ver 0.0). Depois de publicar, Ctrl+F5 no navegador.
-
-## 2. Arquivos (sempre juntos na mesma pasta)
-
-| Arquivo | Papel |
-|---|---|
-| `index.html` | Página principal: abas, telas 2D, CSS, carregamento sob demanda do 3D e do CLP, tela cheia, painel lateral do CLP, janela de ligação do PT100 |
-| `app-3d.js` | Cena 3D (Three.js): sala, TQ-01, tanque de acrílico, bomba, tubulação, instrumentos, montagem, simulação física, animações, câmera e colisão. Expõe `window.App3D` |
-| `app-clp.js` | CLP Delta DVP20SX2 simulado: editor de ladder, varredura, validação, programas-padrão e painel de operação. Expõe `window.PLC` |
-| `app-pf525.js` | Inversor Allen-Bradley PowerFlex 525 (25B-B5P0N104): parâmetros, IHM (display de 7 segmentos e teclas), simulação do acionamento, desenho da frente 3D, checklist de atividades e seletora de partida DIRETA/INVERSOR. Expõe `window.PF525`. Carregado entre `app-clp.js` e `app-3d.js` |
-| `app-drives.js` | Inversores **WEG CFW500** e **Schneider Altivar ATV12** (parâmetros, IHM, simulação, frente desenhada sobre a foto, checklists) e a **seletora de partida** de 4 posições. Expõe `window.DRV` = `{ sel, names, list: { pf525, atv12, cfw500 }, setSel, onChange, active, renderSel }`. Carregado depois de `app-pf525.js` e antes de `app-3d.js` |
-| `vendor/cfw500-img.js`, `vendor/atv12-img.js` | Fotos da frente (imagens do ChatGPT enviadas pelo Ederson, recortadas para 400 × 1046 e 400 × 721), em `window.CFW500_IMG` e `window.ATV12_IMG`. A etiqueta da imagem do Schneider dizia ATV312: é coberta e redesenhada como **ATV12H075M2** |
-| `vendor/pf525-img.js` | Foto da frente do inversor em JPEG embutido (data URI, ~72 KB), em `window.PF525_IMG`. Vem de uma imagem do ChatGPT enviada pelo Ederson, recortada para 400 × 885. Embutida para não “contaminar” o canvas do WebGL quando o HTML é aberto direto do disco |
-| `vendor/three-bundle.js` | Three.js 0.170 + OrbitControls, CSS2DRenderer, RoomEnvironment, EffectComposer, RenderPass, OutputPass, GTAOPass, **UnrealBloomPass e SMAAPass** (desde a BUILD -21), empacotados em IIFE com esbuild (`window.THREE`) |
-| `favicon.svg`, `favicon.ico`, `icons/*.png`, `site.webmanifest` | Ícone do site (manômetro azul/laranja + onda 4–20 mA). PNGs gerados do SVG com `rsvg-convert`; o .ico tem 16/32/48 px. Se mudar o SVG, gerar de novo os PNGs e o .ico |
-| `prompt-chatgpt-bancada-nivel-temperatura.md` | Prompt para refazer uma versão só de nível + temperatura no ChatGPT (não inclui as mudanças posteriores) |
-| `bloco1.pptx` | Slides da Aula 01 (fonte do conteúdo) |
-
-**NÃO compartilhar:**
-- `senaiscormhub_636ba3e9bc34d/` e o `.zip`: pacote SCORM do SENAI com **token de acesso**. Também não usar modelos/ícones do SCORM; servem só de referência visual.
-- `.claude/`: só para o servidor de testes local.
-
-**Outro projeto, não confundir:** a pasta `Aulas instrumentação APP\senaiscormhub_636ba3e9bc34d\` (sem "- Copia") tem `index.html`/`app-3d.js`/`app-clp.js` de uma **reconstrução que o Ederson está fazendo com o ChatGPT**. Não editar sem ele pedir.
-
-## 3. Como rodar e testar
-
-- **Uso normal:** abrir `index.html` no Chrome/Edge. Depois de atualizar arquivos, **Ctrl+F5**.
-- **Teste com Claude Code:** o painel do navegador abre arquivos locais como cópia estática (não carrega os scripts ao lado). Use um servidor:
-  - `.claude/launch.json` → `node <scratchpad>/serve.js "<pasta>" 8765`;
-  - `serve.js` é um servidor estático mínimo; recriar se o scratchpad for outro.
-- **Ganchos de teste no console:**
-  - `App3D.autoInstall()`, `App3D._tick(dt)` (avança a simulação sem animar), `App3D._anim(dt)`, `App3D._clamp()`, `App3D._state`;
-  - `PLC.examples`, `PLC.setRun(true)`, `PLC.io`.
-- **Cuidado ao testar:** o painel do navegador fica oculto e o `requestAnimationFrame` pausa. Use `_tick` e `renderer.render` manual (ou `composer.render()`) para capturas; a captura sai com um quadro de atraso.
-- **Republicar:** gerar a cópia sem `<!doctype>/<html>/<head>/<body>` e sem `?v=BUILD` nos `loadScript`, e publicar com `files` = `app-3d.js`, `app-clp.js` e `vendor/three-bundle.js`.
-
-## 4. Convenções importantes
-
-- **`const BUILD = "20261115-23"`** no HTML: **incrementar a cada versão**. Ele é usado como `?v=` nos scripts para o navegador não usar cache antigo (já causou a "solenoide sumida").
-- **Three.js:** `object.position` é somente leitura. Use o helper `at(obj, pos, scale)`, nunca `Object.assign(mesh, {position})`.
-- **GTAOPass (oclusão ambiente):** deixa sprites/transparentes **pretos**. `overrideVisibility()` foi sobrescrito para esconder `isSprite` e `material.transparent` no G-buffer.
-- **Gráficos (desde a BUILD -21): três níveis no botão ✨ Gráficos** (`S.setQuality`, salvo em `localStorage` `gfx3d` só quando a escolha é manual):
-  - **Alto:** GTAO + brilho + MSAA 4×, até 2× de resolução;
-  - **Médio:** sem GTAO, até 1,5×;
-  - **Leve:** sem composer, até 1,25×.
-  - Abaixo de 24 fps por 4 s, desce um nível sozinho, sem salvar.
-  - Para recompilar o bundle: `entry.js` + `npx esbuild entry.js --bundle --minify --format=iife`, na pasta three-build do scratchpad (precisa de `npm i three@0.170.0 esbuild`).
-- **Janelas do navegador:** não usar `confirm/alert/prompt` (não funcionam no link publicado). Use `armed()` em `app-clp.js`: o primeiro clique pede "Clique de novo para confirmar".
-- **localStorage**, sempre com try/catch:
-  - `clp-sx2-programa-v1` (programa);
-  - `hud3d` (painel escuro visível);
-  - `menu3d` (menu lateral recolhido).
-- **Edições grandes:** foram feitas com scripts Node de substituição exata (`patch-*.js` no scratchpad) e backup antes (`app-3d.vN.js`). Validar com `node --check`. Para o HTML, extrair os `<script>` inline e checar.
-- **Cores de tubulação (NBR 6493):** água de processo verde, ar comprimido azul, eletroduto cinza-escuro, vapor/respiro branco.
-- **Cor do fluido (bancada física usa líquido rosa, tom mais escuro desde a BUILD -17):**
-  - água do tanque `0xDE6FA3` (opacidade 0,64) e superfície `0xD4639A`;
-  - jato e dreno `0xE07FAD`: a textura `texStreak` tem base branca, para não puxar para o azul;
-  - bolhas `0xF8D6E6`;
-  - setas de fluxo nos canos rosa, `rgba(240,130,185)` em `texArrow`;
-  - no 2D, `--water:#E48DB6`. A tubulação continua verde (NBR 6493: água de processo); só o líquido visível é rosa.
-- **Identidade visual:** azul `#1E3A5F`, laranja `#E87722`, fundo `#EEF2F7`; fonte Calibri; tags em Courier New.
-
-## 5. O que existe hoje
-
-### Abas 2D (Blocos 1–3)
-Planta da bancada (SVG), Controlar é comparar (forno com TSH), Malha ou intertravamento (quiz), Laço 4–20 mA, Ligação do PT100 (montagem de fios + 2/3/4 fios), Conversões (calculadora + treino) e Tags (decifrar, montar, achar na planta).
-
-### Bancada 3D
-- **Sala:** remodelada a partir de foto do laboratório: granitina, janelas de caixilho azul, forro com LEDs, armários cinza-claro, bancada didática, cone, carrinho.
-- **Equipamentos:**
-  - TQ-01 (inox) com respiro;
-  - tanque de acrílico com tampa, dreno e régua de nível em % (0–100 %, traço a cada 5 %, 50 % em laranja);
-  - bomba centrífuga completa (motor, protetor de acoplamento amarelo, voluta, skid);
-  - rotâmetro vermelho;
-  - 4 válvulas manuais de volante amarelo;
-  - eletrocalha suspensa (painel → TQ-01 e, desde a BUILD -20, até a linha em x 2,55, z −1,2) e eletrodutos até **todos** os instrumentos elétricos: TQ-01, LIT/LSH/LSL-101, FIT-102, FY-102, VY-01 e motor da bomba. O botão **"🔌 Eletrodutos"** no menu mostra ou esconde os eletrodutos (`S.showCond`, salvo em `localStorage` `cond3d`);
-  - painel com CLP DVP20SX2 (LEDs ao vivo, bornes verdes).
-- **Montagem (Bancada de Peças):** 13 instrumentos + termopar que sobra, áreas de encaixe e dicas de erro pelas tags. Botão "⚡ Montar tudo automaticamente".
-  - **TQ-01:** TE-104, TT-104, PIT-103, PSH-103, TSH-104, PG.
-  - **Linha:** LIT-101 (item didático, não existe na bancada real), LSH-101, LSL-101, FIT-102, FV-102 (atuador azul, ENTRADA/SAÍDA), FY-102 (OUT1/IN/OUT2, tubos azuis), VY-01.
-- **Interface:**
-  - barra lateral recolhível (Ações/Vistas);
-  - painel escuro ocultável;
-  - rótulos compactos/completos/ocultos sem sobreposição;
-  - tela cheia com painel do CLP à esquerda;
-  - janela de ligação do PT100 em tela cheia;
-  - colisão de câmera.
-- **Animações:** ondas na água, jato, bolhas, dreno, setas de fluxo nos canos, motor girando, rotâmetro, boias, pulso do ultrassom do LIT, vapor, visão térmica.
-
-### Instrumentos Smar e Hiter (BUILD -23)
-- Referência: imagem `Instrumentação industrial SMAR e HITER.png` (pasta antiga do Ederson, não vai ao GitHub).
-- Helpers em `app-3d.js`: `smarHousing(g, centro, raio, comprimento, tela)` (corpo de alumínio, tampas azuis com nervuras, visor, marca "smar", entradas elétricas) e `smarScreen(tag, faixa)` (display verde com tag, valor + unidade e % da faixa; `draw([valor, unidade])` como o `screen` antigo).
-- **PIT-103:** Smar LD301 (módulo sensor inox com flanges aparafusados + carcaça), faixa 0–6 bar.
-- **TT-104:** Smar TT301 montado sobre o cabeçote do PT100 (a peça continua instalando no cabeçote do TE-104); display `S.ttScreen`, faixa 0–200 °C, mostra "----" sem a ligação do PT100.
-- **FIT-102:** placa de orifício entre flanges + Smar LD301 de pressão diferencial (lados L e H), faixa 0–30 L/min.
-- **FV-102:** corpo globo, castelo, arcada e atuador em azul Hiter, com "HITER" e seta de fluxo no corpo. **FY-102:** caixa cinza do posicionador com plaqueta HITER e indicador, 2 manômetros; as tomadas OUT 1 / IN / OUT 2 e os tubos azuis continuam.
-- As posições dos prensa-cabos (`gland`) foram mantidas, então os eletrodutos continuam chegando certo.
-
-### Painel de inversores (BUILD -22)
-- **Três inversores lado a lado** num painel novo, à esquerda do painel do CLP (`S.drvPanel`, no `buildPanel` do `app-3d.js`): **PowerFlex 525** (mais perto do CLP), **Altivar ATV12** no meio e **WEG CFW500**. Cada um tem a frente com display ao vivo (`S.drv3d[k]`) e rótulo na cena (`VFD-pf525` etc.).
-- **Seletora "PARTIDA DA BOMBA" de 4 posições** (porta do painel do CLP, painel escuro e painel de cada inversor): **Direta (K1) / PF525 / ATV12 / CFW500**. Fica em `window.DRV` (`localStorage` `partida-bomba`; o valor antigo "inversor" vira "pf525").
-  - Só o inversor escolhido recebe o comando do Y0 (PF525 borne 02 · ATV12 LI1 · CFW500 DI1) e a referência D1117 (AI 4–20 mA) e gira a bomba. X7 = falha do inversor escolhido.
-  - Os outros podem ser parametrizados e até partir pela IHM, mas não acionam o motor (o painel avisa).
-  - Se a bomba recebe o comando e o inversor escolhido não está programado para partir pelos bornes, a dica diz o que falta (`drvExtMsg`).
-- **Painel lateral** (`#vfdDock`): abas PF525 / ATV12 / CFW500 (⚡ marca o que aciona a bomba). `openVfd(k)`, `openVfdBig(k)`; `isVfdDockOpen()` devolve a chave do inversor aberto (ou `false`). Vistas `inversor` (os três), `inv-pf525`, `inv-atv12`, `inv-cfw500`. A aba aberta fica em `localStorage` `vfd-aba`.
-- **Parâmetros salvos** em `localStorage` `drv-cfw500-v1` e `drv-atv12-v1` (o PF525 continua em `pf525-params-v1`).
-- **WEG CFW500** (manual de programação 10001469555, software 1.8x; págs. 9–19 referência rápida e 40–45 HMI; PDF só na pasta antiga do Ederson). Modelo de referência 200–240 V, 4,3 A, motor 0,75 kW.
-  - HMI: BACK/ESC, MENU/ENTER, ▲▼ (segurar acelera), giro, LOC/REM, JOG, I, O. Display com mostrador principal, secundário, unidade, LOC/REM, RUN e barra.
-  - Navegação: monitoração (P0205/P0206; ▲▼ mudam P0121 quando a referência é a HMI) → nível 1 grupos PARAM/READ/MODIF/BASIC/MOTOR/I/O → nível 2 parâmetro → nível 3 edição (ENTER salva, ESC cancela). Parâmetros "cfg" só mudam com o motor parado.
-  - Parâmetros: P0001–P0007, P0012, P0018, P0037, P0049 (leitura), P0100/P0101, P0121/P0122, P0133/P0134, P0135, P0156, P0202, P0204 (5/6 = padrão WEG 60/50 Hz), P0205/P0206, P0220–P0227, P0229, P0233, P0263/P0264, P0400–P0404.
-  - Falha F0072 (sobrecarga, alarme A0046 antes); a tecla O reseta. AI1: P0233 = 1 é 4–20 mA; com 0 lê 0–20 mA (4 mA = 20 %).
-  - Atividade 1 (LOCAL): dados do motor, rampas 5 s, P0134 = 60, P0220 = 2, I/O e 45 Hz. Atividade 2 (REMOTO): P0220 = 1 ou 3, P0227 = 1, P0263 = 1, P0222 = 1, P0233 = 1.
-- **Schneider Altivar ATV12** (ATV12H075M2, manual BBV28581; págs. 33–38, 40–41, 47–52, 60–61, 65–66; PDF só na pasta antiga). O Ederson escolheu simular o ATV12 (a imagem dizia ATV312).
-  - Display de 4 dígitos, LEDs REF/MON/CONF e valor/unidade, botão giratório (no 3D e na IHM: clique à **esquerda** = −, **direita** = +, **centro** = ENT), ESC, MODE, RUN e STOP/RESET (desenhados na tampa oval).
-  - Modos: rEF (AIU1 pelo botão giratório, quando Fr1 = AIU1), MOn (rFr, LCr, ULn, tHr, StAt), ConF (bFr, Fr1, ACC, dEC, LSP, HSP, nCr, AI1t, tCC, UnS, FrS, nSP, tFr, rIn, FCS). Mostra **rdY** parado.
-  - **ENT segurado 2 s** para gravar bFr, AI1t, tCC e FCS (a ampulheta do manual). O tempo do toque vem do `pointerdown`/`pointerup` da cena 3D (`holdMs`) e dos botões da IHM.
-  - De fábrica Fr1 = AI1 e tCC = 2C: RUN só funciona com **Fr1 = AIU1**. AI1t = 0A para ler 4–20 mA. Falha OLF; STOP reseta.
-  - Atividade 1: bFr = 60, UnS, nCr, FrS/nSP, ACC/dEC, HSP, Fr1 = AIU1, RUN e 45 Hz (AIU1 = 75 %). Atividade 2: Fr1 = AI1, tCC = 2C, AI1t = 0A.
-
-### Inversor PowerFlex 525 (BUILD -14)
-- **Modelo:** Allen-Bradley **25B-B5P0N104** (PF525, 240 V trifásico, 5,0 A, 0,75 kW / 1 HP, carcaça A, IP20, sem filtro). Manual: **520-UM001** (set/2025), PDF só na pasta antiga do Ederson, sem ir ao GitHub (material da Rockwell). Páginas usadas: 14 (código), 42–46 (bornes), 61–63 (IHM), 65–66 (Basic Program), 78–80 (Basic Display), 90–92 (t062–t064), 161–163 (falhas).
-- **No 3D:** inversor ao lado do K1 no painel; a frente 3D mostra o display ao vivo.
-  - Clicar nele (ou em "🎛 Inversor PF525" no menu, "Abrir o inversor" no painel escuro ou na vista "Inversor") aproxima a câmera e abre o **painel lateral do inversor** (`#vfdDock`, classe `vdock` no `#box3d`). O painel traz Próxima tecla, passo a passo, display em texto, estado, potenciômetro, seletora e checklist.
-  - **Com o painel aberto, as teclas do inversor 3D são clicáveis:** o UV do clique vai para `PF525.pressAt(u, v)` e as posições ficam em `KEYPOS`.
-  - O botão "IHM ampliada" abre a janela grande antiga (`openVfdBig`), útil em tela pequena.
-  - O menu da cena recolhe sozinho ao abrir o painel.
-- **Seletora "PARTIDA DA BOMBA" (porta do painel, painel escuro e janela do inversor):**
-  - **DIRETA:** o contator K1 liga o motor em 60 Hz, sem rampa (comportamento antigo);
-  - **INVERSOR:** a rotação do motor vem do PF525, com rampa, e a vazão é proporcional à rotação (lei de afinidade). Em reverso, a bomba centrífuga entrega 25 %.
-  - Fica salva em `localStorage` (`partida-bomba`).
-- **IHM fiel ao manual (pág. 63):**
-  - Esc volta níveis: valor → nº do parâmetro → letra do grupo. ▲▼ navegam. Enter/Sel entram.
-  - Edição dígito a dígito, com "PROGRAM" aceso: Sel troca o dígito, Enter salva, Esc cancela.
-  - Parâmetros com símbolo de Stop no manual recusam a alteração com o motor girando (mostra "StoP").
-  - Start, Stop (também limpa falha), Reverse e potenciômetro (arrastar ou roda do mouse) funcionam.
-- **Grupos simulados:**
-  - b (b001–b009, b012, b013);
-  - P (P030–P053);
-  - t (t062–t068);
-  - A (A544);
-  - M (Modified).
-  - Os padrões são os do modelo: P031 = 230 V, P033/P034 = 5,0 A, P036 = 1750 rpm, P041/P042 = 10 s, P044 = 60 Hz, P046 = 1, P047 = 1, t062 = 48.
-  - Os valores ficam salvos em `localStorage` (`pf525-params-v1`).
-- **Simulação:**
-  - rampas em tempo real (não aceleradas);
-  - parada por rampa ou inércia (P045);
-  - corrente ≈ FLA·(0,32 + 0,6·n³) + extra na aceleração;
-  - tensão V/Hz;
-  - b012 no formato do manual (ex.: 062 = bornes + 4–20 mA);
-  - **F007 Motor Overload** quando a corrente passa do P033 por um tempo;
-  - **F048 Params Defaulted** após P053 = 1/2;
-  - autotune (P040) simplificado.
-- **Partida pelos bornes:** P046 = 2 e t062 = 48 (2-Wire FWD). O Y0 do CLP (ou o botão local) fecha o borne 02. t064 = 0 é por borda, 1 por nível. Velocidade pelo CLP: P047 = 6 e `MOV K... D1117`.
-- **Checklist (janela do inversor), conferido no valor gravado:**
-  - Atividade 1 · Partida pela IHM, com dados de placa de **exemplo** (220 V, 60 Hz, 3,0 A, 4 polos, 1720 rpm: conferir a placa real), rampas 5 s, P046 = 1, P047 = 1, partir e levar a 45 Hz, parar.
-  - Atividade 2 · Partida pelo CLP, 2 fios: P046 = 2, t062 = 48, t064 = 0, P047 = 1 ou 6, ligar pelo Y0.
-- **Testado em 15/11:**
-  - direta: 18 L/min;
-  - IHM: 5 s de rampa, 45 Hz, 2,87 A, 13,5 L/min;
-  - CLP: D1117 = 2000 → 30 Hz, 9 L/min, b012 = 062;
-  - F007 com P033 = 0,5 A → X7 = 1, e o Stop limpa.
-
-### CLP (aba "Programar CLP" e painel na tela cheia)
-- **Instruções:** NA, NF, ↑P (LDP), OUT, SET, RST, CMP, MOV, ADD, SUB, MUL, DIV. Até 6 contatos + 1 linha paralela por rede, comentários por rede.
-- **Monitoramento:** ao vivo, com unidades de engenharia.
-- **Mapa de E/S** (endereços e escalas analógicas **conferidos no manual do DVP-SX2** em 13/11; mapa digital X/Y é escolha didática, conferir com a fiação real):
-
-| Endereço | Ligação | Escala |
-|---|---|---|
-| X0 / X1 | LSL-101 / LSH-101 | 1 = atuado |
-| X2 / X3 / X4 | LIGA (NA) / DESLIGA (NF) / seletora AUTO | |
-| X5 / X6 | TSH-104 / PSH-103 | |
-| X7 | falha do inversor escolhido na seletora (PF525 relé R1 “Fault”; ATV12/CFW500 relé de falha) | 1 = em falha |
-| Y0 / Y1 / Y2 / Y3 / Y4 | bomba / VY-01 / alarme / sinaleiro / resistência TZ-104 | |
-| D1110 | AI CH0 LIT-101 | 2000 = 100 % |
-| D1111 | AI CH1 TT-104 | 10 contagens = 1 °C |
-| D1112 | AI CH2 FIT-102 | 2000 = 30 L/min |
-| D1113 | AI CH3 PIT-103 | 2000 = 6 bar |
-| D1116 | AO CH0 → FY-102 | **4000 = 100 %** (AO 4–20 mA = 0..4000) |
-| D1117 | AO CH1 → AI do inversor escolhido (PF525 borne 15 com P047 = 6 · ATV12 AI1 com AI1t = 0A · CFW500 AI1 com P0233 = 1) | 4000 = 100 % da faixa P043–P044 |
-| D1115 | modo das E/S analógicas | **H1F1F (K7967)** = AD0–AD3 e DA0 em 4–20 mA; gravado no 1º scan (M1002) |
-| D1062 / D1118 | nº de amostras da média (padrão 2) / tempo de amostragem (2 ms) | não simulados |
-| D200 / D210 / D211 | SP temperatura / nível liga / nível desliga (painel) | |
-| D220 / D222 | SP vazão / abertura pedida da FV (painel) | D220: 2000 = 30 L/min · D222: 4000 = 100 % |
-| M1000 / M1002 / M1011–M1013 | sempre ON / 1º scan / clocks 10 ms–100 ms–1 s | |
-
-- **Programas-padrão:** nível, temperatura, vazão P (Kp = 2, bias 50%, mostra erro de regime), vazão flutuante (↑M1012), válvula proporcional (posicionamento), pressão (alarme 2,0 bar, PSH 2,2 bar), bancada completa, partida com selo.
-- **Simulação:**
-  - temperatura on/off: TSH 90 °C; P = (T−25)×0,035 bar;
-  - nível ~300 L;
-  - FV-102 com curso de ~1,5 s;
-  - sem proteção no programa, o tanque **transborda** (didático).
-
-## 6. Plano de continuação (próximos passos sugeridos)
-
-1. **Fotos da bancada real:** quando o Ederson mandar, redesenhar os instrumentos fiéis aos modelos reais (PT100/Novus, Smar, pressostato, boias, solenoide, rotâmetro, painel).
-2. ~~Confirmar endereços e escalas do DVP20SX2~~ **feito (BUILD -9).** Fonte: ficha técnica oficial DVP-SX2 (Delta) e manual de programação ES2/EX2/SS2/SA2/SX2 (D1110–D1118, D1062, D1115). Resta: conferir na bancada real a fiação (curto V+/I+ nas entradas de corrente) e o mapa X/Y.
-3. **Bloco 4 · Calibração:** próxima aula anunciada nos slides. Tela/atividade de calibração (padrão × instrumento, erro, ajuste de zero/span) quando chegarem os slides.
-4. **PID:** instrução PID simplificada no CLP (ou PI por ADD/SUB com clock) e um exemplo de malha de nível/vazão contínua; os slides citam o PID para "adiante".
-5. **Malha de nível contínua pela FV-102** (em vez de liga/desliga) e malha de temperatura proporcional (PWM na resistência).
-6. **Exportar/importar o programa ladder** (arquivo JSON) para os alunos entregarem atividades. Lembrar que download por link não funciona no artifact; usar área de copiar/colar texto.
-7. **Modo avaliação:** atividades com objetivo ("mantenha o nível entre 40 e 60% por 2 min") e correção automática.
-8. **Atualizar o prompt do ChatGPT** com as mudanças posteriores (variáveis ao vivo, válvula nova, programas-padrão), se o Ederson continuar a versão no ChatGPT.
-9. **Testar em PC do laboratório e no projetor** (desempenho do 3D e modo leve automático).
-10. **Republicar o link** a cada versão estável (mesmo artifact).
-
-### 6.1 Roteiro dos inversores (aprovado pelo Ederson em 15/11)
-0. ~~ATV12 e CFW500 ao lado do PF525, seletora de 4 posições~~ **feito (BUILD -22).** Pendências: o Ederson conferir na bancada real qual inversor existe de fato e os dados de placa do motor.
-1. ~~Fase 1: modelo 3D no painel + janela ao clicar~~ **feito (BUILD -14).**
-2. ~~Fase 2: IHM interativa fiel ao manual + checklist da Atividade 1 + seletora DIRETA/INVERSOR~~ **feito (BUILD -14).**
-3. **Fase 3:** refinar o motor e a bomba no inversor: curva de corrente mais fiel, rpm com escorregamento, mostrar Hz e rpm na cena, inércia na partida direta (corrente de partida ~6× FLA).
-4. **Fase 4:**
-   - programa-padrão de CLP para controle de **vazão pela rotação** (FIT-102 → D1117);
-   - relé de falha R1 → X7 já existe;
-   - mais falhas didáticas (F004 subtensão, F012 sobrecorrente, F006 motor travado);
-   - atividade 3 (4–20 mA) e atividade 4 (falhas) no checklist.
-
-## 7. Histórico resumido (13/11/2026)
-
-- **Começo:** REA 6.9.0 instalado no Claude Code/Codex. Pacote SCORM analisado: ele só carrega do servidor do SENAI (o simulador Unity não está no zip).
-- **App 2D:** Blocos 1–3 a partir dos slides.
-- **Bancada 3D:** do TQ-01 até a planta completa; sala real, CLP, animações, realismo (GTAO), colisão, variáveis ao vivo, programas-padrão.
-- **Publicação:** link no claude.ai.
-- **BUILD -9 (13/11):** escalas do CLP conferidas no manual. Entradas D1110–D1113: 4–20 mA = 0..2000 (já estava certo). **Saída D1116 corrigida para 0..4000** (antes 0..2000). Programas-padrão ajustados (bias K2000, Kp ×4, passo K40, limite K4000, MOV K4000). Novo D1115 = K7967 (H1F1F) no 1º scan em todos os programas com analógica; monitor avisa "não configurado" se faltar. Simulação testada (vazão P/flutuante/válvula/completa).
-- **13/11 (Lucas):** criado o repositório GitHub `LucasVitalBR/bancada-instrumentacao` (privado). `app-instrumentacao.html` renomeado para `index.html`; `.gitignore` e README criados. GitHub passa a ser a cópia oficial.
-- **13/11 (Lucas):** regra 00 criada (ler CLAUDE.md + comparar/baixar do GitHub no início; commit + push no fim; IA lembra se esquecerem). Lista do que não vai para o GitHub documentada na 1.2.
-- **BUILD -10 (14/11, pedido do Ederson):** eletrodutos cinza do TQ-01 refeitos em `buildPanel` (`app-3d.js`). Antes terminavam soltos no ar; agora saem da eletrocalha com bucha e terminam numa conexão (unidut) no prensa-cabo de TE/TT-104, PIT-103, PSH-103, TSH-104 e TZ-104. TSH e TZ descem por fora do costado e sobem ao prensa-cabo por baixo (curva de gotejamento). Cada eletroduto só aparece com o instrumento instalado (`S.conduits`, conferido em `stepAnims`); o da resistência TZ-104 é fixo. Saiu o pedaço de cabo solto do TE-104. Enviado ao Drive e ao GitHub (14/11). Link publicado ainda na BUILD -8.
-- **13/11 (Lucas):** site publicado no Vercel (https://bancada-instrumentacao.vercel.app), ligado ao GitHub: cada push no `main` atualiza o site. Testado com a BUILD -10 (3D e CLP carregam, sem erros no console).
-- **BUILD -11 (14/11, pedido do Lucas):** ícone do site criado: `favicon.svg` (manômetro com ponteiro laranja na faixa alta + onda quadrada do sinal 4–20 mA, cores da identidade), `favicon.ico`, `icons/` (180/192/512 px) e `site.webmanifest`; links no `<head>` do `index.html`.
-- **BUILD -12 (14/11, pedido do Ederson):** régua do tanque de acrílico (`buildLine`, `app-3d.js`) passou de 11 traços sem número para escala **0–100 %**: traço a cada 5 %, número a cada 10 %, 50 % em laranja. 0 % = fundo (y 0,65) e 100 % = nível máximo (y 1,53), a mesma conta de `setWater` e do LIT-101, então a água bate com a régua. Testado na cena (nível 68,7 % na marca certa). Enviado ao GitHub/Vercel; Drive não atualizado.
-- **14/11 (Ederson):** decidido trabalhar **só pelo GitHub**; a regra 1.1 (salvar também no Drive) foi desativada. Sem mudança no app (BUILD continua -12).
-- **14/11 (Lucas):** envios do Ederson apareciam como "Blocked" no Vercel (plano Hobby + repositório privado). Criado o Deploy Hook `github-push` no Vercel e a automação `.github/workflows/vercel-deploy.yml` (GitHub Actions), que publica o site a cada envio de outro colaborador.
-- **BUILD -13 (14/11, pedido do Ederson):** líquido da bancada trocado de azul-claro para **rosa claro**, porque a bancada física usa fluido dessa cor. Mudou: água do tanque de acrílico, superfície com ondas, jato de entrada, filete do dreno, bolhas (`app-3d.js`) e a cor `--water` das telas 2D (planta). Canos continuam verdes (NBR 6493). Testado na cena.
-- **14/11 (Ederson):** BUILD -13 no GitHub, mas o site seguiu na -12 apesar da automação (Deploy Hook aceito, PENDING). Problema e opções registrados na seção 0.0 para decisão com o Lucas.
-- **15/11 (Ederson):** criado o site no **Cloudflare Pages** da conta do Ederson (https://bancada-instrumentacao.pages.dev), publicado a partir do PC dele com o wrangler. BUILD -13 no ar. O Vercel continua na -12. Procedimento e pendências na seção 0.0.
-- **15/11 (Ederson, manhã):** combinado que o site oficial será o **Cloudflare Pages** e o Vercel será desligado depois que o Cloudflare publicar sozinho. Pendências do Lucas listadas em "PENDENTE PARA O LUCAS" (seção 0.0).
-- **BUILD -14 (15/11, pedido do Ederson):** inversor **Allen-Bradley PowerFlex 525 (25B-B5P0N104)** no painel: modelo 3D com display ao vivo, IHM interativa fiel ao manual 520-UM001 (navegação, edição por dígito, Start/Stop/Reverse/potenciômetro), parâmetros reais dos grupos b, P, t e A, falhas F007/F048, checklist das Atividades 1 (IHM) e 2 (CLP), e **seletora de partida DIRETA/INVERSOR**. Novo arquivo `app-pf525.js`. CLP: D1117 (velocidade, borne 15) e X7 (falha do inversor). Fases 3–4 do roteiro na seção 6.1.
-- **BUILD -15 (15/11, pedido do Ederson):** o Ederson não achava como entrar nos parâmetros. A edição funcionava, mas o caminho não era óbvio. Mudanças:
-  - caixa laranja **“Próxima tecla”** abaixo do teclado, que diz o que apertar em cada etapa (ex.: na tela inicial, “Esc 2 vezes, ▲ até P, ↵”);
-  - link **“como fazer ›”** em cada item do checklist, que mostra o passo a passo até aquele parâmetro, com o número de toques no ▲;
-  - aviso ao dar Enter num parâmetro do grupo b, que é só leitura.
-- **BUILD -16 (15/11, pedido do Ederson):** o checklist e as orientações ficam num **painel ao lado da cena 3D**, e o aluno opera as **teclas do inversor no próprio painel 3D**. Vista nova "Inversor". A janela grande continua no botão "IHM ampliada". `PF525.mount(el, { compact: true })` monta só o painel; vários lugares podem estar montados ao mesmo tempo (`hosts`).
-- **BUILD -17 (15/11, pedido do Ederson):** rosa do fluido mais escuro. O jato da mangueira e o filete do dreno ainda saíam azuis, porque a textura `texStreak` tinha fundo azul: agora a base é branca. As setas de fluxo nos canos também ficaram rosa.
-- **BUILD -18 (15/11, pedido do Ederson):** andar pela cena com o teclado (`S.walk` no laço do `app-3d.js`):
-  - **W A S D ou setas** para frente, trás e lados, no plano horizontal da câmera;
-  - **Q/E ou PageDown/PageUp** para descer e subir;
-  - **Shift** anda mais rápido;
-  - não reage enquanto se digita num campo ou com uma janela (`.ovl3d.on`) aberta.
-- **BUILD -19 (15/11, pedido do Ederson):** a frente do PF525 (3D e IHM ampliada) passou a usar a **imagem enviada pelo Ederson** (`vendor/pf525-img.js`) no lugar do desenho simples. Por cima da imagem, `drawFace()` desenha:
-  - o display verde com o conteúdo da simulação (pisca, FWD/REV, unidade, PROGRAM);
-  - o LED FAULT;
-  - o **potenciômetro** e a tecla de **reversão**, que o PF525 tem e a imagem não mostra;
-  - o destaque da tecla apertada.
-  - A imagem é de um PowerFlex 523: o "523" da etiqueta foi coberto com o cinza da própria imagem e trocado por "525".
-  - As posições das teclas estão em `FACE` (coordenadas da imagem 400 × 885), usadas pelo `hitKey` (cliques no 3D) e pelas áreas clicáveis da IHM ampliada.
-  - No teclado azul, ◄ = Esc e ► = ↵.
-- **BUILD -20 (15/11, pedido do Ederson):**
-  - **Eletrodutos da linha:** a eletrocalha continua até x 2,55. Saem eletrodutos para FIT-102, FY-102, LIT-101, LSH-101, LSL-101, VY-01 (novo prensa-cabo no topo da bobina) e motor da bomba (prensa-cabo virado para trás). Os trajetos contornam o tanque de acrílico e os canos, e os pontos finais foram medidos nos prensa-cabos com tudo montado. Cada eletroduto só aparece com o instrumento instalado (o da bomba é fixo). Os prensa-cabos levam `userData.gland`.
-  - **Botão "🔌 Eletrodutos: visíveis/ocultos"** no menu Ações.
-  - **Foto nova do PF525,** vista de frente e já com o potenciômetro (`vendor/pf525-img.js`, 400 × 855). As posições foram refeitas em `FACE`; a reversão ⇆ fica entre o teclado azul e o botão verde.
-  - **Potenciômetro:** o clique (no 3D ou na IHM ampliada) abre uma **barra deslizante vertical** (`PF525.potSlider`), de 0 a 100 %, mostrando os Hz pedidos. Fecha no ✕, com Esc ou clicando fora. No lugar do antigo arrastar/girar, que era difícil.
-- **BUILD -21 (15/11, pedido do Ederson: pacote 1 de renderização):**
-  - **MSAA 4×** no buffer do composer: bordas lisas com os efeitos ligados.
-  - **Brilho (UnrealBloomPass,** limiar 1,05) só no que acende: lâmpadas e LEDs ganharam intensidade maior quando ligados; o vidro das janelas virou `MeshBasic` para não estourar.
-  - **Reflexos da própria sala:** `S.captureEnv()` gera o mapa de ambiente (PMREM) a partir de um ponto à frente do TQ-01, deslocando a cena, sem o TQ-01 e os ghosts.
-  - **Acrílico com paredes de 10 mm,** verniz (clearcoat) e quinas aparentes, no lugar da caixa única com linhas.
-  - **Tom de cor `NeutralToneMapping`,** que preserva as cores.
-  - **Níveis Alto/Médio/Leve.**
-  - O bundle subiu de 755 KB para 821 KB.
-  - Testado no navegador interno; **falta testar o desempenho no PC do laboratório e no projetor.**
-- **15/11 (Ederson):** repositório agora **público** (feito pelo Lucas). CLAUDE.md atualizado: tirado o link da pasta do Drive e anotado na seção 0.0 que o Vercel deve passar a publicar os envios do Ederson.
-- **15/11 (Ederson):** escolhido o **Vercel** como site oficial (https://bancada-instrumentacao.vercel.app). A publicação no Cloudflare foi encerrada.
-- **BUILD -22 (15/11, pedido do Ederson):** mais dois inversores para os alunos aprenderem a trabalhar com marcas diferentes: **WEG CFW500** e **Schneider Altivar ATV12** (o Ederson escolheu o ATV12 no lugar do ATV312 da imagem, por causa do manual). Os três ficam lado a lado num **painel de inversores** novo; o PF525 saiu do painel do CLP. Seletora de partida de **4 posições** (`window.DRV`), abas no painel lateral, vistas por inversor, checklists das Atividades 1 e 2 de cada um, ENT segurado 2 s no ATV12. Arquivos novos: `app-drives.js`, `vendor/cfw500-img.js`, `vendor/atv12-img.js`. Testado no navegador interno (IHMs, partida local e por bornes, vazão, sem erros no console).
-- **BUILD -23 (15/11, pedido do Ederson):** transmissores e válvula de controle deixaram de ser genéricos e seguem a imagem Smar/Hiter enviada pelo Ederson: PIT-103 e FIT-102 = Smar LD301 (o FIT como ΔP com placa de orifício), TT-104 = Smar TT301, FV-102 + FY-102 = válvula globo Hiter com posicionador. Displays dos transmissores mostram tag, valor e % ao vivo. Testado na cena (sem erros no console).
+- PT100 descalibrável (BUILD 20261122-36): erro de ZERO do TT-104 (−10..+10 °C, passo 0,5; localStorage nivel-tt-zero; App3D.setTtZero(v)/ttZero()). O CLP lê D1111 = (T real + erro), 10 = 1 °C; HUD mostra Padrão (real) × TT-104 (lido) × Erro e o botão "Calibrar (zerar o erro)". Termômetro padrão (display + sonda na água, tag TREF) na tampa do tanque mostra a temperatura real. Próximas ideias: ganho/span, deriva, guia de entrada analógica (4–20 mA → contagens → °C), exercício de correção no ladder.
+- Ponte: INICIAR-PONTE.bat fecha sozinho uma ponte (node.exe) antiga na porta 8765 antes de subir, abre o navegador com ?v=aleatório e a ponte serve sem cache e mostra a pasta e o build ao iniciar (antes, uma ponte velha de outra pasta ficava presa na porta e o navegador mostrava a versão antiga).
+- BUILD 20261123-37: no modo ISPSoft a página também ESCREVE o setpoint do painel em D200 (10 = 1 °C; endereço editável em "Setpoint de temperatura" no mapa de E/S), além de D1111 (temperatura). O programa do aluno só usa D200 (ex.: LD< D1111 D200); não precisa de MOV K...D200.
+- BUILD 20261123-38 · física da resistência: elemento com temperatura própria (P.Th, máx. 200 °C, cor/brilho pela temperatura); aquece mais rápido com menos água (1,6 °C/s a 40 % de nível, ∝ 1/nível); água ferve em 100 °C (não passa) com bolhas na resistência (pool de 150) e evapora devagar (0,25 %/s); sem água (nível < 16 %) o elemento sobe 45 °C/s e QUEIMA ao chegar em 200 °C (S.burnt: preta, sem aquecer, HUD "QUEIMADA"); substituir pelo botão "Substituir resistência" ou clicando nela, só com o comando de aquecimento desligado (P.cmdOn). TSH-104 agora atua em 105 °C e o setpoint vai até 200 °C (acima de 100 °C a água ferve e não alcança). Ganchos de teste: App3D.burnt(), replaceHeater(), _bub(), _setProc({...}).
+- BUILD 20261123-40: a temperatura da água NÃO fica mais presa em 100 °C: sobe até 200 °C (aquecimento diminui ao se aproximar da temperatura da resistência), com fervura/bolhas acima de ~100 °C e evaporação; TSH-104 passa a atuar em 180 °C. Resistência queimada ou seca muito quente solta fumaça escura (sprites A.smoke; P.smoke; ~18 s após queimar; S.smokeT). Teste: App3D._smoke().
+- BUILD 20261123-41: botão "Abrir dreno" e "Abertura do dreno (%)" movidos para o painel Malha de temperatura, logo abaixo do setpoint e do erro de zero (se a temperatura ainda não estiver montada, ficam no painel de nível).
+- BUILD 20261124-42 · transmissor de nível LT-101 (pressão no fundo, parede direita): P = 9,81 × h (ρ = 1000), faixa 0–10 kPa = 4–20 mA = 0–2000 contagens em **D1110**; 100 % de nível = 88 cm = 8,63 kPa = 17,8 mA = 1726 contagens (1 contagem ≈ 0,051 cm). Indicador padrão de nível (display na tampa) mostra o real. Erro de zero do LT-101 (−10..+10 cm) e do TT-104 ficam na seção recolhida "Professor (erros injetados)" do HUD; a linha "Erro" da tabela foi retirada para o aluno não ver o erro. Ponte/ISP envia D1110 (campo "Nível" no mapa, cfg dLevel). Dreno com abertura padrão 30 % (nível controlável com a bomba). LSH continua sem cortar a bomba no modo ISPSoft (decisão do professor: o aluno que protege). Projeto de vários computadores em PROJETO-VARIOS-COMPUTADORES.md (só desenho).
+- BUILD 20261124-44: rótulos flutuantes (balões) saíram da tela: modo fixo `lab-off` (botão "Rótulos" removido). O balão só aparece ao passar o mouse sobre o instrumento (classe `.hot`), e clicar mostra a explicação (tip). Instrumentos com hover/clique: TT-104, TE-104, TSH-104, LSH/LSL-101, VY-01, LT-101, TZ-104, termômetro padrão (TREF), indicador padrão de nível (NPAD). Alarme não força mais balão (o painel já mostra). Botão "🎓 Professor" no menu abre a área de erros injetados.
