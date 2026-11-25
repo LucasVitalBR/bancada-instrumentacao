@@ -16,6 +16,13 @@
   window.__ttWired = true;   // a aba "Ligação do PT100" está fora por enquanto: o TT-104 conta como ligado
   const DX = -3.65;  // conjunto tanque, bomba e tubulação avançado 25 cm em direção ao painel
   let started = false;
+  // qualidade gráfica: alta (padrão em placa dedicada), média e baixa (menos resolução, menos partículas e menos efeitos) — escolhida pelos botões ao lado do FPS
+  const QUAL = { alta: { h: 1080, pf: 1, wv: 1, pc: 0.066 }, media: { h: 720, pf: 0.55, wv: 2, pc: 0.12 }, baixa: { h: 480, pf: 0, wv: 0, pc: 1e9 } };   // baixa = água simplificada: superfície plana, jato e dreno simples, sem bolhas/espuma/gotas; monitor do fundo parado   // h = altura máxima da imagem 3D interna (a janela continua adaptável: a imagem é esticada para caber)
+  function gpuName() { try { const c = document.createElement("canvas"), g = c.getContext("webgl"), e = g.getExtension("WEBGL_debug_renderer_info"), n = e ? g.getParameter(e.UNMASKED_RENDERER_WEBGL) : g.getParameter(g.RENDERER), l = g.getExtension("WEBGL_lose_context"); if (l) l.loseContext(); return String(n); } catch (e) { return ""; } }
+  let qName = "alta";
+  { let st = null; try { st = localStorage.getItem("nivel-q3d"); } catch (e) { }
+    if (st && QUAL[st]) qName = st; else { const g = gpuName(); qName = /(nvidia|geforce|rtx|gtx|radeon rx|radeon pro|apple m\d)/i.test(g) ? "alta" : /(intel|uhd|iris|swiftshader|llvmpipe|basic render|mali|adreno|powervr|vc4)/i.test(g) ? "media" : "alta"; } }
+  const qpf = () => QUAL[qName].pf;
   const S = { parts: {}, slots: {}, installed: {}, errors: 0, sel: null, proc: null, lvl: null, labels: {}, done: {}, labelMode: "compact", hot: null, ui: { emerg: false, selRes: false }, burnt: false, force: { LSL: null, LSH: null, TSH: null } };   // force: null = automático · LSL/LSH: true = boia levantada (água acima) · TSH: true = atuado
 
   /* ---------- catálogo ---------- */
@@ -788,7 +795,7 @@
     S.clickables.push({ obj: doorM, tag: "PORTA", fn: () => { S.door.open = !S.door.open; tip(S.door.open ? "Porta do painel <b>aberta</b>: o CLP e os inversores aparecem. Clique na porta de novo para fechar." : "Porta <b>fechada</b>: use a seletora, LIGA, DESLIGA e EMERGÊNCIA. Clique na porta (fora dos botões) para abrir.", ""); } });
     S.panelScreen = screen(256, 128);
     hinge.add(at(mesh(new T.PlaneGeometry(0.3, 0.15), new T.MeshBasicMaterial({ map: S.panelScreen.tex }), false), dp(0, 0.5)));
-    const plate = (txt, x, y, w, col = "#1F2328", fg = "#fff", fs = 34) => hinge.add(at(mesh(new T.PlaneGeometry(w, w * 0.3), new T.MeshBasicMaterial({ map: canvasTex(200, 60, (c) => { c.fillStyle = col; c.fillRect(0, 0, 200, 60); c.fillStyle = fg; c.font = "bold " + fs + "px Arial"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(txt, 100, 32); }) }), false), dp(x, y)));
+    const plate = (txt, x, y, w, col = "#1F2328", fg = "#fff", fs = 34) => hinge.add(at(mesh(new T.PlaneGeometry(w, w * 0.3), new T.MeshBasicMaterial({ polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, map: canvasTex(200, 60, (c) => { c.fillStyle = col; c.fillRect(0, 0, 200, 60); c.fillStyle = fg; c.font = "bold " + fs + "px Arial"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(txt, 100, 32); }) }), false), dp(x, y)));
     const bezel = mat(0x2A2F36, 0.4, 0.5);
     // acabamento simples (gabinete metálico de parede): porta lisa com dobra de retorno e gaxeta preta em anel, fechadura de came de 1/4 de volta, dobradiças pequenas e plaqueta
     { const chrome = mat(0xD3D8DD, 0.8, 0.28), dkM = mat(0x2A2F36, 0.4, 0.5);
@@ -802,8 +809,8 @@
       hinge.add(at(mesh(new T.BoxGeometry(0.003, 0.016, 0.002), blkM), v3(hp.x, hp.y, DZ + 0.0185)));
       for (const sy of [-0.5, 0, 0.5]) {                          // dobradiças pequenas (tambor + folha)
         const y = 1.45 + sy;
-        const b = mesh(new T.CylinderGeometry(0.008, 0.008, 0.08, 14), chrome); b.position.set(0.462, y, 0.324); pn.add(b);
-        pn.add(at(mesh(new T.BoxGeometry(0.03, 0.08, 0.003), chrome), v3(0.446, y, 0.3185)));
+        const b = mesh(new T.CylinderGeometry(0.008, 0.008, 0.08, 14), chrome); b.position.set(0.462, y, 0.324); b.userData.ext = true; pn.add(b);
+        { const lf = at(mesh(new T.BoxGeometry(0.03, 0.08, 0.003), chrome), v3(0.446, y, 0.3185)); lf.userData.ext = true; pn.add(lf); }
       }
       const np = canvasTex(256, 128, c => { c.fillStyle = "#C9CED3"; c.fillRect(0, 0, 256, 128); c.strokeStyle = "#7B838B"; c.lineWidth = 4; c.strokeRect(5, 5, 246, 118); c.fillStyle = "#1F2933"; c.font = "bold 28px Arial"; c.textAlign = "center"; c.fillText("QDC-01 · CLP", 128, 40); c.font = "bold 22px Arial"; c.fillText("220 V · 60 Hz · IP54", 128, 72); c.font = "18px Arial"; c.fillText("SENAI · Eletromecânica", 128, 104); });
       hinge.add(at(mesh(new T.PlaneGeometry(0.12, 0.06), decalM(np, 0.35)), dp(0.3, -0.55, DZ + 0.0008)));
@@ -834,15 +841,26 @@
       S.ui.emerg = !S.ui.emerg; press("emerg", S.ui.emerg);
       tip(S.ui.emerg ? "<b>EMERGÊNCIA acionada</b>: bomba, válvula e resistência são desenergizadas na hora. O botão fica travado; clique de novo para destravar (rearme)." : "Emergência <b>rearmada</b>. A bancada pode ser ligada de novo.", S.ui.emerg ? "bad" : "");
     } });
+    // seletor rotativo de painel (22 mm): aro cromado, colar, botão preto de lateral ranhurada e ponteiro com linha indicadora branca
+    const knob3d = (par, z0) => {
+      const chrome = mat(0xD3D8DD, 0.8, 0.28), blkK = mat(0x15181C, 0.25, 0.45), grv = mat(0x2C3036, 0.2, 0.55);
+      par.add(at(mesh(cylZ(0.046, 0.008, 36), chrome), v3(0, 0, z0 + 0.004)));
+      par.add(at(mesh(cylZ(0.039, 0.01, 36), mat(0x23272D, 0.3, 0.5)), v3(0, 0, z0 + 0.011)));
+      const lv = new T.Group(); lv.position.set(0, 0, z0 + 0.016); par.add(lv);
+      lv.add(at(mesh(new T.CylinderGeometry(0.027, 0.031, 0.024, 32).rotateX(Math.PI / 2), blkK), v3(0, 0, 0.012)));
+      const rg = new T.InstancedMesh(new T.BoxGeometry(0.0035, 0.006, 0.02), grv, 20), m4 = new T.Matrix4(), q4 = new T.Quaternion(), zz = new T.Vector3(0, 0, 1), one = new T.Vector3(1, 1, 1);
+      for (let i = 0; i < 20; i++) { const a = i / 20 * Math.PI * 2; q4.setFromAxisAngle(zz, a - Math.PI / 2); m4.compose(new T.Vector3(Math.cos(a) * 0.0305, Math.sin(a) * 0.0305, 0.012), q4, one); rg.setMatrixAt(i, m4); }
+      lv.add(rg);
+      lv.add(at(mesh(new T.BoxGeometry(0.02, 0.056, 0.012), blkK), v3(0, 0.016, 0.03)));       // ponteiro (lingueta)
+      lv.add(at(mesh(cylZ(0.01, 0.012, 18), blkK), v3(0, 0.044, 0.03)));
+      lv.add(at(mesh(new T.BoxGeometry(0.004, 0.05, 0.0015), mat(0xF2F3F4, 0.05, 0.5)), v3(0, 0.02, 0.0365)));   // linha branca
+      return lv;
+    };
     // seletora da resistência (2 posições): DESL / LIG
     { const g = new T.Group(); g.position.copy(dp(-0.31, -0.04)); hinge.add(g);
-      g.add(at(mesh(cylZ(0.042, 0.012, 28), bezel), v3(0, 0, 0.006)));
-      g.add(at(mesh(cylZ(0.03, 0.02, 24), mat(0x15181C, 0.3, 0.5)), v3(0, 0, 0.02)));
-      const lv = new T.Group(); lv.position.set(0, 0, 0.03); g.add(lv); S.selRes = lv;
-      lv.add(at(mesh(new T.BoxGeometry(0.014, 0.07, 0.016), mat(0xF2F3F4, 0.1, 0.5)), v3(0, 0.018, 0.008)));
-      lv.add(at(mesh(new T.SphereGeometry(0.012, 12, 8), mat(0xE87722, 0.2, 0.4)), v3(0, 0.05, 0.012)));
-      lv.rotation.z = 0.6;
-      plate("RESISTÊNCIA", -0.31, -0.115, 0.16, "#E8E8E8", "#1F2328", 28); plate("DESL ◄   ► LIG", -0.31, -0.155, 0.16, "#1F2328", "#fff", 24);
+      const lv = knob3d(g, 0); S.selRes = lv; lv.rotation.z = 0.6;
+      const lp = canvasTex(256, 120, c => { c.fillStyle = "#E8E8E8"; c.fillRect(0, 0, 256, 66); c.fillStyle = "#1F2328"; c.font = "bold 36px Arial"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("RESISTÊNCIA", 128, 34); c.fillRect(0, 66, 256, 54); c.fillStyle = "#fff"; c.font = "bold 30px Arial"; c.fillText("DESL ◄   ► LIG", 128, 94); });
+      hinge.add(at(mesh(new T.PlaneGeometry(0.16, 0.075), new T.MeshBasicMaterial({ map: lp, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })), dp(-0.31, -0.128)));   // uma só plaqueta (antes eram duas sobrepostas e piscavam)
       S.clickables.push({ obj: g, tag: "SELRES", fn: () => {
         S.ui.selRes = !S.ui.selRes; const P = S.proc;
         if (window.PLC && PLC.io) PLC.io.btn.X6 = S.ui.selRes;
@@ -1026,9 +1044,7 @@
     // seletora de partida na porta, 4 posições: DIRETA (K1) / PF525 / ATV12 / CFW500
     const selG = new T.Group(); selG.position.set(-0.45, -0.42, 0.012); hinge.add(selG);
     selG.add(at(mesh(new T.PlaneGeometry(0.22, 0.075), new T.MeshBasicMaterial({ map: canvasTex(440, 150, (c) => { c.fillStyle = "#1F2328"; c.fillRect(0, 0, 440, 150); c.fillStyle = "#fff"; c.font = "bold 28px Arial"; c.textAlign = "center"; c.fillText("PARTIDA DA BOMBA", 220, 36); c.font = "bold 22px Arial"; [["DIRETA", 52, 96], ["PF525", 160, 82], ["ATV12", 280, 82], ["CFW500", 388, 96]].forEach(([t, x, y]) => c.fillText(t, x, y)); }) }), false), v3(0, 0.085, 0)));
-    selG.add(at(mesh(cylZ(0.03, 0.02, 24), mat(0x1F2328, 0.2, 0.5)), v3(0, 0, 0.01)));
-    S.selHandle = new T.Group(); S.selHandle.position.set(0, 0, 0.022); selG.add(S.selHandle);
-    S.selHandle.add(at(mesh(new T.BoxGeometry(0.012, 0.05, 0.016), mat(0xF2F3F4, 0.1, 0.5)), v3(0, 0, 0.008)));
+    S.selHandle = knob3d(selG, 0.002);
     S.clickables.push({ obj: selG, tag: "SELETORA", fn: () => {
       const DV = window.DRV; if (!DV) return; const o = Object.keys(DV.names); DV.setSel(o[(o.indexOf(DV.sel) + 1) % o.length]);
       tip(DV.sel === "direta" ? "Seletora em <b>DIRETA</b>: a bomba parte pelo contator K1, direto na rede, em 60 Hz e sem rampa." : `Seletora em <b>${DV.names[DV.sel]}</b>: a bomba parte por este inversor, com rampa e velocidade ajustável. Toque nele, no painel de inversores, para abrir a IHM.`, ""); renderHud(); } });
@@ -1036,6 +1052,7 @@
     psu(pn, 0.27, 1.38);
     terminalStrip(pn, -0.33, 1.04, [3, 1, 1, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 3]);
     S.panel = pn;
+    { const ih = pn.children.indexOf(hinge); S.panelInterior = pn.children.slice(ih + 1).filter(c => c !== dg && !(c.userData && c.userData.ext)); }   // interior do quadro do CLP: só desenhado com a porta aberta
     // eletrocalha
     // eletrocalha galvanizada suspensa no forro (tirantes) e eletrodutos cinza-escuro até os instrumentos
     const galv = mat(0xB4BCC4, 0.75, 0.38), TY = 2.72;
@@ -1464,8 +1481,8 @@
   const PLCo = () => window.PLC;
   function plcInputs() {
     const io = PLCo().io, L = S.lvl;
-    io.X[0] = L.L <= 15;
-    io.X[1] = L.L >= 85 ? true : L.L <= 82 ? false : io.X[1];
+    io.X[0] = L.L <= 17;                                                           // LSL: boia desce (nível baixo) abaixo de ~17 % (posição da chave)
+    io.X[1] = L.L >= 83 ? true : L.L <= 81 ? false : io.X[1];                      // LSH: boia sobe (nível alto) a partir de ~83 %
     const P = S.proc, ttOk = ready("tq") && !!window.__ttWired;
     io.D[1110] = ltInfo(L.L).counts;                                               // LT-101: 0–10 kPa → 0..2000
     io.D[1111] = ttOk ? Math.round(clamp(Tm(P), 0, 200) / 200 * RAW) : 0;          // 10 contagens = 1 °C
@@ -1501,9 +1518,17 @@
     if (k === "atv12") return D.param("Fr1") === 0 && D.param("tCC") === 0 ? "" : "o ATV12 " + (D.param("Fr1") === 3 ? "está com <b>Fr1 = AIU1</b> (comando pela IHM: RUN/STOP)" : "não está em 2 fios") + ". Para partir pela LI1, use <b>Fr1 = AI1</b> e <b>tCC = 2C</b>.";
     return "";
   }
-  function setHud(on) { S.hudOn = on; S.wrap.classList.toggle("hud-off", !on); try { localStorage.setItem("nivel-hud3d", on ? "1" : "0"); } catch (e) { } }
+  function setHud(on) { if (on && window.innerWidth <= 760) { const mv = document.getElementById("v3d-views"), tb = document.getElementById("v3dToggle"); if (mv && tb && !mv.classList.contains("col")) tb.click(); }   /* tela estreita: abrir o painel recolhe o menu */
+    S.hudOn = on; S.wrap.classList.toggle("hud-off", !on); try { localStorage.setItem("nivel-hud3d", on ? "1" : "0"); } catch (e) { } }
   function renderClp() { if (window.PLC && PLCo().refresh) PLCo().refresh(); }
 
+  // texto da boia: posição (levantada/baixa) e, com o ISPSoft conectado, o contato escolhido na aba CLP (NA/NF) e o valor enviado ao CLP
+  function floatTxt(k, up, alarm) {
+    const m = window.ISP && ISP.active && ISP.cfg && ISP.cfg.x[k], pos = up ? "levantada" : "baixa";
+    let t = "boia " + pos;
+    if (m && m.n != null) { const closed = !!(ISP.sentX && ISP.sentX[m.n]); t += " · contato " + (m.nf ? "NF" : "NA") + " " + (closed ? "fechado" : "aberto") + " (X" + m.n.toString(8) + " = " + (closed ? 1 : 0) + ")"; }
+    return alarm ? "<span class='al'>" + t + "</span>" : t;
+  }
   function updateReadings() {
     const P = S.proc, L = S.lvl;
     const lab = (k, txt, alarm) => { const l = S.labels[k]; if (l) { l.el.querySelector("i").textContent = txt; l.el.classList.toggle("alarm", !!alarm); } };
@@ -1544,8 +1569,8 @@
         <tr><td><b>LT-101 (lido)</b></td><td>${fmt(q4.cm)} cm · ${fmt(q4.kPa, 2)} kPa</td><td>${fmt(q4.mA, 2)} mA · D1110 = ${d1110}</td></tr>
         <tr><td><b>VY-01</b></td><td colspan="2">${L.vy ? "aberta (bobina energizada)" : "fechada"}</td></tr>
         <tr><td><b>Bomba</b></td><td colspan="2">${fmt(S.pumpT || 25, 0)} °C ${S.blocked ? "<span class='al'>REGISTRO FECHADO</span>" : ""}${S.thermalTrip ? " <span class='al'>RELÉ TÉRMICO</span>" : ""}${S.pumpBurnt ? " <span class='al'>QUEIMADA</span>" : ""}</td></tr>
-        <tr><td><b>LSH-101</b></td><td colspan="2">${L.trip || PL.X[1] ? "<span class='al'>ATUOU: bomba desligada</span>" : "normal"}</td></tr>
-        <tr><td><b>LSL-101</b></td><td colspan="2">${PL.X[0] ? "<span class='al'>ALARME: nível baixo</span>" : "normal"}</td></tr>`;
+        <tr><td><b>LSH-101</b></td><td colspan="2">${floatTxt("LSH", !!PL.X[1], L.trip || PL.X[1])}</td></tr>
+        <tr><td><b>LSL-101</b></td><td colspan="2">${floatTxt("LSL", !PL.X[0], PL.X[0])}</td></tr>`;
       lab("VY-01", L.vy ? "aberta" : "fechada");
       lab("LSH-101", S.force.LSH != null ? "FORÇADA " + (S.force.LSH ? "▲" : "▼") : (L.trip || PL.X[1] ? "ATUOU" : "OK"), S.force.LSH != null || L.trip || PL.X[1]);
       lab("LSL-101", S.force.LSL != null ? "FORÇADA " + (S.force.LSL ? "▲" : "▼") : (PL.X[0] ? "ALARME" : "OK"), S.force.LSL != null || PL.X[0]);
@@ -1621,7 +1646,7 @@
       if (!PL.io.X[1]) L.lshMsg = false;
     } else {
       if (window.MD) { MD.emerg = S.ui.emerg; MD.level(L, PL.io, dt); }
-      else if (L.L >= 85 && L.pump) { L.trip = true; L.pump = false; renderHud(); tip("<b>LSH-101 atuou!</b> Nível alto: a chave desligou a bomba e a VY-01 fechou. É intertravamento: protege contra transbordar.", "bad"); }
+      else if (L.L >= 83 && L.pump) { L.trip = true; L.pump = false; renderHud(); tip("<b>LSH-101 atuou!</b> Nível alto: a chave desligou a bomba e a VY-01 fechou. É intertravamento: protege contra transbordar.", "bad"); }
       pumpCmd = L.pump; vyCmd = L.pump;
       // no comando local, a VY-01 também abre quando o motor gira pelo inversor (partida pela tecla verde da IHM)
       if (window.DRV && window.DRV.sel !== "direta" && (L.motorN || 0) > 0.03 && !L.trip) vyCmd = true;
@@ -1716,7 +1741,7 @@
     A.jetMesh.count = 0; A.jetMesh.renderOrder = 5; A.jetMesh.frustumCulled = false; S.ac.add(A.jetMesh);
     // bolhas
     A.bub = new T.InstancedMesh(new T.SphereGeometry(1, 8, 6), new T.MeshStandardMaterial({ color: 0xFFF3FA, transparent: true, opacity: 0.88, roughness: 0.05, emissive: 0x553344, emissiveIntensity: 0.35 }), 420);
-    A.bub.count = 0; A.bub.renderOrder = 5; S.ac.add(A.bub);
+    A.bub.count = 0; A.bub.renderOrder = 5; A.bub.frustumCulled = false; S.ac.add(A.bub);   // sem isso a esfera de culling (calculada com poucas bolhas) escondia as bolhas com o zoom perto
     // gotas (respingo do jato, ebulição e dreno): pool fixo de 96, mesma cor das bolhas
     A.drops = []; A.dropAcc = 0; A.dropAcc2 = 0; A.sl = 0; A.prevQ = 0; A.prevDrain = false;
     A.dropMesh = new T.InstancedMesh(new T.SphereGeometry(1, 6, 4), new T.MeshStandardMaterial({ color: 0xF8D6E6, transparent: true, opacity: 0.8, roughness: 0.05, depthWrite: false }), 96);
@@ -1763,13 +1788,18 @@
   const _m4 = new T.Matrix4(), _q = new T.Quaternion(), _sc = new T.Vector3(), _p = new T.Vector3(), _v3 = new T.Vector3(), _yUp = new T.Vector3(0, 1, 0);
   function stepAnims(dt) {
     A.t += dt; const t = A.t;
+    if (S.panelInterior && S.door) { const vis = S.door.open || S.door.ang > 0.03; if (S.panelIntVis !== vis) { S.panelIntVis = vis; for (const o of S.panelInterior) o.visible = vis; } }
     for (const vv of (S.valves || [])) vv.lv.rotation.y += ((vv.open ? 0 : Math.PI / 2) - vv.lv.rotation.y) * Math.min(1, dt * 8);
     if (S.pumpMats) { const k = clamp(((S.pumpT || 25) - 35) / 55, 0, 1), hot = new T.Color(0xD2461C), char = new T.Color(0x2B2623); for (const [m, c0] of S.pumpMats) { m.color.copy(c0).lerp(hot, k); if (S.pumpBurnt) { m.color.copy(char); m.emissiveIntensity = 0; } else { m.emissive.setRGB(0.9 * k, 0.18 * k, 0.02 * k); m.emissiveIntensity = 0.6 * k; } } }
     { const kp = S.pumpBurnt ? clamp((S.pumpSmokeT || 0) / 20, 0, 1) : ((S.pumpT || 25) > 70 ? clamp(((S.pumpT || 25) - 70) / 20, 0, 1) * 0.6 : 0);
       if (S.pumpBurnt) S.pumpSmokeT = Math.max(0, (S.pumpSmokeT || 0) - dt);
       A.smokeAccP = (A.smokeAccP || 0) + dt * kp * 14;
       while (A.smokeAccP > 1 && S.pumpG) { A.smokeAccP--; const p = A.smoke.find(x => x.life >= 1); if (!p) break; const o = S.pumpG.localToWorld(v3(0.27 + (Math.random() - 0.5) * 0.1, 0.34, (Math.random() - 0.5) * 0.08)); p.life = 0; p.sp.position.copy(o); p.vx = (Math.random() - 0.5) * 0.05; p.vz = (Math.random() - 0.5) * 0.05; p.s0 = 0.05 + Math.random() * 0.04; } }
-    A.pcT = (A.pcT || 0) + dt; if (A.pcT > 0.066) { A.pcT = 0; drawPcScreen(t); }
+    if (A.qSeen !== qName) {
+      A.qSeen = qName;
+      if (qName === "baixa") { if (A.surf) { const pa = A.surf.geometry.attributes.position.array; for (let i = 1; i < pa.length; i += 3) pa[i] = 0; A.surf.geometry.attributes.position.needsUpdate = true; A.surf.geometry.computeVertexNormals(); } drawPcScreen(0); }
+    }
+    A.pcT = (A.pcT || 0) + dt; if (A.pcT > QUAL[qName].pc) { A.pcT = 0; drawPcScreen(t); }
     if (S.door) { const tg = S.door.open ? 1.75 : 0; S.door.ang += (tg - S.door.ang) * Math.min(1, dt * 3.5); S.door.hinge.rotation.y = S.door.ang; }
     if (S.conduits) for (const c of S.conduits) c.g.visible = S.showCond !== false && (c.always || !!S.installed[c.tag]);
     const L = S.lvl, P = S.proc;
@@ -1789,7 +1819,8 @@
     const dQ = Math.abs(Q - A.prevQ) / 30 + (!!L.drain !== A.prevDrain ? 0.25 : 0); A.prevQ = Q; A.prevDrain = !!L.drain;
     A.sl = Math.min(1.5, A.sl * Math.exp(-0.55 * dt) + dQ * 1.2);
     const sA = 0.0045 * A.sl + 0.0008 * Q / 30, c1 = Math.cos(t * 5.2), c2 = Math.cos(t * 7.6 + 1), c3 = Math.sin(t * 3.1);
-    for (let i = 0; i < pos.count; i++) {
+    const wvq = QUAL[qName].wv, doWave = wvq > 0 && ((A.wvN = (A.wvN || 0) + 1) % wvq) === 0;
+    if (doWave) for (let i = 0; i < pos.count; i++) {
       const x = base[i * 3], z = base[i * 3 + 2];
       const d = Math.hypot(x - ix, z - iz);
       const y = amp * (0.5 * Math.sin(x * 23 + t * 2.6) + 0.3 * Math.sin(z * 29 - t * 2.1) + 0.2 * Math.sin((x + z) * 41 + t * 3.7))
@@ -1797,14 +1828,14 @@
         + sA * (Math.cos(x * 4.9) * c1 + 0.6 * Math.cos(z * 5.8) * c2 + 0.4 * Math.sin(x * 9.8) * Math.cos(z * 5.8) * c3);
       pos.array[i * 3 + 1] = y;
     }
-    pos.needsUpdate = true; A.surf.geometry.computeVertexNormals();
+    if (doWave) { pos.needsUpdate = true; A.surf.geometry.computeVertexNormals(); }
     A.surf.position.set(0, topY + 0.002, 0); A.surf.visible = L.L > 0.5;
     // ---- jato de entrada
     const dropAdd = (x, y, z, vx, vy, vz, r, kind) => { let d = A.drops.find(q => !q.on); if (!d) { if (A.drops.length >= 96) return; d = {}; A.drops.push(d); } Object.assign(d, { on: true, x, y, z, vx, vy, vz, r, kind }); };
     // microbolhas em suspensão: dão a sensação de líquido diluído/turvo; circulam mais rápido com a vazão
     if (!A.amb) { A.amb = new T.InstancedMesh(new T.SphereGeometry(1, 5, 4), new T.MeshStandardMaterial({ color: 0xF8D6E6, transparent: true, opacity: 0.4, roughness: 0.1, depthWrite: false }), 110); A.amb.renderOrder = 4; A.amb.frustumCulled = false; S.ac.add(A.amb);
       A.ambP = []; for (let i = 0; i < 110; i++) A.ambP.push({ x: (Math.random() - 0.5) * 0.58, y: Math.random(), z: (Math.random() - 0.5) * 0.48, r: 0.0011 + Math.random() * 0.0016, v: 0.008 + Math.random() * 0.022, ph: Math.random() * 6.28 }); }
-    { const nA = L.L > 4 ? Math.min(110, Math.floor(L.L * 1.6)) : 0, hh = Math.max(0.01, topY - 0.7), fl = 1 + Q / 12 + (L.drain ? 0.5 : 0); let na = 0;
+    { const nA = L.L > 4 ? Math.min(Math.round(110 * qpf()), Math.floor(L.L * 1.6)) : 0, hh = Math.max(0.01, topY - 0.7), fl = 1 + Q / 12 + (L.drain ? 0.5 : 0); let na = 0;
       for (let i = 0; i < nA; i++) { const p = A.ambP[i];
         p.y += p.v * fl * dt / hh; if (p.y > 1) { p.y -= 1; p.x = (Math.random() - 0.5) * 0.58; p.z = (Math.random() - 0.5) * 0.48; }
         p.x += Math.sin(t * 0.7 + p.ph) * 0.012 * fl * dt + (Q > 0.2 ? -0.01 * Q / 30 * dt : 0); p.z += Math.cos(t * 0.6 + p.ph * 1.7) * 0.012 * fl * dt;
@@ -1813,10 +1844,10 @@
       A.amb.count = na; if (na) A.amb.instanceMatrix.needsUpdate = true; }
     // espuma de bolhas no ponto de impacto (some sozinha): esconde o encontro do filete com a água
     if (!A.foam) { A.foam = new T.InstancedMesh(new T.SphereGeometry(1, 6, 4), new T.MeshStandardMaterial({ color: 0xF8D6E6, transparent: true, opacity: 0.6, roughness: 0.05, depthWrite: false }), 90); A.foam.count = 0; A.foam.renderOrder = 6; A.foam.frustumCulled = false; S.ac.add(A.foam); A.foamP = []; A.foamAcc = 0; }
-    if (jetOn && L.L > 0.5) { A.foamAcc += dt * (18 + 50 * Q / 30); while (A.foamAcc > 1) { A.foamAcc--; let f = A.foamP.find(z => !z.on); if (!f) { if (A.foamP.length >= 90) break; f = {}; A.foamP.push(f); }
+    if (jetOn && L.L > 0.5) { A.foamAcc += dt * qpf() * (18 + 50 * Q / 30); while (A.foamAcc > 1) { A.foamAcc--; let f = A.foamP.find(z => !z.on); if (!f) { if (A.foamP.length >= 90) break; f = {}; A.foamP.push(f); }
       const a = Math.random() * 6.28, d = Math.random() * 0.03 * (0.6 + Q / 30); Object.assign(f, { on: true, x: ix + Math.cos(a) * d, z: iz + Math.sin(a) * d, vx: Math.cos(a) * 0.02, vz: Math.sin(a) * 0.02, life: 0, max: 0.8 + Math.random() * 1.2, r: 0.003 + Math.random() * 0.005 }); } }
     const bo0 = S.proc ? S.proc.boil : 0;
-    if (bo0 > 0.15 && L.L > 17) { A.foamAcc2 = (A.foamAcc2 || 0) + dt * 70 * bo0; while (A.foamAcc2 > 1) { A.foamAcc2--; let f = A.foamP.find(z => !z.on); if (!f) { if (A.foamP.length >= 90) break; f = {}; A.foamP.push(f); } Object.assign(f, { on: true, x: (Math.random() - 0.5) * 0.14, z: -0.26 + Math.random() * 0.3, vx: (Math.random() - 0.5) * 0.03, vz: (Math.random() - 0.5) * 0.03, life: 0, max: 0.35 + Math.random() * 0.7, r: 0.003 + Math.random() * 0.006 }); } }
+    if (bo0 > 0.15 && L.L > 17) { A.foamAcc2 = (A.foamAcc2 || 0) + dt * qpf() * 70 * bo0; while (A.foamAcc2 > 1) { A.foamAcc2--; let f = A.foamP.find(z => !z.on); if (!f) { if (A.foamP.length >= 90) break; f = {}; A.foamP.push(f); } Object.assign(f, { on: true, x: (Math.random() - 0.5) * 0.14, z: -0.26 + Math.random() * 0.3, vx: (Math.random() - 0.5) * 0.03, vz: (Math.random() - 0.5) * 0.03, life: 0, max: 0.35 + Math.random() * 0.7, r: 0.003 + Math.random() * 0.006 }); } }
     if (S.tzTex) S.tzTex.offset.x -= dt * (0.15 + 1.6 * (S.tzGlow || 0));
     let nf = 0;
     for (const f of A.foamP) { if (!f.on) continue; f.life += dt; if (f.life >= f.max || topY >= 1.38) { f.on = false; continue; }
@@ -1846,7 +1877,7 @@
       }
       A.jetG.attributes.position.needsUpdate = true; A.jetG.computeVertexNormals(); A.jetG.computeBoundingSphere();
       A.jet.visible = true; A.jetTex.offset.x -= dt * (2.5 + 3 * Q / 30);
-      A.jetAcc += dt * (45 + 70 * Q / 30);
+      A.jetAcc += dt * qpf() * (45 + 70 * Q / 30);
       while (A.jetAcc > 1) { A.jetAcc--; let p = A.jetP.find(z => !z.on); if (!p) { if (A.jetP.length >= 140) break; p = {}; A.jetP.push(p); }
         const u = 0.25 + 0.75 * Math.random(), tt = te0 * u; Object.assign(p, { on: true, x: 0.31 - vx0 * tt, y: 1.4 - 1.6 * tt * tt, z: (Math.random() - 0.5) * 0.008, vx: -vx0 + (Math.random() - 0.5) * 0.12, vy: -3.2 * tt + (Math.random() - 0.3) * 0.12, vz: (Math.random() - 0.5) * 0.14, r: 0.0016 + 0.0016 * Math.random() }); }
     } else if (A.jet) A.jet.visible = false;
@@ -1858,10 +1889,10 @@
       _m4.compose(_p.set(p.x, p.y, p.z), _q, _sc.set(p.r, p.r * (1.1 + sp * 0.5), p.r)); A.jetMesh.setMatrixAt(nj++, _m4); }
     A.jetMesh.count = nj; if (nj) A.jetMesh.instanceMatrix.needsUpdate = true;
     // ---- bolhas
-    if (Q > 0.2) { A.bubAcc += dt * (14 + Q * 3.2); while (A.bubAcc > 1) { A.bubAcc--; let b = A.bubbles.find(x => !x.on); if (!b) { if (A.bubbles.length >= 420) break; b = {}; A.bubbles.push(b); }
+    if (Q > 0.2) { A.bubAcc += dt * qpf() * (14 + Q * 3.2); while (A.bubAcc > 1) { A.bubAcc--; let b = A.bubbles.find(x => !x.on); if (!b) { if (A.bubbles.length >= 420) break; b = {}; A.bubbles.push(b); }
       Object.assign(b, { on: true, x: ix + (Math.random() - 0.5) * 0.1, z: iz + (Math.random() - 0.5) * 0.1, y: (submerged ? 1.4 : topY) - 0.01 - Math.random() * 0.2, v: -(0.03 + 0.22 * Math.random() * (0.3 + Q / 30)), vt: 0.05 + Math.random() * 0.14, r: 0.0022 + Math.random() * Math.random() * 0.0085, vx: -0.05 - Math.random() * 0.1 * Q / 30, vz: (Math.random() - 0.5) * 0.08, ph: Math.random() * 6.28 }); } }
     const bo = S.proc ? S.proc.boil : 0;
-    if (bo > 0.02) { A.boilAcc = (A.boilAcc || 0) + dt * (14 + 330 * bo); while (A.boilAcc > 1) { A.boilAcc--; let b = A.bubbles.find(x => !x.on); if (!b) { if (A.bubbles.length >= 420) break; b = {}; A.bubbles.push(b); }
+    if (bo > 0.02) { A.boilAcc = (A.boilAcc || 0) + dt * qpf() * (14 + 330 * bo); while (A.boilAcc > 1) { A.boilAcc--; let b = A.bubbles.find(x => !x.on); if (!b) { if (A.bubbles.length >= 420) break; b = {}; A.bubbles.push(b); }
       { const th = Math.PI / 2 + (Math.floor(Math.random() * 3)) * Math.PI * 2 / 3 - 0.0, rr = 0.03 + (Math.random() - 0.5) * 0.04; Object.assign(b, { on: true, x: rr * Math.cos(th) * 1.0 + (Math.random() - 0.5) * 0.02, z: -0.26 + Math.random() * 0.3, y: 0.74 + rr * Math.sin(th) + Math.random() * 0.02, v: 0.16 + Math.random() * 0.3, vt: 0, r: 0.0036 + Math.random() * Math.random() * 0.013 * (0.5 + bo), vx: 0, vz: 0, ph: Math.random() * 6.28 }); } } }
     // gotas: pool fixo (96); kind 0 = dentro do tanque (cai na superfície), 1 = respingo do ralo no piso
     let n = 0;
@@ -1877,7 +1908,7 @@
       _m4.compose(_p.set(b.x, b.y, b.z), _q, _sc.set(b.r * w, b.r / w, b.r * w)); A.bub.setMatrixAt(n++, _m4); if (n >= 420) break; }
     A.bub.count = n; A.bub.instanceMatrix.needsUpdate = true;
     // respingo no ponto de impacto do jato
-    if (jetOn && L.L > 0.5) { A.dropAcc += dt * (8 + 40 * Q / 30); while (A.dropAcc > 1) { A.dropAcc--; const a = Math.random() * 6.28, sp = 0.05 + Math.random() * 0.12 * (0.5 + Q / 30);
+    if (jetOn && L.L > 0.5) { A.dropAcc += dt * qpf() * (8 + 40 * Q / 30); while (A.dropAcc > 1) { A.dropAcc--; const a = Math.random() * 6.28, sp = 0.05 + Math.random() * 0.12 * (0.5 + Q / 30);
       dropAdd(ix + Math.cos(a) * 0.01, topY, iz + Math.sin(a) * 0.01, Math.cos(a) * sp - 0.05, 0.35 + Math.random() * 0.55 * (0.5 + Q / 30), Math.sin(a) * sp, 0.0015 + Math.random() * 0.0025, 0); } }
     // ebulição solta salpicos finos
     if (bo > 0.3 && L.L > 20) { A.dropAcc2 += dt * 25 * bo; while (A.dropAcc2 > 1) { A.dropAcc2--; dropAdd((Math.random() - 0.5) * 0.12, topY, -0.26 + Math.random() * 0.3, (Math.random() - 0.5) * 0.1, 0.25 + Math.random() * 0.35, (Math.random() - 0.5) * 0.1, 0.0015 + Math.random() * 0.002, 0); } }
@@ -1892,9 +1923,9 @@
     A.drain.visible = drainOn;
     if (drainOn) {
       const vh = 0.18 + 0.55 * fD, te = Math.sqrt(2 * 0.384 / 3.2), lz = 0.31 + vh * te;
-      fillStream(A.drainG, { x: 0.12, y: 0.39, z: 0.31, hx: 0, hz: 1, vh, te, r0: 0.005 + 0.008 * fD, wob: 0.003 * (0.4 + fD), ph: t * 20 });
+      if (qName !== "baixa" || (A.drnN = (A.drnN || 0) + 1) % 8 === 1) fillStream(A.drainG, { x: 0.12, y: 0.39, z: 0.31, hx: 0, hz: 1, vh, te, r0: 0.005 + 0.008 * fD, wob: 0.003 * (0.4 + fD), ph: t * 20 });
       A.drainTex.offset.x -= dt * (2.5 + 3 * fD);
-      A.dropAcc3 = (A.dropAcc3 || 0) + dt * (10 + 30 * fD);
+      A.dropAcc3 = (A.dropAcc3 || 0) + dt * qpf() * (10 + 30 * fD);
       while (A.dropAcc3 > 1) { A.dropAcc3--;
         if (Math.random() < 0.7) { const a = Math.random() * 6.28, sp = 0.05 + Math.random() * 0.12 * (0.5 + fD); dropAdd(0.12 + Math.cos(a) * 0.01, 0.008, lz, Math.cos(a) * sp, 0.25 + Math.random() * 0.45 * (0.5 + fD), Math.sin(a) * sp * 0.8, 0.0015 + Math.random() * 0.0025, 1); }
         else { const u = 0.3 + 0.7 * Math.random(), tt = te * u; dropAdd(0.12, 0.39 - 1.6 * tt * tt, 0.31 + vh * tt, (Math.random() - 0.5) * 0.1, -3.2 * tt, vh + (Math.random() - 0.5) * 0.1, 0.0015 + Math.random() * 0.0015, 1); } }
@@ -1980,9 +2011,8 @@
   /* ---------- inicialização ---------- */
   function init(wrap) {
     let renderer;
-    try { renderer = new T.WebGLRenderer({ antialias: true }); }
+    try { renderer = new T.WebGLRenderer({ antialias: qName === "alta" }); }
     catch (e) { $("#load3d").textContent = "Este computador não conseguiu iniciar o 3D (WebGL). Atualize o navegador ou o driver de vídeo."; return; }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
     renderer.shadowMap.enabled = false;
     renderer.toneMapping = T.NeutralToneMapping; renderer.toneMappingExposure = 1.12; // Neutral: preserva as cores (canos verdes, fluido rosa, azul/laranja)
     renderer.outputColorSpace = T.SRGBColorSpace;
@@ -2099,7 +2129,7 @@
     });
     document.querySelectorAll("#v3d-views [data-view]").forEach(b => b.onclick = () => goView(b.dataset.view));
     $("#b3reset").onclick = reset;
-    let hudPref = true; try { hudPref = localStorage.getItem("nivel-hud3d") !== "0"; } catch (e) { }
+    let hudPref = true; try { const hp = localStorage.getItem("nivel-hud3d"); hudPref = hp === null ? window.innerWidth > 760 : hp !== "0"; } catch (e) { }
     setHud(hudPref);
     const hs = $("#h3dShow"); if (hs) hs.onclick = () => setHud(true);
     const bpr = $("#b3prof"); if (bpr) bpr.onclick = () => { if (!S.hudOn) setHud(true); S.profOpen = true; renderHud(); const pb = $("#profBox"); if (pb) { pb.open = true; pb.scrollIntoView({ block: "center", behavior: "smooth" }); } };
@@ -2120,8 +2150,33 @@
     tip("Escolha uma peça na Bancada de Peças, leia a tag e toque na área azul onde ela deve ser instalada. Arraste para girar, use a roda ou dois dedos para aproximar. Teclado: <b>W A S D</b> ou <b>setas</b> para andar, <b>Q/E</b> para descer/subir (Shift = mais rápido).");
     const clock = new T.Clock();
     let acc = 0;
+    // ---- barra de desempenho (sempre visível): FPS + botão ⓘ (detalhes: quadro, pior e melhor) + qualidade Alta / Média / Baixa
+    const perf = { n: 0, t0: performance.now(), worst: 0, best: 1e9, low: 0, lastTip: -1e9, det: false };
+    perf.el = document.createElement("div"); perf.el.id = "perf3d";
+    perf.el.innerHTML = '<b id="pfFps">-- FPS</b><span class="pfq" title="Qualidade gráfica. Média: menos resolução e menos partículas. Baixa: água simplificada (sem ondas, bolhas e espuma), monitor do fundo parado e resolução mínima — mais FPS"><button data-q="alta">Alta</button><button data-q="media">Média</button><button data-q="baixa">Baixa</button></span>';
+    wrap.appendChild(perf.el);
+    perf.apply = () => { perf.el.querySelectorAll("[data-q]").forEach(b => b.classList.toggle("on", b.dataset.q === qName)); };
+    function setQuality(q) {
+      if (!QUAL[q]) return; qName = q; try { localStorage.setItem("nivel-q3d", q); } catch (e) { }
+      resize(); perf.low = 0; perf.n = 0; perf.t0 = performance.now(); perf.apply();
+    }
+    perf.el.querySelectorAll("[data-q]").forEach(b => b.onclick = () => setQuality(b.dataset.q));
+    perf.apply(); S.setQuality = setQuality;
+    perf.tick = (frameMs) => {
+      perf.n++; perf.worst = Math.max(perf.worst, frameMs); perf.best = Math.min(perf.best, frameMs);
+      const now = performance.now();
+      if (now - perf.t0 >= 500) {
+        const sec = (now - perf.t0) / 1000, fps = perf.n / sec, ft = 1000 * sec / perf.n, fe = perf.el.querySelector("#pfFps");
+        fe.textContent = fps.toFixed(0) + " FPS"; fe.style.color = fps >= 50 ? "#2EE07A" : fps >= 30 ? "#FFB020" : "#FF6B5B";
+        perf.low = fps < 24 ? perf.low + 1 : 0;
+        if (perf.low >= 6 && qName !== "baixa" && now - perf.lastTip > 60000) { perf.lastTip = now; tip("<b>Desempenho baixo</b> (" + fps.toFixed(0) + " FPS). Se estiver travando, escolha a qualidade <b>Média</b> ou <b>Baixa</b> nos botões ao lado do FPS.", ""); }
+        perf.n = 0; perf.t0 = now; perf.worst = 0; perf.best = 1e9;
+      }
+    };
+    S.perf = perf; let lastFrame = performance.now();
     function loop() {
       requestAnimationFrame(loop);
+      const fNow = performance.now(), frameMs = fNow - lastFrame; lastFrame = fNow;
       const dt = Math.min(clock.getDelta(), 0.1);
       if (!wrap.offsetParent) {   // outra aba aberta (ex.: CLP): só a simulação e a comunicação seguem rodando
         if (ready("tq") || ready("ln")) plcCycle(dt * 5);
@@ -2148,8 +2203,10 @@
       if (window.MD) MD.refresh(dt);
       stepAnims(dt);
       acc += dt; if (acc > 0.25) { acc = 0; updateReadings(); }
+      const pT1 = performance.now();
       renderer.render(scene, cam);
       lr.render(scene, cam);
+      perf.tick(frameMs, pT1 - fNow, performance.now() - pT1);
       dc += dt; if (dc > 0.15) { dc = 0; declutter(); }
     }
     let dc = 0;
@@ -2177,7 +2234,9 @@
   function resize() {
     if (!S.renderer) return;
     const w = S.wrap.clientWidth, h = S.wrap.clientHeight; if (!w || !h) return;
-    S.renderer.setSize(w, h); S.lr.setSize(w, h); S.cam.aspect = w / h; S.cam.updateProjectionMatrix();
+    const dpr = window.devicePixelRatio || 1, ratio = Math.max(0.3, Math.min(dpr, QUAL[qName].h / h));   // nunca mais pixels que o limite da qualidade (1080 / 720 / 480 de altura)
+    S.renderer.setPixelRatio(ratio); S.renderer.setSize(w, h); S.lr.setSize(w, h);
+    S.cam.aspect = w / h; S.cam.updateProjectionMatrix();
   }
   function reset() {
     releaseForce(); S.ui.emerg = false; S.ui.selRes = false;

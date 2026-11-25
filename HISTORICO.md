@@ -192,3 +192,23 @@ Registro de esfera também no dreno (mesmo modelo). Página hospedada (Vercel/qu
 Alavanca do registro de esfera: empunhadura mais longa (7,2 r) e fina (0,95 r de largura, 0,5 r de espessura).
 ## 24/11/2026 build 20261124-95
 Registro de esfera um pouco menor: escala 0,72 e empunhadura de 5,3 r (meio-termo), mesma espessura.
+## 24/11/2026 build 20261124-96
+Tela dividida: CSS para largura <= 760 px (cabeçalho compacto, menu 136 px e recolhido por padrão, painel do processo como folha inferior e oculto por padrão, tabelas e aba CLP em linhas empilhadas). Boias: limiares elétricos iguais à posição das chaves (LSL 17 %, LSH 83 %) e a tabela mostra posição da boia e o contato escolhido (NA/NF, Xn = valor enviado ao CLP).
+## 24/11/2026 build 20261124-97
+Botão Desempenho no menu Ações: contador de FPS, tempo de quadro (pior quadro), custo médio de simulação x desenho, chamadas de desenho, triângulos, texturas/geometrias, resolução/pixel ratio e nome da GPU (WEBGL_debug_renderer_info) para comparar computadores; lembra o estado (localStorage nivel-perf3d).
+## 24/11/2026 build 20261124-98
+Qualidade gráfica Alta/Média/Baixa ao lado do FPS (barra sempre visível no topo da cena; botão ⓘ mostra quadro/pior/melhor). Média e baixa reduzem resolução (pixel ratio 0.9/0.65), partículas (55 %/25 %), atualização da superfície da água e do protetor de tela; antialias só em Alta (vale ao reabrir). Padrão pela placa de vídeo (NVIDIA/Radeon = alta; Intel/integrada/software = média); escolha guardada em nivel-q3d. Interior do quadro do CLP só é desenhado com a porta aberta. Aviso quando o FPS fica abaixo de 24 por 3 s.
+## 24/11/2026 build 20261124-99
+Seletoras da porta (resistência e partida da bomba) trocadas por botão rotativo realista (aro cromado, colar, botão preto ranhurado, ponteiro com linha branca, sem ponta amarela). As duas plaquetas RESISTÊNCIA e DESL/LIG se sobrepunham e piscavam (z-fighting): agora é uma plaqueta só e todas as plaquetas da porta têm polygonOffset.
+## 24/11/2026 build 20261124-100
+Removido o botão ⓘ e os detalhes de tempo de quadro da barra de desempenho: ficam só o FPS e os botões Alta/Média/Baixa.
+## 24/11/2026 build 20261124-101
+Resolução interna por qualidade: altura máxima 1080 (Alta), 720 (Média) e 480 (Baixa); a imagem é esticada para a janela adaptável e nunca desenha mais pixels que a janela tem. A barra do FPS mostra a resolução interna (ex.: 1920×1080).
+## 24/11/2026 build 20261124-102
+Tela estreita (<= 760 px, vista dividida): menu e painel do processo nunca ficam abertos ao mesmo tempo (abrir um recolhe o outro) e o menu sempre começa recolhido; painel com fundo sólido e sombra. Resolução interna por altura (1080/720/480) conferida em 1400x900, 4K e dpr 1,5.
+## 24/11/2026 build 20261124-103
+Qualidade Baixa = física/visual da água simplificada: superfície plana (sem ondas nem normais por quadro), jato de entrada como cilindro fino, filete do dreno atualizado a cada 8 quadros, sem bolhas/espuma/gotas/microbolhas (pf = 0) e monitor do fundo parado no quadro inicial. O nível, a temperatura e a vazão continuam calculados igual (só a parte visual muda).
+## 24/11/2026 build 20261124-104
+Qualidade Baixa: removido o segundo feixe de água (cilindro simples) que aparecia embaixo do cano; fica só o jato original. Removida a resolução da barra do FPS.
+## 24/11/2026 build 20261124-105
+Bolhas sumiam com o zoom perto: a malha instanciada A.bub tinha frustumCulled ligado e a esfera de culling era calculada com poucas bolhas, escondendo as demais fora dela. Agora frustumCulled = false.
