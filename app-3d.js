@@ -702,21 +702,30 @@
     };
     // canaleta ranhurada (dedos de plástico) com tampas nas pontas
     const ductTex = canvasTex(512, 96, (c, w, h) => {
-      c.fillStyle = "#AAB0B6"; c.fillRect(0, 0, w, h);
-      for (let x = 0; x < w; x += 32) { c.fillStyle = "#4B5258"; c.fillRect(x + 8, 4, 16, 34); c.fillRect(x + 8, h - 38, 16, 34); }
-      c.fillStyle = "#9AA1A8"; c.fillRect(0, h / 2 - 7, w, 14); c.fillStyle = "#C3C8CD"; c.fillRect(0, h / 2 - 7, w, 3);
+      // vista de frente: tampa lisa no meio (voltada para a porta) e só os furos/dedos nas bordas de cima e de baixo, por onde entram os fios
+      c.fillStyle = "#B6BCC2"; c.fillRect(0, 0, w, h);
+      for (let x = 0; x < w; x += 28) { c.fillStyle = "#454C52"; c.fillRect(x + 8, 3, 12, 15); c.fillRect(x + 8, h - 18, 12, 15); }
+      c.fillStyle = "#8E959C"; c.fillRect(0, 19, w, 2); c.fillRect(0, h - 21, w, 2);
+      c.fillStyle = "#CBD0D5"; c.fillRect(0, 22, w, 2);
     });
+    // canaleta de PVC cinza-escuro, funda (quase a profundidade dos componentes): tampa lisa na frente e rasgos (dedos) só nas faixas de cima e de baixo, por onde os fios entram
+    const ductM = mat(0x666A70, 0.1, 0.72), ductLid = mat(0x7B8087, 0.1, 0.62), slitM = mat(0x2A2D31, 0.1, 0.8), DD = 0.075;
+    const slits = (p, n, w, h, x0, y0, dx, dy, z, hor) => { const im = new T.InstancedMesh(new T.BoxGeometry(w, h, 0.002), slitM, n), m4 = new T.Matrix4(); for (let i = 0; i < n; i++) { m4.setPosition(x0 + dx * i, y0 + dy * i, z); im.setMatrixAt(i, m4); } p.add(im); };
     const duct3d = (p, cx, y, len) => {
-      bx(p, len, 0.06, 0.05, mat(0xA3A8AD, 0.1, 0.7), cx, y, 0.055);
-      bx(p, len, 0.005, 0.054, mat(0xB6BBC0, 0.1, 0.65), cx, y + 0.0325, 0.056);   // aba superior
-      const t = ductTex.clone(); t.needsUpdate = true; t.wrapS = T.RepeatWrapping; t.repeat.set(len / 0.113, 1);
-      const f = mesh(new T.PlaneGeometry(len - 0.004, 0.056), decalM(t, 0.7)); f.position.set(cx, y, 0.0803); p.add(f);
-      for (const s of [-1, 1]) bx(p, 0.004, 0.062, 0.052, mat(0x6F7882, 0.1, 0.7), cx + s * (len / 2 + 0.002), y, 0.055);
+      const H = 0.06, zf = 0.03 + DD;
+      bx(p, len, H, DD, ductM, cx, y, 0.03 + DD / 2);
+      bx(p, len - 0.004, H - 0.032, 0.004, ductLid, cx, y, zf + 0.002);              // tampa lisa de frente (voltada para a porta)
+      const n = Math.floor((len - 0.02) / 0.016);
+      for (const sy of [-1, 1]) slits(p, n, 0.007, 0.0135, cx - (n - 1) * 0.008, y + sy * (H / 2 - 0.0085), 0.016, 0, zf + 0.0011);   // rasgos nas bordas de cima e de baixo
+      for (const sx of [-1, 1]) bx(p, 0.004, H + 0.002, DD + 0.002, ductLid, cx + sx * (len / 2 + 0.002), y, 0.03 + DD / 2);          // tampas das pontas
     };
-    const vduct3d = (p, cx, y0, y1) => {      // canaleta vertical lateral (moldura do quadro)
-      const L = y1 - y0, cy = (y0 + y1) / 2; bx(p, 0.05, L, 0.05, mat(0xA3A8AD, 0.1, 0.7), cx, cy, 0.055);
-      const t = ductTex.clone(); t.needsUpdate = true; t.wrapS = t.wrapT = T.RepeatWrapping; t.center.set(0.5, 0.5); t.rotation = Math.PI / 2; t.repeat.set(1, L / 0.113);
-      const f = mesh(new T.PlaneGeometry(0.046, L - 0.004), decalM(t, 0.7)); f.position.set(cx, cy, 0.0803); p.add(f);
+    const vduct3d = (p, cx, y0, y1) => {      // canaleta vertical lateral (moldura do quadro), mesma construção
+      const W = 0.05, L = y1 - y0, cy = (y0 + y1) / 2, zf = 0.03 + DD;
+      bx(p, W, L, DD, ductM, cx, cy, 0.03 + DD / 2);
+      bx(p, W - 0.032, L - 0.004, 0.004, ductLid, cx, cy, zf + 0.002);
+      const n = Math.floor((L - 0.02) / 0.016);
+      for (const sx of [-1, 1]) slits(p, n, 0.0135, 0.007, cx + sx * (W / 2 - 0.0085), cy - (n - 1) * 0.008, 0, 0.016, zf + 0.0011);
+      for (const sy of [-1, 1]) bx(p, W + 0.002, 0.004, DD + 0.002, ductLid, cx, cy + sy * (L / 2 + 0.002), 0.03 + DD / 2);
     };
     // régua de bornes modulares (cinza/bege, PE amarelo-verde, azul do neutro) com parafuso frontal, entradas de fio, marcador e fim de linha
     const termCols = [0xB1B6BB, 0xE3C93C, 0x4A7FC4, 0x8F959B];

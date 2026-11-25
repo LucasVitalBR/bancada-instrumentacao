@@ -216,3 +216,7 @@ Bolhas sumiam com o zoom perto: a malha instanciada A.bub tinha frustumCulled li
 Painéis laterais fluidos: menu (esquerda) e painel do processo (direita) continuam nas laterais e encolhem com a janela (largura, letras, botões e tabelas em clamp/vw, até 1100 px); removida a folha inferior em tela estreita e a regra de abrir um fechar o outro.
 ## 24/11/2026 build 20261124-107
 Qualidade Média: partículas (bolhas, espuma, gotas, microbolhas, jato) em 30 % da Alta (antes 55 %). Alta = 100 %, Baixa = 0 %.
+## 24/11/2026 build 20261124-108
+Canaletas do quadro: a face voltada para a porta agora é uma tampa lisa; os furos (dedos) ficam só nas bordas de cima e de baixo, por onde os fios entram (antes a face inteira parecia ranhurada, como se a tampa estivesse virada para cima).
+## 24/11/2026 build 20261124-109
+Canaletas do quadro refeitas pela foto de referência (horizontais e verticais): PVC cinza-escuro, fundas (7,5 cm, quase a profundidade dos componentes), tampa lisa de frente, rasgos só nas faixas de cima e de baixo (por onde os fios entram), tampas nas pontas.
