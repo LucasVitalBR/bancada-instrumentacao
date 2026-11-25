@@ -5,17 +5,15 @@ Simulador didático 3D de controle de nível e temperatura (tanque, bomba, boias
 ## Usar só o simulador
 Abra a página hospedada (ou `index.html`). O modo **Simular sem programa** funciona sozinho, sem instalar nada.
 
-## Testar com o ISPSoft (ponte local)
-A página não consegue falar direto com o ISPSoft; ela usa uma pequena **ponte** (`ponte.js`, Node) que roda no computador de quem está programando.
+## Testar com o ISPSoft (Comunicação - CLP)
+A página não fala direto com o ISPSoft; ela usa a **Comunicação - CLP** (`ponte.js`), que roda no computador de quem está programando (Windows 64 bits).
 
-1. Instale o [Node.js](https://nodejs.org) (ou coloque um `node.exe` na pasta).
-2. Baixe esta pasta e dê dois cliques em `INICIAR-PONTE.bat` (abre a página e inicia a ponte).
-   - Para a ponte iniciar sozinha, execute `REGISTRAR-INICIO-AUTOMATICO.bat` uma vez; depois o botão **ISPSoft + inversor** da página inicia a ponte em segundo plano.
-   - `PARAR-PONTE.bat` encerra a ponte.
-3. No ISPSoft, ative a simulação com o driver **Simulator** do COMMGR (porta 10004).
-4. Na página, abra a aba **CLP**, preencha o mapa de E/S e clique em **Conectar ao ISPSoft**.
+1. Primeira vez em cada usuário do Windows: na aba **CLP**, clique em **Instalar ou reparar a Comunicação - CLP**, abra o arquivo baixado e espere a confirmação.
+2. No ISPSoft, ative a simulação com o driver **Simulator** do COMMGR e use na página a mesma porta.
+3. Na **Bancada 3D**, clique em **Montar automaticamente**.
+4. Na aba **CLP**, confira o mapa de E/S e clique em **Conectar ao ISPSoft**. A comunicação inicia por esse botão (não inicia junto com o Windows).
 
-A página hospedada fala com a ponte em `http://localhost:8765` (no computador do aluno). Se o navegador pedir permissão para acessar a rede local, permita.
+O instalador é gerado por `node instalador/gerar.js` (rode sempre que mudar `ponte.js`). Só os sites do projeto podem enviar comandos; outro endereço pode ser incluído em `origens.txt`, na pasta instalada.
 
 ## Arquivos
 `index.html` (interface), `app-3d.js` (cena e processo), `modo-direto.js`, `modo-ispsoft.js`, `ponte.js`, `app-drives.js`/`app-pf525.js` (inversores), `vendor/` (three.js e imagens).

@@ -43,7 +43,7 @@
       ISP.msg = "Iniciando a Comunicação - CLP em segundo plano…"; ISP.render();
       try { const a = document.createElement("a"); a.href = "nivelponte://iniciar"; document.body.appendChild(a); a.click(); a.remove(); } catch (e2) {}
       let up = false; for (let i = 0; i < 16 && !up; i++) { await new Promise(z => setTimeout(z, 750)); try { up = (await post("ping")).ok; } catch (e3) {} }
-      if (up) { try { r = await post("connect", { port: ISP.cfg.port }); } catch (e4) { r = { ok: false, error: "a ponte iniciou, mas não respondeu; tente de novo" }; } }
+      if (up) { try { r = await post("connect", { port: ISP.cfg.port }); } catch (e4) { r = { ok: false, error: "a Comunicação - CLP iniciou, mas não respondeu; tente de novo" }; } }
       ISP.semPonte = !up;
       if (!up) r = { ok: false, error: "a Comunicação - CLP não respondeu. Veja abaixo o que fazer" };
     }
@@ -88,7 +88,7 @@
       for (const k in YIDX) io.Y[YIDX[k]] = c.y[k] == null ? false : !!r.y[c.y[k]];
       io.D[1116] = c.dRef == null ? 0 : (r.d[c.dRef] || 0);
       if (!wasOk) { ISP.msg = "Comunicando com o simulador."; ISP.render(); }
-    }).catch(e => { ISP.busy = false; ISP.ok = false; ISP.msg = "a ponte parou de responder"; ISP.render(); });
+    }).catch(e => { ISP.busy = false; ISP.ok = false; ISP.msg = "a Comunicação - CLP parou de responder"; ISP.render(); });
   };
 
   // painel ao vivo de entradas (enviadas) e saídas (lidas) do simulador do ISPSoft
