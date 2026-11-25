@@ -219,18 +219,18 @@
     const step = mesh(new T.BoxGeometry(r * 1.0, r * 0.15, r * 0.9), ss); step.rotation.z = -0.5; step.position.set(-r * 1.4, r * 0.2, 0); lv.add(step);
     lv.add(at(mesh(new T.BoxGeometry(r * 1.4, r * 0.15, r * 0.9), ss), v3(-r * 2.1, r * 0.4, 0)));
     // empunhadura plástica amarela: perfil arredondado extrudado (topo plano, bordas chanfradas)
-    const GL = r * 7.2, GW = r * 0.95, rr = GW / 2 * 0.95, sh = new T.Shape();   // empunhadura longa e fina
+    const GL = r * 5.3, GW = r * 0.95, rr = GW / 2 * 0.95, sh = new T.Shape();   // empunhadura longa e fina
     sh.moveTo(-GL / 2 + rr, -GW / 2); sh.lineTo(GL / 2 - rr, -GW / 2); sh.quadraticCurveTo(GL / 2, -GW / 2, GL / 2, -GW / 2 + rr); sh.lineTo(GL / 2, GW / 2 - rr); sh.quadraticCurveTo(GL / 2, GW / 2, GL / 2 - rr, GW / 2);
     sh.lineTo(-GL / 2 + rr, GW / 2); sh.quadraticCurveTo(-GL / 2, GW / 2, -GL / 2, GW / 2 - rr); sh.lineTo(-GL / 2, -GW / 2 + rr); sh.quadraticCurveTo(-GL / 2, -GW / 2, -GL / 2 + rr, -GW / 2);
     const gg = new T.ExtrudeGeometry(sh, { depth: r * 0.3, bevelEnabled: true, bevelThickness: r * 0.1, bevelSize: r * 0.1, bevelSegments: 3, curveSegments: 8 }); gg.rotateX(-Math.PI / 2);
-    const grip = mesh(gg, yel); grip.position.set(-r * 5.6, r * 0.12, 0); lv.add(grip);
+    const grip = mesh(gg, yel); grip.position.set(-r * 4.65, r * 0.12, 0); lv.add(grip);
     const topY = r * 0.12 + r * 0.3 + r * 0.1;                                                          // topo plano da empunhadura
     const lt = canvasTex(256, 96, c => { c.fillStyle = "#F2C81B"; c.fillRect(0, 0, 256, 96); c.fillStyle = "#1A1A1A"; c.font = "bold 30px Arial"; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText("OFF", 130, 26); c.fillText("ON", 142, 66); c.font = "bold 56px Arial"; c.fillText("\u21BA", 56, 50); });
-    const pl = mesh(new T.PlaneGeometry(r * 2.3, r * 0.62), new T.MeshStandardMaterial({ map: lt, roughness: 0.5, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); pl.rotation.x = -Math.PI / 2; pl.rotation.z = Math.PI; pl.position.set(-r * 6.4, topY + 0.0006, 0); lv.add(pl);
+    const pl = mesh(new T.PlaneGeometry(r * 1.9, r * 0.62), new T.MeshStandardMaterial({ map: lt, roughness: 0.5, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); pl.rotation.x = -Math.PI / 2; pl.rotation.z = Math.PI; pl.position.set(-r * 5.2, topY + 0.0006, 0); lv.add(pl);
     lv.add(at(mesh(new T.CylinderGeometry(r * 0.46, r * 0.46, r * 0.35, 6), ssD), v3(0, r * 0.3, 0)));
     lv.add(at(mesh(new T.TorusGeometry(r * 0.28, r * 0.08, 8, 18).rotateX(Math.PI / 2), blue), v3(0, r * 0.52, 0)));
     lv.add(at(mesh(new T.CylinderGeometry(r * 0.23, r * 0.23, r * 0.28, 10), ssD), v3(0, r * 0.62, 0)));
-    g.scale.setScalar(0.8);
+    g.scale.setScalar(0.72);
     return { g, lv };
   }
   function handValve(parent, p, dir, r) {

@@ -190,3 +190,5 @@ Bomba queima quando o registro fica fechado com ela ligada: junto da falha do in
 Registro de esfera também no dreno (mesmo modelo). Página hospedada (Vercel/qualquer domínio) fala com a ponte em http://localhost:8765 no computador do aluno; ponte responde ao pré-voo de rede privada (Access-Control-Allow-Private-Network).
 ## 24/11/2026 build 20261124-94
 Alavanca do registro de esfera: empunhadura mais longa (7,2 r) e fina (0,95 r de largura, 0,5 r de espessura).
+## 24/11/2026 build 20261124-95
+Registro de esfera um pouco menor: escala 0,72 e empunhadura de 5,3 r (meio-termo), mesma espessura.
