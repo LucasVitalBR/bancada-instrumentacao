@@ -65,11 +65,23 @@
       '</div></div></div>';
     wrap.appendChild(g);
     const q = s => g.querySelector(s), qa = s => g.querySelectorAll(s), plc = q(".plc");
-    // fica ao lado do menu (à direita dele), colado embaixo, no tamanho cheio; só encolhe se a janela for muito baixa
-    const place = () => { const mn = document.getElementById("v3d-views"), wr = wrap.getBoundingClientRect(); const mr = mn && mn.offsetWidth ? mn.getBoundingClientRect().right - wr.left : 0; g.style.left = Math.max(8, mr + 12) + "px"; };
-    const fit = () => { place(); g.style.zoom = ""; const need = plc.offsetHeight + 60, have = wrap.clientHeight; g.style.zoom = need > have ? Math.max(0.6, have / need).toFixed(3) : ""; };
+    // fica ao lado do menu (à direita dele), colado embaixo. Em telas pequenas (celular) vai para a esquerda da tela e ENCOLHE: nunca passa da largura da janela
+    // e ocupa no máximo metade da altura, para não esconder a bancada. No computador mantém o tamanho cheio (só encolhe se a janela for muito baixa).
+    const mobile = () => Math.min(wrap.clientWidth, window.innerWidth) <= 760 || (!!window.matchMedia && matchMedia('(pointer:coarse)').matches && window.innerWidth <= 900);
+    const place = () => {
+      const mn = document.getElementById('v3d-views'), wr = wrap.getBoundingClientRect(), mr = mn && mn.offsetWidth ? mn.getBoundingClientRect().right - wr.left : 0;
+      const left = mobile() ? 8 : Math.max(8, mr + 12), z = parseFloat(g.style.zoom) || 1;
+      g.dataset.left = left; g.style.left = (left / z).toFixed(1) + 'px';                 // com zoom, o 'left' também é multiplicado: divide para cair no lugar certo
+    };
+    const fit = () => {
+      g.style.zoom = ''; place();
+      const H = wrap.clientHeight, W = wrap.clientWidth, needH = plc.offsetHeight + 60, needW = g.offsetWidth, left = +g.dataset.left || 8;
+      let z = Math.min(1, H / needH, (W - left - 6) / needW);
+      if (mobile()) z = Math.min(z, (0.5 * H) / needH);
+      z = Math.max(0.35, z); g.style.zoom = z < 0.999 ? z.toFixed(3) : ''; place();
+    };
     q(".gtab").onclick = () => { g.classList.toggle("open"); fit(); upd(); };
-    window.addEventListener("resize", () => { if (g.classList.contains("open")) fit(); });
+    window.addEventListener("resize", () => { if (g.classList.contains("open")) fit(); }); window.addEventListener("orientationchange", () => setTimeout(() => { if (g.classList.contains("open")) fit(); }, 250));
     q("#gRel").onclick = () => { if (window.ISP) ISP.manualX = {}; if (window.App3D && App3D.releaseForce) App3D.releaseForce(); upd(); };
     const has = (o, n) => Object.prototype.hasOwnProperty.call(o, n);
     const natural = () => { const I = window.ISP; try { return I.calcX(window.PLC && PLC.io) || {}; } catch (e) { return I.sentX || {}; } };
