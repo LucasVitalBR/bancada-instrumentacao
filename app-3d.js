@@ -17,7 +17,7 @@
   const DX = -3.65;  // conjunto tanque, bomba e tubulação avançado 25 cm em direção ao painel
   let started = false;
   // qualidade gráfica: alta (padrão em placa dedicada), média e baixa (menos resolução, menos partículas e menos efeitos) — escolhida pelos botões ao lado do FPS
-  const QUAL = { alta: { h: 1080, pf: 1, wv: 1, pc: 0.066 }, media: { h: 720, pf: 0.55, wv: 2, pc: 0.12 }, baixa: { h: 480, pf: 0, wv: 0, pc: 1e9 } };   // baixa = água simplificada: superfície plana, jato e dreno simples, sem bolhas/espuma/gotas; monitor do fundo parado   // h = altura máxima da imagem 3D interna (a janela continua adaptável: a imagem é esticada para caber)
+  const QUAL = { alta: { h: 1080, pf: 1, wv: 1, pc: 0.066 }, media: { h: 720, pf: 0.3, wv: 2, pc: 0.12 }, baixa: { h: 480, pf: 0, wv: 0, pc: 1e9 } };   // baixa = água simplificada: superfície plana, jato e dreno simples, sem bolhas/espuma/gotas; monitor do fundo parado   // h = altura máxima da imagem 3D interna (a janela continua adaptável: a imagem é esticada para caber)
   function gpuName() { try { const c = document.createElement("canvas"), g = c.getContext("webgl"), e = g.getExtension("WEBGL_debug_renderer_info"), n = e ? g.getParameter(e.UNMASKED_RENDERER_WEBGL) : g.getParameter(g.RENDERER), l = g.getExtension("WEBGL_lose_context"); if (l) l.loseContext(); return String(n); } catch (e) { return ""; } }
   let qName = "alta";
   { let st = null; try { st = localStorage.getItem("nivel-q3d"); } catch (e) { }

@@ -214,3 +214,5 @@ Qualidade Baixa: removido o segundo feixe de água (cilindro simples) que aparec
 Bolhas sumiam com o zoom perto: a malha instanciada A.bub tinha frustumCulled ligado e a esfera de culling era calculada com poucas bolhas, escondendo as demais fora dela. Agora frustumCulled = false.
 ## 24/11/2026 build 20261124-106
 Painéis laterais fluidos: menu (esquerda) e painel do processo (direita) continuam nas laterais e encolhem com a janela (largura, letras, botões e tabelas em clamp/vw, até 1100 px); removida a folha inferior em tela estreita e a regra de abrir um fechar o outro.
+## 24/11/2026 build 20261124-107
+Qualidade Média: partículas (bolhas, espuma, gotas, microbolhas, jato) em 30 % da Alta (antes 55 %). Alta = 100 %, Baixa = 0 %.
