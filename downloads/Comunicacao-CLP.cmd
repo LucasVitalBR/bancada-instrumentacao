@@ -95,7 +95,7 @@ try {
 } catch {
   Write-Host ''
   Write-Host ('ERRO: ' + $_.Exception.Message) -ForegroundColor Red
-  Write-Host 'Se o erro foi no download do Node.js: use o botao Baixar Node.js no site, instale e abra este arquivo de novo.'
+  Write-Host 'Se o erro foi no download do Node.js: confira a internet e abra este arquivo de novo.'
   Write-Host 'Se continuar, tire uma foto desta tela e chame o professor.'
 }
 #PONTE-INICIO

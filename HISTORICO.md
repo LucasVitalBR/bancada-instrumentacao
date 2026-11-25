@@ -252,3 +252,6 @@ Instalador da ponte por usuário (downloads/Comunicacao-CLP.cmd, baixado como "C
 
 ## BUILD 20261125-126
 - Aba CLP: passo a passo (instalar o Node.js e a Comunicação - CLP, preparar o ISPSoft e conectar), com os links de download. A Comunicação - CLP também procura o Node em Program Files.
+
+## BUILD 20261125-127
+- Aba CLP: botão Baixar Comunicação - CLP ao lado de Conectar ao ISPSoft; retirado o botão de instalação do Node.js e o link de reparo.

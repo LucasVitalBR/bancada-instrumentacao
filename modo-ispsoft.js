@@ -28,8 +28,6 @@
   const save = () => { try { sessionStorage.setItem(KEY, JSON.stringify(ISP.cfg)); } catch (e) {} };
   const BASE = location.protocol === "file:" || !/^(localhost|127.0.0.1)$/.test(location.hostname) ? "http://localhost:8765" : "";   // página hospedada (Vercel) ou arquivo: a ponte roda no computador do aluno
   const INSTALADOR = "downloads/Comunicacao-CLP.cmd", NOME = "Comunicação - CLP.cmd";
-  const NODE_URL = "https://nodejs.org/dist/v24.22.2/node-v24.22.2-x64.msi";   // instalador oficial (LTS)
-  const BT = 'style="display:inline-block;margin:4px 0;padding:6px 12px;border-radius:6px;background:#EE7A10;color:#fff;font-weight:700;text-decoration:none"';
   const post = (u, b) => fetch(BASE + "/api/" + u, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b || {}) }).then(r => r.json());
   const PLCo = () => window.PLC;
   ISP.applyDefaults = () => { const p = ISP.cfg.port; ISP.cfg = JSON.parse(JSON.stringify(DEF)); ISP.cfg.port = p; ISP.manualX = {}; save(); ISP.render(); };   // programa da aula
@@ -119,14 +117,14 @@
     const rowY = k => `<tr><td>${LBL[k]}</td><td>${sel("y", k, c.y[k])}${c.y[k] == null ? "" : bad("y", c.y[k], k)}</td></tr>`;
     box.innerHTML = `<div class="small">Programa no <b>ISPSoft</b> · <span style="color:${on ? (ISP.ok ? "#2EE07A" : "#E0503C") : "inherit"}">${ISP.msg}</span></div>
       <div class="row3"><label class="small">Porta <input type="number" id="ispPort" value="${c.port}" style="${ST};width:70px" ${dis}></label>
-      <button class="b3 ${on ? "on" : "pri"}" id="ispBtn">${on ? "Desconectar" : "Conectar ao ISPSoft"}</button></div>
-      ${on ? "" : `<details ${ISP.semPonte ? "open" : ""} style="margin:6px 0;padding:8px 10px;border:2px solid #EE7A10;border-radius:8px"><summary class="small" style="cursor:pointer"><b>Primeira vez neste computador? Passo a passo</b> (instalar o Node.js e a Comunicação - CLP)</summary><ol class="small" style="margin:6px 0;padding-left:20px;line-height:1.7">
-        <li><a href="${NODE_URL}" ${BT}>Baixar Node.js</a><br>Abra o arquivo baixado, clique em <b>Next</b>, aceite os termos se concordar, siga até <b>Install</b> e depois <b>Finish</b>. Se o Node.js já estiver instalado, pule este passo.</li>
-        <li><a href="${INSTALADOR}" download="${NOME}" ${BT}>Baixar Comunicação - CLP</a><br>Abra o arquivo baixado e espere aparecer <b>"Comunicacao - CLP instalada"</b>.</li>
+      <button class="b3 ${on ? "on" : "pri"}" id="ispBtn">${on ? "Desconectar" : "Conectar ao ISPSoft"}</button>
+      ${on ? "" : `<a class="b3" href="${INSTALADOR}" download="${NOME}" title="Primeira vez neste computador: baixe, abra o arquivo e depois clique em Conectar ao ISPSoft" style="text-decoration:none;display:inline-block">Baixar Comunicação - CLP</a>`}</div>
+      ${on ? "" : `<details ${ISP.semPonte ? "open" : ""} style="margin:6px 0;padding:8px 10px;border:2px solid #EE7A10;border-radius:8px"><summary class="small" style="cursor:pointer"><b>Primeira vez neste computador? Passo a passo</b></summary><ol class="small" style="margin:6px 0;padding-left:20px;line-height:1.7">
+        <li>Clique em <b>Baixar Comunicação - CLP</b>, abra o arquivo baixado e espere aparecer <b>"Comunicacao - CLP instalada"</b>.</li>
         <li>No ISPSoft, deixe o simulador em <b>RUN</b>. Use no campo <b>Porta</b> o mesmo número do COMMGR.</li>
         <li>Na aba <b>Bancada 3D</b>, clique em <b>Montar automaticamente</b>. Depois, confira o mapa de E/S aqui.</li>
         <li>Clique em <b>Conectar ao ISPSoft</b>. É esse botão que inicia a comunicação. Permita os pedidos do navegador para este site.</li>
-      </ol><div class="small">Os passos 1 e 2 são feitos uma vez em cada usuário do Windows. A instalação do Node.js pode pedir senha de administrador. Se o computador bloquear, chame o professor ou o TI.</div></details>`}
+      </ol><div class="small">O passo 1 é feito uma vez em cada usuário do Windows. Se o computador bloquear, chame o professor ou o TI.</div></details>`}
       <details open style="margin-top:4px"><summary class="small" style="cursor:pointer"><b>Mapa de E/S</b>: escolha o endereço de cada sinal (— = a página não usa). Endereços em octal, como no Delta: X0–X7, X10–X17. Em cada entrada escolha o contato ligado ao CLP: <b>NA</b> (X = 1 quando acionado) ou <b>NF</b> (X = 1 em repouso). Boias: acionada = boia levantada. Pode mudar com o CLP conectado.</summary>
       <table class="t3">${Object.keys(DEF.x).map(rowX).join("")}${Object.keys(DEF.y).map(rowY).join("")}
       <tr><td>Setpoint de temperatura (do painel, 10 = 1 °C)</td><td>D<input type="number" id="ispDs" value="${c.dSp == null ? '' : c.dSp}" placeholder="—" style="${ST};width:62px" ${dis}></td></tr>
