@@ -249,3 +249,6 @@ Gaveta do CLP adaptável ao celular (painel-clp.js): detecta tela pequena (janel
 
 ## 25/11/2026 build 20261125-124 (branch ponte-instalador)
 Instalador da ponte por usuário (downloads/Comunicacao-CLP.cmd, baixado como "Comunicação - CLP.cmd", gerado por node instalador/gerar.js) e botão de download na aba CLP quando a ponte não responde. Ponte aceita só os sites do projeto (extras em origens.txt), recusa outro Host e não cai com endereço mal formado. Sem início com o Windows. Falta testar o instalador no Windows (sintaxe PowerShell não validada).
+
+## BUILD 20261125-126
+- Aba CLP: passo a passo (instalar o Node.js e a Comunicação - CLP, preparar o ISPSoft e conectar), com os links de download. A Comunicação - CLP também procura o Node em Program Files.
